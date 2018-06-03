@@ -11,7 +11,7 @@ public class DesktopLauncher {
 	//config contains information about how the game window should be made
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		//set game window title, width and height
-		config.title="Chess is an Enhanced Form Which Removes From the Game the Limits it Once Had While Also Providing Multiplayer Capabilities Through Utilization of the Internet";
+		config.title="Chess Unnamed; Needs Title";
 		config.width=1100;
 		config.height=618;
 		config.resizable=false;
