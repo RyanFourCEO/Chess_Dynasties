@@ -20,27 +20,31 @@ static int moveTypeCounter=0;
     //initialize all the movetypes
     static void InitAllMoveTypes(){
 moveTypeCounter=0;
-        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,false,false,false);//index 0 in array, this movetype is just an empty square, it will have no functionality
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,false,false,false);
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
         moveTypeCounter++;
+        //index 0 in array, this movetype is just an empty square, it will have no functionality
 
-        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true,false,true);//index 1 in array, this is the move/attack movetype
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true,false,true);
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
         moveTypeCounter++;
+        //index 1 in array, this is the move/attack movetype
 
-        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true,false,false);//index 2 in array, this is the move only movetype
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true,false,false);
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
         moveTypeCounter++;
+        //index 2 in array, this is the move only movetype
 
-        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true, false, false,true);//index 3 in array, this is the attack only movetype
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true, false, false,true);
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
         moveTypeCounter++;
-
-        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true, false,false);// index 4 in array, this is move from starting position movetype
+        //index 3 in array, this is the attack only movetype
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true, false,false);
         allMoveTypes[0][moveTypeCounter].setIsOneTimeUse();
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
         allMoveTypes[1][moveTypeCounter].setIsOneTimeUse();
         moveTypeCounter++;
+        // index 4 in array, this is move from starting position movetype
     }
     static void initShaders(){
         vertexShader=Gdx.files.internal("VertShader.txt").readString();

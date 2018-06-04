@@ -75,8 +75,8 @@ switch (moveType){
 
         break;
 }
-//used for pieces like pawns which can only move 2 squares on their very first move, this will likely be replaced
-        //by a more elegant solution later
+//used for pieces like pawns which can only move 2 squares on their very first move
+//TODO: replace with more elegant solution
 
 
     }
