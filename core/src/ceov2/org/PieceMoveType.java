@@ -14,7 +14,7 @@ public class PieceMoveType {
     //this is for things like pawn's 2 square forward move, that can only be used on the very first turn
     boolean oneTimeUse=false;
 
-    public PieceMoveType(int moveType,boolean blockable,boolean emptyIsTarget,boolean allyIsTarget,boolean enemyIsTarget ){
+	public PieceMoveType(int moveType,boolean blockable,boolean emptyIsTarget,boolean allyIsTarget,boolean enemyIsTarget ){
    this.moveType=moveType;
    this.blockable=blockable;
    this.emptyIsTarget=emptyIsTarget;
@@ -75,8 +75,8 @@ switch (moveType){
 
         break;
 }
-//used for pieces like pawns which can only move 2 squares on their very first move, this will likely be replaced
-        //by a more elegant solution later
+//used for pieces like pawns which can only move 2 squares on their very first move
+//TODO: replace with more elegant solution
 
 
     }
