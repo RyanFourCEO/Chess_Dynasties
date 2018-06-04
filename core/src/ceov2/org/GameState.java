@@ -36,7 +36,7 @@ public class GameState {
     //i.e. it is equal to the index of the piece in the array of Pieces,-1 means unoccupied
     int[][] piecesOnBoard = new int[8][8];
 
-    //in the future the constructor will take 2 army objects as it's parameters to set up the game
+    //in the future the constructor will take 2 army objects as its parameters to set up the game
     public GameState() {
 
         initFont();
@@ -47,6 +47,7 @@ public class GameState {
         setBoard(allPiecesOnBoard);
         findAllValidMoves();
     }
+	
     //this method executes every tick
     public void runGame(SpriteBatch batch,MouseVars mouseVars){
         //see if the player has clicked on a piece, or it trying to move a piece
@@ -95,17 +96,15 @@ public class GameState {
                 row=7;
             }
             //the boards values are updated
-            for (int y = 0; y != 8; y++) {
+            for (int y = 0; y <= 8; y++) {
                 //the array boardState is set to the colour of the piece, a value of 0 means unoccupied
                 boardState[y][row] = colour;
                 if (colour==1){
                     moraleTotals[0]+=allPiecesOnBoard.get(counter).moraleCost;
-                }else{
-                    if(colour==2) {
+                } else if(colour==2) {
                         moraleTotals[1] += allPiecesOnBoard.get(counter).moraleCost;
-                    }
                 }
-                //The array of pieces: each piece has it's position on the board set
+                //The array of pieces: each piece has its position on the board set
                 allPiecesOnBoard.get(counter).setLocation(y, row);
                 //the array piecesOnBoard is set to the index of the piece
                 piecesOnBoard[y][row]=counter;
@@ -117,7 +116,7 @@ public class GameState {
 //find all the valid moves on any given turn
     public void findAllValidMoves(){
 //loop through the arrayList of pieces
-for(int a=0;a!=allPiecesOnBoard.size();a++){
+for(int a=0;a<=allPiecesOnBoard.size();a++){
 //loop through the moveset of each piece
     for(int x=0;x!=15;x++){
         for(int y=0;y!=15;y++) {
@@ -482,14 +481,68 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 
     }
 
+	//TODO: move these to proper place
+	//functions for interacting with pieces
+	//current use: pawn promotion
+	//commented out since useless
+	//TODO: figure out how allPiecesOnBoard array works !important
+	
+	/*
+	public void createPieceInEmpty(int x, int y, string pieceName){ //create pieces: only works in empty location
+		if(piecesOnBoard[x][y]=-1){
+			piecesOnBoard[x][y]=equalsIgnoreCase(pieceName);
+			if(boardState[x][y]=1){
+				moraleTotals[0]+=allPiecesOnBoard.get(x+8*y-1).moraleCost;
+			}
+			else{
+				moraleTotals[1]+=allPiecesOnBoard.get(x+8*y-1).moraleCost;
+			}
+		}
+	}
+	
+	public void removePiece(int x, int y){ 
+		if(piecesOnBoard[x][y]!=-1){
+			piecesOnBoard[x][y]=-1;
+			if(boardState[x][y]=1){
+				moraleTotals[0]-=allPiecesOnBoard.get(x+8*y-1).moraleCost;
+			}
+			else{
+				moraleTotals[1]-=allPiecesOnBoard.get(x+8*y-1).moraleCost;
+			}
+		}
+		//used for promote and other transform
+	}
+	
+	public void destroyPiece(int x, int y) {
+		//placeholder for destroy effects
+		//does not belong here i don't think
+		//actually not sure how this is different from removepiece
+	}
+	
+	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
+		if(piecesOnBoard[x][y]!=-1){ //used for promote
+			removePiece([x][y]); 
+			createPieceInEmpty([x][y], equalsIgnoreCase(pieceName));
+		}
+	}
+	*/
+	
+	
     //prepare the board for the next turn
     private void updateBoard(){
         //change who's turn it is
         if (playerTurn==1) {
             playerTurn = 2;
-        }else{
+        }
+		else{
             playerTurn=1;
         }
+		
+		//TODO: Promotion Logic
+		//intent: at the start of your turn your pieces promote by being on the back row
+		
+		
+		
         //reset the valid moves arrays and find the new set of valid moves
             setAllMovesInvalid();
             findAllValidMoves();

@@ -11,7 +11,7 @@ public class DesktopLauncher {
 	//config contains information about how the game window should be made
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		//set game window title, width and height
-		config.title="Chess Unnamed; Needs Title";
+		config.title="Chess Dynasties";
 		config.width=1100;
 		config.height=618;
 		config.resizable=false;
