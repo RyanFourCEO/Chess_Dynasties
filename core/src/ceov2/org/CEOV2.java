@@ -2,21 +2,21 @@ package ceov2.org;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.Input;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import javax.xml.soap.Text;
-import java.util.ArrayList;
 
 public class CEOV2 extends ApplicationAdapter {
 
@@ -46,9 +46,16 @@ public class CEOV2 extends ApplicationAdapter {
     //when endGame is true, the LiveGame object will be set to null
     boolean endGame=false;
 
+
+    boolean enterArmyMaker=false;
+    boolean armyMakingIsLive=false;
+    boolean exitArmyMaker=false;
+
 	//initialization/loading of the games resources
 	@Override
 	public void create () {
+
+
 		//camera = new OrthographicCamera(1100,618);
         mouseVars=new MouseVars();
 		//viewport = new FitViewport(1100, 618, camera);
@@ -80,7 +87,7 @@ startGame=true;
 		batch = new SpriteBatch();
 		img = new Texture("unknown.png");
 		sprite1=new Sprite(img);
-sprite1.scale(-0.3f);
+sprite1.setSize(438,385);
 sprite1.setCenter(190,150);
 		font= new BitmapFont();
 		font.setColor(Color.RED);
@@ -88,9 +95,6 @@ sprite1.setCenter(190,150);
 		sprite2=new Sprite(img2);
 sprite2.setSize(480,480);
 sprite2.setCenter(640,290);
-
-
-
 	}
 
 
@@ -107,11 +111,20 @@ mouseVars.setMouseVariables();
 		//draw all graphics objects
 
 		batch.begin();
-		sprite1.draw(batch);
-		sprite2.draw(batch);
-		font.draw(batch,"hello",250,300);
+
+		//batch.setShader(SpriteBatch.createDefaultShader());
+		batch.draw(sprite1,sprite1.getX(),sprite1.getY(),sprite1.getWidth(),sprite1.getHeight());
+		batch.draw(sprite2,sprite2.getX(),sprite2.getY(),sprite2.getWidth(),sprite2.getHeight());
+		//batch.setShader(SpriteBatch.createDefaultShader());
+		//sprite1.draw(batch);
+		//sprite2.draw(batch);
+		//font.draw(batch,"hello",250,300);
 
 
+
+
+		batch.end();
+		batch.begin();
 
 		stage.draw();
 		batch.end();

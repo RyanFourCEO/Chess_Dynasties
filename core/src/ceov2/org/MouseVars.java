@@ -2,6 +2,7 @@ package ceov2.org;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+
 //contains the location of the mouse and what actions the mouse is performing
 //finds the new mouse variables every time the main loop executes
 public class MouseVars {

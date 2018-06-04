@@ -2,8 +2,10 @@ package ceov2.org;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 import java.util.ArrayList;
+
 //this class deals with all the logic of a live game.
 public class GameState {
     //holds morale of both players
@@ -41,6 +43,7 @@ public class GameState {
 
         initFont();
         Piece.InitAllMoveTypes();
+        Piece.initShaders();
         loadTempPieces();
         loadArmies();
 
@@ -49,7 +52,7 @@ public class GameState {
     }
 	
     //this method executes every tick
-    public void runGame(SpriteBatch batch,MouseVars mouseVars){
+    public void runGame(SpriteBatch batch, MouseVars mouseVars){
         //see if the player has clicked on a piece, or it trying to move a piece
         //if the player has made a valid move this method will also execute it
         processMouseInput(mouseVars);
@@ -135,13 +138,15 @@ for(int a=0;a<=allPiecesOnBoard.size();a++){
                         //test if the square is a valid target for the piece to move to
                         //for example a piece that can move/attack can go to an empty square or an enemy occupied square
                         //but not an ally square
-                        boolean validTarget = Piece.allMoveTypes.get(allPiecesOnBoard.get(a).moveset[x][y]).checkIsValidTarget(boardState[xOnBoard][yOnBoard],playerTurn);
+
+                        boolean validTarget = Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y]%1000].checkIsValidTarget(boardState[xOnBoard][yOnBoard],playerTurn);
                         //if the target is not valid, the piece can't move there
                         if (validTarget == true) {
                             //check if the piece is blocked, (bishops can't move through other pieces)
                             boolean blocked=false;
                             //some movetypes can't be blocked, so if that isn't an issue, blocked remains false
-                            if (Piece.allMoveTypes.get(allPiecesOnBoard.get(a).moveset[x][y]).blockable==true){
+                            //a piece with moveset value greater than 1000 is unblockable
+                            if (allPiecesOnBoard.get(a).moveset[x][y]<1000){
                                 //method to check if the piece is blocked
 blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocation,allPiecesOnBoard.get(a).yLocation);
                             }
@@ -208,6 +213,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
             //if the move was found to be valid
             if (validMove==true){
                 //execute the move
+
                 allPiecesOnBoard.get(selectedPiece).executeMove(loc[0],loc[1],this);
                 //set up for the next turn
                 updateBoard();
@@ -302,12 +308,12 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
         resetMoveset(moveset);
         tempPieces.get(3).setMoraleValues(30,0);
         //index 4
-        setMoveSetCoord(moveset,1,2,true,true,true,true,true,true,true,true,4);
+        setMoveSetCoord(moveset,1,2,true,true,true,true,true,true,true,true,1001);
         tempPieces.add(new Piece(moveset,"Knight"));
         resetMoveset(moveset);
         tempPieces.get(4).setMoraleValues(30,0);
         //index 5
-        setMoveSetLines(moveset,2,true,false,false,false,false,false,false,false,5);
+        setMoveSetLines(moveset,2,true,false,false,false,false,false,false,false,4);
         setMoveSetLines(moveset,1,true,false,false,false,false,false,false,false,2);
         setMoveSetLines(moveset,1,false,true,false,false,false,false,false,true,3);
 
@@ -324,7 +330,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
         }
         return converted;
     }
-    //set the moveset array values, given a String
+    //set the moveset array values, given a String,currently unused
     void setMoveSet(int[][] moveset,String line){
         //9 commas means that we are dealing with linear movements,10 variables, 1 range, 8 direction, 1 movetype
         //10 commas means we are dealing with knight-like movements,11 variables, 2 coordinates, 8 directions, 1 movetype
@@ -348,7 +354,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
             setMoveSetCoord(moveset,Integer.valueOf(separated[0]),Integer.valueOf(separated[1]),convertToBoolean(separated[2]),convertToBoolean(separated[3]),convertToBoolean(separated[4]),convertToBoolean(separated[5]),convertToBoolean(separated[6]),convertToBoolean(separated[7]),convertToBoolean(separated[8]),convertToBoolean(separated[9]),Integer.valueOf(separated[10]));
         }
     }
-    //set the moveset array to all 0's
+    //set the moveset array to all 0's,also prints out the moveset to the console
     private void resetMoveset(int[][] moveset){
         String line="";
         for (int y=14;y!=-1;y--){
@@ -356,7 +362,8 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
                 line+=String.valueOf(moveset[x][y])+" ";
                 moveset[x][y]=0;
             }
-            System.out.println(line);
+            //this prints the moveset to the console
+           // System.out.println(line);
             line="";
         }
 
@@ -486,7 +493,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 	//current use: pawn promotion
 	//commented out since useless
 	//TODO: figure out how allPiecesOnBoard array works !important
-	
+
 	/*
 	public void createPieceInEmpty(int x, int y, string pieceName){ //create pieces: only works in empty location
 		if(piecesOnBoard[x][y]=-1){
@@ -499,7 +506,11 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 			}
 		}
 	}
-	
+
+
+	public void removePiece(int x, int y){
+
+
 	public void removePiece(int x, int y){ 
 		if(piecesOnBoard[x][y]!=-1){
 			piecesOnBoard[x][y]=-1;
@@ -512,12 +523,18 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 		}
 		//used for promote and other transform
 	}
-	
+
 	public void destroyPiece(int x, int y) {
 		//placeholder for destroy effects
 		//does not belong here i don't think
 		//actually not sure how this is different from removepiece
 	}
+
+
+	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
+		if(piecesOnBoard[x][y]!=-1){ //used for promote
+			removePiece([x][y]);
+
 	
 	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
 		if(piecesOnBoard[x][y]!=-1){ //used for promote
@@ -526,8 +543,13 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 		}
 	}
 	*/
+
+
+
+
 	
 	
+
     //prepare the board for the next turn
     private void updateBoard(){
         //change who's turn it is
@@ -537,12 +559,21 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 		else{
             playerTurn=1;
         }
+
+
+		//TODO: Promotion Logic
+		//intent: at the start of your turn your pieces promote by being on the back row
+
+
+
+
 		
 		//TODO: Promotion Logic
 		//intent: at the start of your turn your pieces promote by being on the back row
 		
 		
 		
+
         //reset the valid moves arrays and find the new set of valid moves
             setAllMovesInvalid();
             findAllValidMoves();
