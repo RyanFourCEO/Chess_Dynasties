@@ -99,7 +99,7 @@ public class GameState {
                 row=7;
             }
             //the boards values are updated
-            for (int y = 0; y <= 8; y++) {
+            for (int y = 0; y < 8; y++) {
                 //the array boardState is set to the colour of the piece, a value of 0 means unoccupied
                 boardState[y][row] = colour;
                 if (colour==1){
@@ -119,7 +119,7 @@ public class GameState {
 //find all the valid moves on any given turn
     public void findAllValidMoves(){
 //loop through the arrayList of pieces
-for(int a=0;a<=allPiecesOnBoard.size();a++){
+for(int a=0;a<allPiecesOnBoard.size();a++){
 //loop through the moveset of each piece
     for(int x=0;x!=15;x++){
         for(int y=0;y!=15;y++) {
