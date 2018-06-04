@@ -50,6 +50,7 @@ public class GameState {
         setBoard(allPiecesOnBoard);
         findAllValidMoves();
     }
+	
     //this method executes every tick
     public void runGame(SpriteBatch batch, MouseVars mouseVars){
         //see if the player has clicked on a piece, or it trying to move a piece
@@ -98,7 +99,7 @@ public class GameState {
                 row=7;
             }
             //the boards values are updated
-            for (int y = 0; y != 8; y++) {
+            for (int y = 0; y <= 8; y++) {
                 //the array boardState is set to the colour of the piece, a value of 0 means unoccupied
                 boardState[y][row] = colour;
                 if (colour==1){
@@ -118,7 +119,7 @@ public class GameState {
 //find all the valid moves on any given turn
     public void findAllValidMoves(){
 //loop through the arrayList of pieces
-for(int a=0;a!=allPiecesOnBoard.size();a++){
+for(int a=0;a<=allPiecesOnBoard.size();a++){
 //loop through the moveset of each piece
     for(int x=0;x!=15;x++){
         for(int y=0;y!=15;y++) {
@@ -506,7 +507,11 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 		}
 	}
 
+
 	public void removePiece(int x, int y){
+
+
+	public void removePiece(int x, int y){ 
 		if(piecesOnBoard[x][y]!=-1){
 			piecesOnBoard[x][y]=-1;
 			if(boardState[x][y]=1){
@@ -525,14 +530,25 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 		//actually not sure how this is different from removepiece
 	}
 
+
 	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
 		if(piecesOnBoard[x][y]!=-1){ //used for promote
 			removePiece([x][y]);
+
+	
+	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
+		if(piecesOnBoard[x][y]!=-1){ //used for promote
+			removePiece([x][y]); 
 			createPieceInEmpty([x][y], equalsIgnoreCase(pieceName));
 		}
 	}
 	*/
 
+
+
+
+	
+	
 
     //prepare the board for the next turn
     private void updateBoard(){
@@ -544,10 +560,19 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
             playerTurn=1;
         }
 
+
 		//TODO: Promotion Logic
 		//intent: at the start of your turn your pieces promote by being on the back row
 
 
+
+
+		
+		//TODO: Promotion Logic
+		//intent: at the start of your turn your pieces promote by being on the back row
+		
+		
+		
 
         //reset the valid moves arrays and find the new set of valid moves
             setAllMovesInvalid();

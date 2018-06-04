@@ -19,6 +19,7 @@ static int moveTypeCounter=0;
     static final int boardLocationy=50;
     //initialize all the movetypes
     static void InitAllMoveTypes(){
+
 moveTypeCounter=0;
         allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,false,false,false);
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
@@ -51,6 +52,27 @@ moveTypeCounter=0;
         fragmentShader=Gdx.files.internal("FragmentShader.txt").readString();
         shaderProgram=new ShaderProgram(vertexShader,fragmentShader);
         defaultShader=SpriteBatch.createDefaultShader();
+=======
+        allMoveTypes.add(new PieceMoveType(0,false,false,false,false));
+		//index 0 in arraylist, this movetype is just an empty square, it will have no functionality
+		
+        allMoveTypes.add(new PieceMoveType(1,true,true,false,true));
+		//index 1 in arraylist, this is the move/attack movetype
+		
+        allMoveTypes.add(new PieceMoveType(1,true,true,false,false));
+		//index 2 in arraylist, this is the move only movetype
+		
+        allMoveTypes.add(new PieceMoveType(1,true, false, false,true));
+		//index 3 in arrayList, this is the attack only movetype
+
+        allMoveTypes.add(new PieceMoveType(1,false,true, false,true));
+		// index 4 in arrayList, this is the unblockable move/attack movetype
+
+        allMoveTypes.add(new PieceMoveType(1,true,true, false,false));
+		// index 5 in arrayList, this is move from starting position movetype
+		
+        allMoveTypes.get(5).setIsOneTimeUse();
+
     }
 //the moveset of a piece, 0 means no movement on that location, >0 gives the index of the movetype in the array allMoveTypes
     int[][] moveset=new int[15][15];

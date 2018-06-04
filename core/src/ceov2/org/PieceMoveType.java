@@ -14,7 +14,7 @@ public class PieceMoveType {
     //this is for things like pawn's 2 square forward move, that can only be used on the very first turn
     boolean oneTimeUse=false;
 
-    public PieceMoveType(int moveType,boolean blockable,boolean emptyIsTarget,boolean allyIsTarget,boolean enemyIsTarget ){
+	public PieceMoveType(int moveType,boolean blockable,boolean emptyIsTarget,boolean allyIsTarget,boolean enemyIsTarget ){
    this.moveType=moveType;
    this.blockable=blockable;
    this.emptyIsTarget=emptyIsTarget;
