@@ -3,28 +3,50 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import java.util.ArrayList;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+
 //this class contains all the information a piece has
 public class Piece {
+    static String vertexShader;
+    static String fragmentShader;
+    static ShaderProgram shaderProgram;
+    static ShaderProgram defaultShader;
     //static array of all movetypes
-    static ArrayList<PieceMoveType> allMoveTypes=new ArrayList<PieceMoveType>();
+    static PieceMoveType[][] allMoveTypes=new PieceMoveType[2][5];
+static int moveTypeCounter=0;
     //boards location on screen
     static final int boardLocationx=400;
     static final int boardLocationy=50;
     //initialize all the movetypes
     static void InitAllMoveTypes(){
-        allMoveTypes.add(new PieceMoveType(0,false,false,false,false));//index 0 in arraylist, this movetype is just an empty square, it will have no functionality
+moveTypeCounter=0;
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,false,false,false);//index 0 in array, this movetype is just an empty square, it will have no functionality
+        allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
+        moveTypeCounter++;
 
-        allMoveTypes.add(new PieceMoveType(1,true,true,false,true));//index 1 in arraylist, this is the move/attack movetype
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true,false,true);//index 1 in array, this is the move/attack movetype
+        allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
+        moveTypeCounter++;
 
-        allMoveTypes.add(new PieceMoveType(1,true,true,false,false));//index 2 in arraylist, this is the move only movetype
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true,false,false);//index 2 in array, this is the move only movetype
+        allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
+        moveTypeCounter++;
 
-        allMoveTypes.add(new PieceMoveType(1,true, false, false,true));//index 3 in arrayList, this is the attack only movetype
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true, false, false,true);//index 3 in array, this is the attack only movetype
+        allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
+        moveTypeCounter++;
 
-        allMoveTypes.add(new PieceMoveType(1,false,true, false,true));// index 4 in arrayList, this is the unblockable move/attack movetype
-
-        allMoveTypes.add(new PieceMoveType(1,true,true, false,false));// index 5 in arrayList, this is move from starting position movetype
-        allMoveTypes.get(5).setIsOneTimeUse();
+        allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true, false,false);// index 4 in array, this is move from starting position movetype
+        allMoveTypes[0][moveTypeCounter].setIsOneTimeUse();
+        allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
+        allMoveTypes[1][moveTypeCounter].setIsOneTimeUse();
+        moveTypeCounter++;
+    }
+    static void initShaders(){
+        vertexShader=Gdx.files.internal("VertShader.txt").readString();
+        fragmentShader=Gdx.files.internal("FragmentShader.txt").readString();
+        shaderProgram=new ShaderProgram(vertexShader,fragmentShader);
+        defaultShader=SpriteBatch.createDefaultShader();
     }
 //the moveset of a piece, 0 means no movement on that location, >0 gives the index of the movetype in the array allMoveTypes
     int[][] moveset=new int[15][15];
@@ -74,8 +96,15 @@ public class Piece {
         int yOffset=yTarget-yLocation+7;
         //find what type of move the piece is doing
         int movetype=moveset[xOffset][yOffset];
+        int blockable;
+        if (movetype>1000&&movetype<2000){
+            movetype=movetype%1000;
+blockable=1;
+        }else{
+            blockable=0;
+        }
         //execute the move
-        allMoveTypes.get(movetype).executeMove(xTarget,yTarget,xLocation,yLocation,state);
+        allMoveTypes[blockable][movetype].executeMove(xTarget,yTarget,xLocation,yLocation,state);
 //the piece is no longer selected, as it has executed a move
         selected=false;
     }
@@ -93,11 +122,12 @@ public class Piece {
         String filePath="pieces\\";
         if (isWhite==true){
 
-            filePath+=name+"White"+".png";
+
         }else{
             flipMoveset();
-            filePath+=name+"Black"+".png";
+
         }
+        filePath+=name+"White"+".png";
 pieceImage=new Texture(filePath);
        // pieceImage.setFilter(Texture.TextureFilter.Linear,Texture.TextureFilter.Linear);
 sprite=new Sprite(pieceImage);
@@ -127,8 +157,15 @@ sprite=new Sprite(pieceImage);
         }else {
             sprite.setCenter(xLocation * 60 + 30 + boardLocationx, yLocation * 60 + 30 + boardLocationy);
         }
+if (isWhite==true) {
+    sprite.draw(batch);
+}else{
+            //if the piece is black, draw the piece with the colour inversion shaders
+            batch.setShader(shaderProgram);
+    sprite.draw(batch);
+    batch.setShader(defaultShader);
 
-        sprite.draw(batch);
+}
     }
 //delete the graphics, used when the game ends
 void deleteGraphics(){

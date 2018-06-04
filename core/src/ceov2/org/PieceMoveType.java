@@ -84,7 +84,15 @@ switch (moveType){
     void updatePieceMoveset(int xLoc,int yLoc, int[][] piecesOnBoard, ArrayList<Piece> allPiecesOnBoard){
         for(int x=0;x!=15;x++) {
             for(int y=0;y!=15;y++){
-                if (Piece.allMoveTypes.get( allPiecesOnBoard.get(piecesOnBoard[xLoc][yLoc]).moveset[x][y]).oneTimeUse==true){
+                int movetype=allPiecesOnBoard.get(piecesOnBoard[xLoc][yLoc]).moveset[x][y];
+                int blockable;
+                if (movetype>1000&&movetype<2000){
+                    movetype=movetype%1000;
+                    blockable=1;
+                }else{
+                    blockable=0;
+                }
+                if (Piece.allMoveTypes[blockable][movetype].oneTimeUse==true){
                   allPiecesOnBoard.get(piecesOnBoard[xLoc][yLoc]).moveset[x][y]=0;
 
                 }
@@ -93,7 +101,7 @@ switch (moveType){
         }
     }
 
-    void capturePiece(Piece piece,int[] moraleTotals){
+    void capturePiece(Piece piece, int[] moraleTotals){
         piece.capture();
         if(piece.isWhite==true){
             moraleTotals[0]-=piece.moraleCost+piece.moralePenalty;
