@@ -13,10 +13,16 @@ public class Piece {
     static ShaderProgram defaultShader;
     //static array of all movetypes
     static PieceMoveType[][] allMoveTypes=new PieceMoveType[2][5];
+     //all the pieces in the game, any time a piece gets added, that pieces name must be added here
+      static String[] allPieces={"Rook","Pawn","Bishop","Queen","King","Knight"};
+      //the morales of all the pieces in the game, only necessary while piece files don't exist
+      static int[] allMorales={50,10,30,90,0,30};
+      //the number of total pieces in the game, this must be updated along with the above array of strings
+      static int pieceCounter=6;
 static int moveTypeCounter=0;
     //boards location on screen
-    static final int boardLocationx=400;
-    static final int boardLocationy=50;
+    static int boardLocationx=400;
+    static int boardLocationy=50;
     //initialize all the movetypes
     static void InitAllMoveTypes(){
 
@@ -40,6 +46,7 @@ moveTypeCounter=0;
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
         moveTypeCounter++;
         //index 3 in array, this is the attack only movetype
+
         allMoveTypes[0][moveTypeCounter]=new PieceMoveType(1,true,true, false,false);
         allMoveTypes[0][moveTypeCounter].setIsOneTimeUse();
         allMoveTypes[1][moveTypeCounter]=new PieceMoveType(1,false,false,false,false);
@@ -47,6 +54,7 @@ moveTypeCounter=0;
         moveTypeCounter++;
         // index 4 in array, this is move from starting position movetype
     }
+
     static void initShaders(){
         vertexShader=Gdx.files.internal("VertShader.txt").readString();
         fragmentShader=Gdx.files.internal("FragmentShader.txt").readString();
@@ -82,6 +90,7 @@ moveTypeCounter=0;
         }
 
         this.name=name;
+        setImage();
         //pieceImage=new Texture(name+".png");
     }
     //set the morale penalties a piece has
@@ -123,21 +132,24 @@ blockable=1;
         selected=false;
 }
 //set the colour and graphics of a piece
-    void setImage(boolean isWhite){
-        this.isWhite=isWhite;
+    void setImage(){
+
         String filePath="pieces\\";
-        if (isWhite==true){
-
-
-        }else{
-            flipMoveset();
-
-        }
         filePath+=name+"White"+".png";
 pieceImage=new Texture(filePath);
        // pieceImage.setFilter(Texture.TextureFilter.Linear,Texture.TextureFilter.Linear);
 sprite=new Sprite(pieceImage);
 
+    }
+
+    void setColour(boolean isWhite){
+        this.isWhite=isWhite;
+
+        if (isWhite==true){
+
+        }else{
+            flipMoveset();
+        }
     }
 
     void capture(){
@@ -173,6 +185,17 @@ if (isWhite==true) {
 
 }
     }
+//draw the piece in a specific location, not the location the piece has on the board
+    void drawSpecificLoc(SpriteBatch batch,int size,int centerx,int centery){
+        sprite.setSize((size),(size));
+        if (selected==true){
+            sprite.setCenter(Gdx.input.getX(),618-Gdx.input.getY());
+        }else{
+            sprite.setCenter(centerx, centery);
+        }
+        sprite.draw(batch);
+    }
+
 //delete the graphics, used when the game ends
 void deleteGraphics(){
         pieceImage.dispose();

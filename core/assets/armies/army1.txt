@@ -1,0 +1,1 @@
+Rook,Knight,Bishop,Queen,King,Bishop,Knight,Rook,Pawn,Pawn,Pawn,Pawn,Pawn,Queen,Pawn,Pawn

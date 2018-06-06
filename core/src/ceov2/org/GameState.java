@@ -1,6 +1,9 @@
 package ceov2.org;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
@@ -23,6 +26,8 @@ public class GameState {
      boolean whiteWins=false;
      boolean blackWins=false;
      boolean gameOver=false;
+     Texture boardImage;
+     Sprite sprite;
 
      //font object for writing morale values to the screen
      BitmapFont font;
@@ -40,17 +45,22 @@ public class GameState {
 
     //in the future the constructor will take 2 army objects as its parameters to set up the game
     public GameState() {
-
+        loadTextures();
         initFont();
         Piece.InitAllMoveTypes();
         Piece.initShaders();
         loadTempPieces();
         loadArmies();
-
         setBoard(allPiecesOnBoard);
         findAllValidMoves();
     }
-	
+
+	private void loadTextures(){
+        boardImage=new Texture("chessBoard.png");
+        sprite=new Sprite(boardImage);
+        sprite.setSize(480,480);
+        sprite.setCenter(640,290);
+    }
     //this method executes every tick
     public void runGame(SpriteBatch batch, MouseVars mouseVars){
         //see if the player has clicked on a piece, or it trying to move a piece
@@ -85,18 +95,18 @@ public class GameState {
         for (int x = 0; x != 4; x++) {
             //the row and colour are set the the right numbers
             if (x==0){
-                row=1;
+                row=0;
                 colour=1;
             }
             if (x==1){
-                row=0;
+                row=1;
             }
             if (x==2){
                 colour=2;
-                row=6;
+                row=7;
             }
             if (x==3){
-                row=7;
+                row=6;
             }
             //the boards values are updated
             for (int y = 0; y < 8; y++) {
@@ -185,7 +195,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
                         selectedPieceLocx=loc[0];
                         selectedPieceLocy=loc[1];
                         selectedPiece=piecesOnBoard[loc[0]][loc[1]];
-                        //pieceSelected is set true, so 2 pieces can't be selected at once
+                        //pieceInArmySelected is set true, so 2 pieces can't be selected at once
                         pieceSelected = true;
                     }
                 }
@@ -237,38 +247,37 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
         // setMoveSet(moveset,line2);
         // setMoveSet(moveset,line3);
     }
-    //loads the default pieces, this will no longer be used once pieces are loaded from files
+    //loads the current armies
     private void loadArmies(){
+        //load the army1 file, this will contain the setup for the white army
+        String army=Gdx.files.internal("armies\\army1.txt").readString();
+        String[] separated=new String[16];
+        //separate the loaded string from the file into it's 16 piece names
+        for(int x=0;x!=16;x++) {
+            separated = army.split(",");
+        }
+        //load all the pieces corresponding to the piece names from the file
         //load all white pieces first, so they take up the first 16 places in the array
-        for (int x=0;x!=8;x++) {
-            loadPieceToArmy("Pawn",true);
+        for (int x=0;x!=16;x++) {
+            loadPieceToArmy(separated[x],true);
 
         }
-        loadPieceToArmy("Rook",true);
-        loadPieceToArmy("Knight",true);
-        loadPieceToArmy("Bishop",true);
-        loadPieceToArmy("Queen",true);
-        loadPieceToArmy("King",true);
-        loadPieceToArmy("Bishop",true);
-        loadPieceToArmy("Knight",true);
-        loadPieceToArmy("Rook",true);
-        for(int x=0;x!=8;x++){
-            loadPieceToArmy("Pawn",false);
+//repeat the above for the black pieces, which are loaded from army2
+        army=Gdx.files.internal("armies\\army2.txt").readString();
+        for(int x=0;x!=16;x++) {
+            separated = army.split(",");
         }
+        for (int x=0;x!=16;x++) {
+            loadPieceToArmy(separated[x],false);
 
-
-        loadPieceToArmy("Rook",false);
-        loadPieceToArmy("Knight",false);
-        loadPieceToArmy("Bishop",false);
-        loadPieceToArmy("Queen",false);
-        loadPieceToArmy("King",false);
-        loadPieceToArmy("Bishop",false);
-        loadPieceToArmy("Knight",false);
-        loadPieceToArmy("Rook",false);
+        }
+        //clear tempPieces as we no longer need to load pieces, which is tempPieces only purpose
         tempPieces.clear();
     }
     //add a piece to the arraylist containing all the pieces
     private void loadPieceToArmy(String pieceName,boolean isWhite){
+        //loop through boardPieces to find the piece with the correct name
+        //loop through boardPieces to find the piece with the correct name
         //loop through boardPieces to find the piece with the correct name
         for (int x=0;x!=tempPieces.size();x++){
             //if the name is correct
@@ -276,7 +285,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
                 //initialize the piece object and add it to the ArrayList
                 allPiecesOnBoard.add(new Piece(tempPieces.get(x).moveset,pieceName));
                 //set the image and color of the piece
-                allPiecesOnBoard.get(allPiecesOnBoard.size()-1).setImage(isWhite);
+                allPiecesOnBoard.get(allPiecesOnBoard.size()-1).setColour(isWhite);
                 //set the morale values of the piece
                 allPiecesOnBoard.get(allPiecesOnBoard.size()-1).setMoraleValues(tempPieces.get(x).moraleCost,tempPieces.get(x).moralePenalty);
                 //add the morale values to the totals for each player
@@ -301,7 +310,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
         setMoveSetLines(moveset,1,true,true,true,true,true,true,true,true,1);
         tempPieces.add(new Piece(moveset,"King"));
         resetMoveset(moveset);
-        tempPieces.get(2).setMoraleValues(0,85);
+        tempPieces.get(2).setMoraleValues(0,200);
         //index 3
         setMoveSetLines(moveset,7,false,true,false,true,false,true,false,true,1);
         tempPieces.add(new Piece(moveset,"Bishop"));
@@ -691,10 +700,10 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
                     //if the king is of the colour of the player whos turn just started
                     if (playerTurn==1&&allPiecesOnBoard.get(x).isWhite==true){
                         //reduce that players morale total
-                        moraleTotals[0]-=15;
+                     //   moraleTotals[0]-=15;
                     }
                     if(playerTurn==2&&allPiecesOnBoard.get(x).isWhite==false){
-                        moraleTotals[1]-=15;
+                      //  moraleTotals[1]-=15;
                     }
                 }
             }
@@ -716,6 +725,10 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 }
 
     private void drawAll(SpriteBatch batch) {
+
+
+        sprite.draw(batch);
+
         String draw="";
         //draw the morale totals on screen
         draw="White's Morale Total: "+String.valueOf(moraleTotals[0]);
@@ -744,6 +757,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
     //delete graphics objects, used when the game is being reset to avoid leaking memory
     void deleteGraphics(){
         font.dispose();
+        boardImage.dispose();
         for(int x=0;x!=allPiecesOnBoard.size();x++){
             allPiecesOnBoard.get(x).deleteGraphics();
         }
