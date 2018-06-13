@@ -5,15 +5,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 import java.util.ArrayList;
 
 //this class deals with all the logic of a live game.
 public class GameState {
-    //holds morale of both players
+    //holds morale of both players,index 0=player 1(white)index 1=player 2(black)
     int[] moraleTotals=new int[2];
-    //playerturn tells who's turn it is, 1=player 1's turn, 2=player 2's turn
+    //playerturn tells who's turn it is, 1=player 1's turn(white), 2=player 2's turn(black)
      int playerTurn=1;
      //tells if a piece is selected by a player(they have clicked it)
      boolean pieceSelected;
@@ -26,6 +25,10 @@ public class GameState {
      boolean whiteWins=false;
      boolean blackWins=false;
      boolean gameOver=false;
+     boolean turnJustStarted=false;
+     boolean turnJustEnded=false;
+
+
      Texture boardImage;
      Sprite sprite;
 
@@ -36,9 +39,11 @@ public class GameState {
     ArrayList<Piece> tempPieces = new ArrayList<Piece>();
     //the array of all Pieces that are on the board
     ArrayList<Piece> allPiecesOnBoard=new ArrayList<Piece>();
+
     //contains the information about what occupies each square of the board
     //0=empty square, 1=square occupied by white piece, 2=square occupied by black piece
     int[][] boardState = new int[8][8];
+
     //contains the information about what specific piece is on each square of the board
     //i.e. it is equal to the index of the piece in the array of Pieces,-1 means unoccupied
     int[][] piecesOnBoard = new int[8][8];
@@ -53,6 +58,7 @@ public class GameState {
         loadArmies();
         setBoard(allPiecesOnBoard);
         findAllValidMoves();
+        turnJustStarted=true;
     }
 
 	private void loadTextures(){
@@ -63,6 +69,11 @@ public class GameState {
     }
     //this method executes every tick
     public void runGame(SpriteBatch batch, MouseVars mouseVars){
+        if (turnJustStarted==true){
+            testAndExecuteAbilities();
+            turnJustStarted=false;
+        }
+
         //see if the player has clicked on a piece, or it trying to move a piece
         //if the player has made a valid move this method will also execute it
         processMouseInput(mouseVars);
@@ -223,8 +234,7 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
             //if the move was found to be valid
             if (validMove==true){
                 //execute the move
-
-                allPiecesOnBoard.get(selectedPiece).executeMove(loc[0],loc[1],this);
+                executeMove(loc[0],loc[1],allPiecesOnBoard.get(selectedPiece),allPiecesOnBoard.get(selectedPiece).moveset[xOffset][yOffset]);
                 //set up for the next turn
                 updateBoard();
 
@@ -517,21 +527,9 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 	}
 
 
-	public void removePiece(int x, int y){
 
 
-	public void removePiece(int x, int y){ 
-		if(piecesOnBoard[x][y]!=-1){
-			piecesOnBoard[x][y]=-1;
-			if(boardState[x][y]=1){
-				moraleTotals[0]-=allPiecesOnBoard.get(x+8*y-1).moraleCost;
-			}
-			else{
-				moraleTotals[1]-=allPiecesOnBoard.get(x+8*y-1).moraleCost;
-			}
-		}
-		//used for promote and other transform
-	}
+
 
 	public void destroyPiece(int x, int y) {
 		//placeholder for destroy effects
@@ -561,6 +559,15 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
 
     //prepare the board for the next turn
     private void updateBoard(){
+        turnJustEnded=true;
+
+
+        testAndExecuteAbilities();
+
+        turnJustEnded=false;
+
+
+
         //change who's turn it is
         if (playerTurn==1) {
             playerTurn = 2;
@@ -597,6 +604,161 @@ blocked=checkIfPieceIsBlocked(xOnBoard,yOnBoard,allPiecesOnBoard.get(a).xLocatio
         checkIfKingLives();
         ///check if any morale values have reached 0, if so end the game
         checkIfGameOver();
+
+        turnJustStarted=true;
+
+    }
+
+    //test all an abilities triggers, and if any should be triggered, trigger them
+    void testAndExecuteAbilities(){
+        //loop through all pieces
+        for(int x=0;x!=allPiecesOnBoard.size();x++) {
+            //loop through all a piece's abilities
+            for(int y=0;y!=allPiecesOnBoard.get(x).allAbilities.size();y++){
+                //triggersMet: all a piece's trigger must be met for the ability to execute
+                //every time a trigger is met, this is increased by 1, if this value
+                //is not equal to the number of triggers, the ability doesn't trigger
+                int triggersMet=0;
+                //loop through all a piece's triggers
+                for (int z=0;z!=allPiecesOnBoard.get(x).allAbilities.get(y).allTriggers.size();z++){
+                    //test to see if the trigger's condition is met
+                    if(checkAbilityTrigger(allPiecesOnBoard.get(x).allAbilities.get(y).allTriggers.get(z),allPiecesOnBoard.get(x))==true){
+                        triggersMet++;
+                    }
+                }
+                //if triggersmet is equal to the number of triggers a piece's ability has, the ability is executed
+                if (triggersMet==allPiecesOnBoard.get(x).allAbilities.get(y).allTriggers.size()){
+             executeAbilityEffect(allPiecesOnBoard.get(x).allAbilities.get(y).effect,allPiecesOnBoard.get(x));
+                }
+
+            }
+        }
+
+    }
+
+    boolean checkAbilityTrigger(AbilityTrigger trigger, Piece thisPiece){
+        boolean triggered=false;
+        switch (trigger.triggerIndex){
+
+//index 0, start of own turn
+            case 0:
+                if (playerTurn==thisPiece.playerWhoOwnsPiece){
+                    if(turnJustStarted==true) {
+                        triggered = true;
+                    }
+                }
+                break;
+//index 1 start of opponent's turn
+            case 1:
+                if (playerTurn!=thisPiece.playerWhoOwnsPiece){
+                    if(turnJustStarted==true) {
+                        triggered = true;
+                    }
+                }
+                break;
+//index 2 start of either player's turns
+            case 2:
+                if(turnJustStarted==true) {
+                    triggered = true;
+                }
+                break;
+//index 3 if the piece gets captured (on death effect)
+            case 3:
+                if (thisPiece.justCaptured==true){
+                    triggered=true;
+                }
+                break;
+
+//index 4 end of player's turn
+            case 4:
+                if (playerTurn==thisPiece.playerWhoOwnsPiece){
+                    if(turnJustEnded==true) {
+                        triggered = true;
+                    }
+                }
+                break;
+//index 5 end of opponent's turn
+            case 5:
+                if (playerTurn!=thisPiece.playerWhoOwnsPiece){
+                    if(turnJustEnded==true) {
+                        triggered = true;
+                    }
+                }
+                break;
+//index 6, end of either player's turn
+            case 6:
+                if(turnJustEnded==true) {
+                    triggered = true;
+                }
+                break;
+        }
+        return triggered;
+    }
+
+    void executeAbilityEffect(AbilityEffect effect, Piece thisPiece){
+
+        switch(effect.effectIndex){
+            case 0:
+                moraleTotals[0]++;
+
+                break;
+
+
+        }
+
+    }
+
+    void executeMove(int xTarget,int yTarget, Piece pieceMoving,int movetype){
+        System.out.println("a move has been made");
+        int blockable;
+        if (movetype>1000&&movetype<2000){
+            movetype=movetype%1000;
+            blockable=1;
+        }else{
+            blockable=0;
+        }
+
+        if (Piece.allMoveTypes[blockable][movetype].moveType!=0){
+pieceMoving.removeOneTimeMovesMoves();
+        }
+
+        switch(Piece.allMoveTypes[blockable][movetype].moveType){
+            case 0:
+//movetype 0, the empty square movetype, does nothing
+                break;
+            case 1:
+//movetype 1, the standard movetype, moves a piece to a square, if the square is occupied the piece is taken
+                capturePiece(xTarget,yTarget);
+                movePiece(pieceMoving.xLocation,pieceMoving.yLocation,xTarget,yTarget);
+                break;
+
+
+        }
+
+    }
+
+    public void capturePiece(int x, int y){
+        if(boardState[x][y]!=0){
+            allPiecesOnBoard.get(piecesOnBoard[x][y]).captured=true;
+            allPiecesOnBoard.get(piecesOnBoard[x][y]).justCaptured=true;
+            testAndExecuteAbilities();
+            allPiecesOnBoard.get(piecesOnBoard[x][y]).justCaptured=false;
+            if ( allPiecesOnBoard.get(piecesOnBoard[x][y]).isWhite==true){
+                moraleTotals[0]-=allPiecesOnBoard.get(piecesOnBoard[x][y]).moraleCost+allPiecesOnBoard.get(piecesOnBoard[x][y]).moralePenalty;
+            }else{
+                moraleTotals[1]-=allPiecesOnBoard.get(piecesOnBoard[x][y]).moraleCost+allPiecesOnBoard.get(piecesOnBoard[x][y]).moralePenalty;
+            }
+        }
+    }
+
+    public void movePiece(int currentx, int currenty, int newx, int newy){
+        //place the piece on the new square
+        piecesOnBoard[newx][newy]=piecesOnBoard[currentx][currenty];
+        boardState[newx][newy]=boardState[currentx][currenty];
+        allPiecesOnBoard.get(piecesOnBoard[currentx][currenty]).setLocation(newx,newy);
+         //remove the piece from the old square
+        boardState[currentx][currenty]=0;
+        piecesOnBoard[currentx][currenty]=-1;
 
     }
 //check if a move is blocked by another piece
