@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
+import java.util.ArrayList;
+
 //this class contains all the information a piece has
 public class Piece {
     static String vertexShader;
@@ -20,7 +22,7 @@ public class Piece {
       //the number of total pieces in the game, this must be updated along with the above array of strings
       static int pieceCounter=6;
 static int moveTypeCounter=0;
-    //boards location on screen
+    //board's location on screen
     static int boardLocationx=400;
     static int boardLocationy=50;
     //initialize all the movetypes
@@ -62,6 +64,7 @@ moveTypeCounter=0;
         defaultShader=SpriteBatch.createDefaultShader();
 
     }
+
 //the moveset of a piece, 0 means no movement on that location, >0 gives the index of the movetype in the array allMoveTypes
     int[][] moveset=new int[15][15];
     //the valid moves a piece has on a given turn
@@ -73,22 +76,61 @@ moveTypeCounter=0;
     // locations of the piece on the board
     int xLocation;
     int yLocation;
-    boolean captured=false;
+
     int moraleCost;
     int moralePenalty;
     //if the piece is currently selected by the player
     boolean selected=false;
     //colour of the piece
     boolean isWhite;
+    //1 if white owns the piece, 2 if black owns the piece
+    int playerWhoOwnsPiece=0;
+    //variables keeping track of the piece's progress
+    boolean captured=false;
+    int numberOfMovesMade=0;
+    int piecesCaptured=0;
+    int turnsSurvived=0;
+    int turnCaptured=0;
+    boolean justCaptured=false;
+    int moveTypeCapturedBy;
+    int[] moveTypesPieceHas;
+    int[] moveTypesUsed;
+
+    ArrayList<PieceAbility> allAbilities=new ArrayList<PieceAbility>();
+
 
     //initialize a piece with a moveset array and a name
     public Piece(int[][] moveset,String name){
+      //  int[] triggers={5};
+       // allAbilities.add(new PieceAbility(1,triggers,0));
+
+        int[] moveTypesPieceHas=new int[15];
+        int numberOfMoveTypesPieceHas=0;
+        //loop through a piece's moveset
         for(int x=0;x!=15;x++){
             for(int y=0;y!=15;y++){
+                //set the moveset equal to the array that was sent int=
                this.moveset[x][y]=moveset[x][y];
+
+               //check to see if the movetype that was just added has not yet been added before
+               boolean newMoveType=true;
+               for(int z=0;z!=numberOfMoveTypesPieceHas;z++) {
+                   if (moveset[x][y]==moveTypesPieceHas[z]){
+                           newMoveType=false;
+                   }
+               }
+               //if the movetype that was added is new, and is not 0, increase the numberOfMoveTypesPieceHas
+                //also add the new movetype to an array which stores which movetypes a piece has
+               if(moveset[x][y]!=0) {
+                   if (newMoveType == true) {
+                       moveTypesPieceHas[numberOfMoveTypesPieceHas] = moveset[x][y];
+                       numberOfMoveTypesPieceHas++;
+                   }
+               }
+
             }
         }
-
+        this.moveTypesPieceHas=moveTypesPieceHas;
         this.name=name;
         setImage();
         //pieceImage=new Texture(name+".png");
@@ -104,24 +146,22 @@ moveTypeCounter=0;
         yLocation=y;
 
     }
-//execute a move
-    void executeMove(int xTarget,int yTarget,GameState state){
-   //find the location of the move in the 15*15 moveset array
-        int xOffset=xTarget-xLocation+7;
-        int yOffset=yTarget-yLocation+7;
-        //find what type of move the piece is doing
-        int movetype=moveset[xOffset][yOffset];
-        int blockable;
-        if (movetype>1000&&movetype<2000){
-            movetype=movetype%1000;
-blockable=1;
-        }else{
-            blockable=0;
+
+//this method is called when a piece moves, if they have any moves that can only be used as their first turn
+    //they are no longer usable
+    void removeOneTimeMovesMoves(){
+        for(int x=0;x!=15;x++){
+            for(int y=0;y!=15;y++){
+               int blockable=0;
+                if (moveset[x][y]>1000&&moveset[x][y]<2000){
+                    blockable=1;
+                }
+                int movetype=moveset[x][y]%1000;
+                if (allMoveTypes[blockable][movetype].oneTimeUse==true){
+                    moveset[x][y]=0;
+                }
+            }
         }
-        //execute the move
-        allMoveTypes[blockable][movetype].executeMove(xTarget,yTarget,xLocation,yLocation,state);
-//the piece is no longer selected, as it has executed a move
-        selected=false;
     }
 
     void select(){
@@ -144,7 +184,11 @@ sprite=new Sprite(pieceImage);
 
     void setColour(boolean isWhite){
         this.isWhite=isWhite;
-
+if (isWhite==true){
+    playerWhoOwnsPiece=1;
+}else{
+    playerWhoOwnsPiece=2;
+}
         if (isWhite==true){
 
         }else{
@@ -152,7 +196,7 @@ sprite=new Sprite(pieceImage);
         }
     }
 
-    void capture(){
+    void capture(GameState state){
         captured=true;
     }
     //used for opponent's pieces, currently used for black pieces, this method ensures pieces like pawns move in the
