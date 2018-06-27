@@ -11,7 +11,10 @@ int requiredNumber;
     public AbilityTrigger(int triggerIndex){
 this.triggerIndex=triggerIndex;
     }
-
+public AbilityTrigger(int triggerIndex, int requiredNumber){
+    this.triggerIndex=triggerIndex;
+    this.requiredNumber=requiredNumber;
+}
 
 
 }

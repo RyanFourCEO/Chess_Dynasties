@@ -112,8 +112,8 @@ calculateMorale();
 //load all pieces currently in the game
     void loadAllPieces(){
         for (int x=0;x!=Piece.pieceCounter;x++) {
-            allPieces.add(new Piece(moveset, Piece.allPieces[x]));
-            allPieces.get(allPieces.size()-1).setMoraleValues(Piece.allMorales[x],0);
+            System.out.println(Piece.allPieces[x]+" this is the issue");
+            allPieces.add(new Piece(Piece.allPieces[x],true));
         }
         }
 //load the army file of the player
@@ -135,6 +135,7 @@ calculateMorale();
             armyPiece[y][x]=separated[counter++];
         }
     }
+    calculateMorale();
     }
 //draw all graphics
     void drawAll(SpriteBatch batch,MouseVars mouseVars){
@@ -198,7 +199,13 @@ if (indexToDrawFrom>allPieces.size()){
     //draw nothing
 }else{
     //loop through pieces and draw them
-    for(int x=indexToDrawFrom;x!=indexToDrawFrom+allPieces.size();x++){
+    int numberOfPiecesToDraw=0;
+    if ((allPieces.size()-indexToDrawFrom)>(pageX*pageY)){
+      numberOfPiecesToDraw=10;
+    }else{
+        numberOfPiecesToDraw=allPieces.size()%(pageX*pageY);
+    }
+    for(int x=indexToDrawFrom;x!=indexToDrawFrom+numberOfPiecesToDraw;x++){
         allPieces.get(x).drawSpecificLoc(batch,60,500+60*xLocation,450-60*yLocation);
         if (xLocation==pageX-1){
             xLocation=0;

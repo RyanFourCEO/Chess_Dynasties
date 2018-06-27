@@ -1,0 +1,22 @@
+﻿cost,name,ability,movement,movement notation,lore,art,Ability notation,rarity,special class
+10,Pawn,,"1 orthogonally forward only to move, 1 diagonally forward only to attack, may move exactly 2 orthogonally forward from start","2|1|0|0|0|0|0|0|0|4
+1|1|0|0|0|0|0|0|0|2
+1|0|1|0|0|0|0|0|1|3",,Yes,20:Queen|0,▪Common,Promoter
+30,Knight,,Knight move (1/2),1|2|1|1|1|1|1|1|1|1|1001,,Yes,,▪Common,
+30,Bishop,,Infinity diagonal,7|0|1|0|1|0|1|0|1|1,,Yes,,▪Common,
+50,Rook,,Infinity orthogonal,7|1|0|1|0|1|0|1|0|1,,Yes,,▪Common,
+90,Queen,,Infinity in any direction,7|1|1|1|1|1|1|1|1|1,,Yes,,▪Common,
+0,King,May castle (specifics TBD). Lose 200 morale on death.,1 in any direction,1|1,,Yes,5:200|1,▪Common,Royal
+50,Advisor,May swap places with the ally King.,1 orthogonal,1|1|0|1|0|1|0|1|0|1,"A member of the Royal Council, he is sworn to uphold the King's interests at all costs.",Yes,21|10,●Rare,
+55,Ceasefire Armaments,Sacrifice Artillery to summon ally pawns on 1/2 strictlcy forward and 2/3 sideways forward.,No movement,"1|2|1|0|0|0|0|0|0|1|20
+2|3|0|1|0|0|0|0|1|0|20
+1|16","""Detente' is just a fancy word for 'Inevitable Betrayal'.""                       - Pragmatic Politics, Edition VII",yes,4:Pawn|8:16,,
+90,Bait,"When Bait is killed, create a [Dragon? some big primal beast thing] in the square behind it",1 in any direction,"1|1
+1|0|0|0|0|1|0|0|0|21","some blood sacrifice shit, blood attracting animals                         art: man bleeding (self inflicted?) w/shadow of dragon over him, cowering in fear",yes,4:Rook|1,✚Epic,
+25,Cannon,"Can't act for the first 2 turns, stacking with frontline penalty.","3 orthogonal up and down, must leap over a piece to attack. Infinity sideways, must leap over a piece to attack.Can leap over 1 piece when moving","3|1|0|0|0|1|0|0|0|7
+7|0|0|1|0|0|0|1|0|7","""Once, we claimed the siege magician as the end of warfare. Heed my warning! This shall be no different!""                                     - Philosopher-King Mansa II",Yes,14:2|5,▪Common,
+0,Conscript,"at the start of the game, you lose 40 morale",1 forward,1|1|1|0|0|0|0|0|1|1,He is not quite willing to participate in the bloodshed.,yes,5:40|5:0,,Promoter
+9,Hired Blade,May not target the King.,"1 forward, may move exactly 2 orthogonally forward from start","2|1|0|0|0|0|0|0|0|4
+1|1|0|0|0|0|0|0|0|1","Will do what he needs to get by, but that's about it. You didn't pay him much of anything.",yes,6:999|5,▪Common,Promoter
+50,Slime,"If this piece is attacked, the attacker is rooted (can't move or be moved) for 3 turns.",1 in any direction,1|1,Fighting slimes is a messy endeavor. Hope you're ready to clean up afterwards.,Yes,3:3:1|1,●Rare,
+30,Warship,can teleport to any unoccupied space not adjacent to a piece,1 orthogonal only to attack w/o moving,1|1|0|1|0|1|0|1|0|5,,yes,22|10,,

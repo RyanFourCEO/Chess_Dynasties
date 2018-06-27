@@ -78,6 +78,10 @@ sprite1.setCenter(190,150);
 //The main loop of the game, all graphics will be drawn here, and game logic is executed here
 	@Override
 	public void render () {
+
+
+
+
 		//collect the mouse variable for this
 mouseVars.setMouseVariables();
 
