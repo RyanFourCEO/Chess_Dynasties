@@ -54,10 +54,15 @@ boolean pieceInArmySelected=false;
     int selectedPieceLocation[]=new int[2];
 //if a piece in the collection is selected
 boolean pieceInCollectionSelected=false;
+
+//the last piece selected by the user, show stuff based on what this piece is
+int lastPieceUserSelected=0;
+
 //the name of the piece in the collection that is selected
 String selectedCollectionPiece="";
 //constructor, called once when the player enters the armyMaker
     public ArmyMaker(){
+        Piece.InitAllMoveTypes();
         //load all pieces in the game so they may be added to the army and drawn
 loadAllPieces();
 //load the current army file
@@ -100,7 +105,7 @@ calculateMorale();
     void loadTextures(){
         font=new BitmapFont();
         font.setColor(Color.BLACK);
-        boardImage=new Texture("chessBoard.png");
+        boardImage=new Texture("Board.png");
         TextureRegion boardRegion=new TextureRegion(boardImage,0,(int)(boardImage.getHeight()*0.25),boardImage.getWidth(),(int)(boardImage.getHeight()*0.25));
 
        // boardImage.dispose();
@@ -112,7 +117,6 @@ calculateMorale();
 //load all pieces currently in the game
     void loadAllPieces(){
         for (int x=0;x!=Piece.pieceCounter;x++) {
-            System.out.println(Piece.allPieces[x]+" this is the issue");
             allPieces.add(new Piece(Piece.allPieces[x],true));
         }
         }
@@ -145,7 +149,30 @@ calculateMorale();
         drawArmyPieces(batch,mouseVars);
         //draw the collection
         drawCollectionPieces(batch,mouseVars);
+        //draw PieceInfo
+        drawPieceInfo(batch);
+}
+//draw pieceInfo, currently just a potato way to show a piece's moveset
+void drawPieceInfo(SpriteBatch batch){
+    String line="";
+    String spacing="  ";
+    for(int y=14;y>=0;y--){
+        for(int x=14;x>=0;x--){
 
+            if (x==7&&y==7){
+                line+="x  ";
+            }else {
+                if (String.valueOf(Piece.moveTypeIndexes[allPieces.get(lastPieceUserSelected).staticMoveset[x][y] % 1000]).length()==2){
+                    spacing=" ";
+                }else{
+                    spacing="  ";
+                }
+                line += String.valueOf(Piece.moveTypeIndexes[allPieces.get(lastPieceUserSelected).staticMoveset[x][y] % 1000]) + spacing;
+            }
+        }
+        font.draw(batch,line,20,600-15*(14-y));
+        line="";
+    }
 }
 //loop through all army pieces and draw them
 void drawArmyPieces(SpriteBatch batch, MouseVars mouseVars){
@@ -293,6 +320,16 @@ for(int x=0;x!=allPieces.size();x++){
             if (loc[0]>=0&&loc[1]>= 0&&loc[0]<=gridx&&loc[1]<=gridy) {
                     //if they haven't already selected a piece, the player can pick up a new piece
                     if (pieceInArmySelected ==false&&pieceInCollectionSelected==false) {
+                        //find the index of the piece the user selected and store it is lastPieceUserSelected, this
+                        //has no importance to the actual code going on here, the variable "lastPieceUserSelected"
+                        //is only used to show the user information about the piece they selected
+                        if (armyPiece[loc[1]][loc[0]].length()>0){
+                            for(int x=0;x!=allPieces.size();x++){
+                                if (allPieces.get(x).name.equals(armyPiece[loc[1]][loc[0]])){
+                                    lastPieceUserSelected=x;
+                                }
+                            }
+                        }
                         //set the location of the selected piece
                         selectedPieceLocation[0]=loc[0];
                         selectedPieceLocation[1]=loc[1];
@@ -340,6 +377,7 @@ if (pieceInArmySelected==true) {
                     if (index < allPieces.size()) {
                         //set that a piece in the collection has been selected, and set it's name
                         selectedCollectionPiece = allPieces.get(index).name;
+                        lastPieceUserSelected=index;
                         pieceInCollectionSelected = true;
                     }
                 }

@@ -5,13 +5,23 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-
 import java.util.ArrayList;
+//temporary for clipboard pasting stuff
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+
+
 
 //this class deals with all the logic of a live game.
 public class GameState {
+    //clipboard copying stuff, temporary
+    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
     //holds morale of both players,index 0=player 1(white)index 1=player 2(black)
     int[] moraleTotals=new int[2];
+    //tells the game when the board should be flipped, this changes the functionality
+    //of the findSquareMouseIsOn method, and the drawAll Method, when all the piece's get drawn
+     boolean flipBoard=false;
     //playerturn tells who's turn it is, 1=player 1's turn(white), 2=player 2's turn(black)
      int playerTurn=1;
      //tells if a piece is selected by a player(they have clicked it)
@@ -21,6 +31,11 @@ public class GameState {
      int selectedPieceLocy;
      //the index of the selected piece in the array of pieces
      int selectedPiece;
+     //the index of the last piece that was selected, this is used to display that piece's
+     //moveset and abilities to the user. This allows the user to click on a piece to have it's information
+     //displayed
+     //displayed
+     int pieceLastSelected;
      //booleans for the state of the game
      boolean whiteWins=false;
      boolean blackWins=false;
@@ -37,6 +52,10 @@ public class GameState {
 
      Texture boardImage;
      Sprite sprite;
+     //the variables controlling the board
+     int boardSize=618;
+     int boardPosX=331;
+     int boardPosY=0;
 
      //font object for writing morale values to the screen
      BitmapFont font;
@@ -59,10 +78,8 @@ public class GameState {
         loadTextures();
         initFont();
         Piece.InitAllMoveTypes();
-        Piece.initShaders();
         loadArmies();
         setBoard(allPiecesOnBoard);
-
         turnJustStarted=true;
         testAndExecuteAbilities();
         turnJustStarted=false;
@@ -72,11 +89,12 @@ public class GameState {
     }
 
 	private void loadTextures(){
-        boardImage=new Texture("chessBoard.png");
+        boardImage=new Texture("Board.png");
         sprite=new Sprite(boardImage);
-        sprite.setSize(480,480);
-        sprite.setCenter(640,290);
+        sprite.setSize(618,618);
+        sprite.setCenter(640,309);
     }
+
     //this method executes every tick
     public void runGame(SpriteBatch batch, MouseVars mouseVars){
 
@@ -254,6 +272,13 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
         if (mouseVars.mouseClicked==true) {
             //if loc is actually on the board, we have to test to see if the square is occupied
             if (loc[0] >= 0 && loc[1] >= 0&&loc[0]<=7&&loc[1]<=7) {
+
+                //this happens so that the player can click on pieces and see what they are, it has no
+                //relevance on the code occurring here
+                if (boardState[loc[0]][loc[1]]!=0){
+                    pieceLastSelected=piecesOnBoard[loc[0]][loc[1]];
+                }
+
                 //if the square is a piece the player owns, they might be able to pick it up
                 if (boardState[loc[0]][loc[1]] == playerTurn) {
                     //if they haven't already selected a piece, the player can pick up a new piece
@@ -373,10 +398,10 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
 		if(piecesOnBoard[x][y]!=-1){ //used for promote
 			removePiece([x][y]);
 
-	
+
 	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
 		if(piecesOnBoard[x][y]!=-1){ //used for promote
-			removePiece([x][y]); 
+			removePiece([x][y]);
 			createPieceInEmpty([x][y], equalsIgnoreCase(pieceName));
 		}
 	}
@@ -385,8 +410,8 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
 
 
 
-	
-	
+
+
 
     //prepare the board for the next turn
     private void updateBoard(){
@@ -416,12 +441,12 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
 
 
 
-		
+
 		//TODO: Promotion Logic
 		//intent: at the start of your turn your pieces promote by being on the back row
-		
-		
-		
+
+
+
 
         //reset the valid moves arrays and find the new set of valid moves
 
@@ -445,7 +470,7 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
         setAllMovesInvalid();
         findAllValidMoves();
     }
-//loop through all pieces and increase their counters, this will reduce the time of their status effects and increase the
+    //loop through all pieces and increase their counters, this will reduce the time of their status effects and increase the
 //number of turns they have survived
     private void updatePieceCounters(){
         //loop through all pieces and update their counters
@@ -500,11 +525,9 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
 //index 0, if the piece reaches the opposite side of the board
             case 0:
                 if (thisPiece.isWhite==true) {
-                    System.out.println(thisPiece.yLocation+" excuse me");
+
                     if (thisPiece.yLocation==7){
-                        System.out.println("yeah this never happens");
                         triggered=true;
-                        System.out.println("uh what the");
                     }
                 }else{
                     if (thisPiece.yLocation==0){
@@ -646,7 +669,6 @@ thisPiece.addStatusEffect(Integer.valueOf(effect.effectVar2),Integer.valueOf(eff
             break;
 //give status to piece which just attacked
         case 3:
-            System.out.println(" helllllllloooooooooooo");
 thisPiece.pieceTargetedBy.addStatusEffect(Integer.valueOf(effect.effectVar2),Integer.valueOf(effect.effectVar1));
             break;
 //summon a piece on locations marked with movetype 20/21
@@ -666,7 +688,6 @@ thisPiece.pieceTargetedBy.addStatusEffect(Integer.valueOf(effect.effectVar2),Int
             break;
 //lose x morale on death effect
         case 5:
-            System.out.println("heyo");
             if (thisPiece.isWhite==true){
                 moraleTotals[0]-=Integer.valueOf(effect.effectVar1);
             }else{
@@ -680,7 +701,6 @@ thisPiece.pieceTargetedBy.addStatusEffect(Integer.valueOf(effect.effectVar2),Int
             break;
 //transform ability
         case 20:
-            System.out.println(effect.effectVar1+" hel");
             transformPiece(effect.effectVar1,thisPiece.xLocation,thisPiece.yLocation,thisPiece.isWhite);
             break;
             //gain the swap places with ally move on the location of ally king aka become able to swap with ally king
@@ -722,6 +742,10 @@ effect.inEffect=false;
     }
 
     void executeMove(int xTarget,int yTarget, Piece pieceMoving,int movetype){
+        String theString=String.valueOf(pieceMoving.xLocation)+String.valueOf(pieceMoving.yLocation)+String.valueOf(xTarget)+String.valueOf(yTarget);
+        StringSelection selection = new StringSelection(theString);
+        clipboard.setContents(selection, selection);
+
         //find if the movetype is blockable (if it's greater than 1000 it is blockable
         int blockable;
         if (movetype>1000&&movetype<2000){
@@ -779,6 +803,68 @@ pieceMoving.removeOneTimeMovesMoves();
 
         }
 
+    }
+//make a move based on a String containing the location, and the destination of the move
+//example string 1765, where (1,7) is the initial location of the piece, and (6,5) is the location
+//the piece is moving to
+    void testThenExecuteMove(String move){
+        //the String must be exactly 4 characters long or it won't execute
+        if (move.length()==4) {
+            //array storing the four integers
+            int[] integers=new int[4];
+            //the string may be 4 character but be invalid "12t2" for example
+            boolean validInputString=true;
+            //the four integers
+            int currentPiecex;
+            int currentPiecey;
+            int moveLocx;
+            int moveLocy;
+            //loop through the 4 characters
+            for (int x = 0; x != 4; x++) {
+                //test if the character is a number form 0-7
+                if (StringUtils.isValidNumber(move.charAt(x))){
+                    //if it is, put it's integer value into the integers array
+                   integers[x]=Integer.valueOf(String.valueOf(move.charAt(x)));
+                }else{
+                    //if it's not valid the string is set to invalid and no further things of substance
+                    //will execute
+                    validInputString=false;
+                }
+            }
+            //put the array values into individual integers, purely for readability
+            currentPiecex=integers[0];
+            currentPiecey=integers[1];
+            moveLocx=integers[2];
+            moveLocy=integers[3];
+           //if the input string was valid, continue on
+if (validInputString==true) {
+    //if the input string was valid, but the move is illegal on the board, it won't occur
+    boolean validMove=false;
+    //find the index of the piece moving
+    int indexOfPieceMoving = piecesOnBoard[currentPiecex][currentPiecey];
+    //find the location of the move in the 15x15 moveset array
+    int moveLocXOnMoveset=moveLocx+7-currentPiecex;
+    int moveLocYOnMoveset=moveLocy+7-currentPiecey;
+    //see if the move is valid
+    if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset]==true){
+        validMove=true;
+    }
+    //find the movetype the piece is using
+    int movetypePieceUsing=allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
+   //if the move is valid, execute the move
+    if (validMove==true){
+        executeMove(moveLocx,moveLocy,allPiecesOnBoard.get(indexOfPieceMoving),movetypePieceUsing);
+    }
+
+}
+
+        }
+
+
+       // if (allPiecesOnBoard.get(piecesOnBoard).validMoves[xOffset][yOffset] == true) {
+        //    validMove = true;
+       // }
+        //TODO
     }
 //the method that captures a piece using a movetype
     public void capturePieceWithMove(int x, int y, Piece pieceMoving,int movetypeUsed){
@@ -1152,10 +1238,10 @@ if (boardState[moveTargetx][moveTargety]==0){
         int xLoc=-1;
         int yLoc=-1;
         //if the cursor is within the bounds of the board
-        if (mousex>Piece.boardLocationx&&mousex<Piece.boardLocationx+480) {
+        if (mousex>boardPosX&&mousex<boardPosX+618) {
             for (int x = 0; x != 8; x++) {
                 //if the mouse position on screen is greater than the square's leftmost point
-                if (mousex > Piece.boardLocationx + 60 * x) {
+                if (mousex > boardPosX + (int)(77.25 * x)) {
                     xLoc++;
                 } else {
                     break;
@@ -1163,10 +1249,10 @@ if (boardState[moveTargetx][moveTargety]==0){
             }
         }
         //if the cursor is within the bounds of the board
-    if (mousey>Piece.boardLocationy&&mousey<Piece.boardLocationy+480) {
+    if (mousey>boardPosY&&mousey<boardPosY+618) {
         for (int x = 0; x != 8; x++) {
             //if the mouse position on screen is greater than the square's bottommost point
-            if (mousey > Piece.boardLocationy + 60 * x) {
+            if (mousey > boardPosY + (int)(77.25 * x)) {
                 yLoc++;
             } else {
                 break;
@@ -1176,8 +1262,13 @@ if (boardState[moveTargetx][moveTargety]==0){
     }
     //set the loc array to the locations found
     int[] loc=new int[2];
-        loc[0]=xLoc;
-        loc[1]=yLoc;
+        if (flipBoard==true){
+            loc[0] = 7-xLoc;
+            loc[1] = 7-yLoc;
+        }else {
+            loc[0] = xLoc;
+            loc[1] = yLoc;
+        }
     return loc;
 }
     //loop through all pieces and set all their possible moves as invalid
@@ -1230,11 +1321,19 @@ if (boardState[moveTargetx][moveTargety]==0){
         sprite.draw(batch);
 
         String draw="";
-        //draw the morale totals on screen
-        draw="White's Morale Total: "+String.valueOf(moraleTotals[0]);
-        font.draw(batch,draw,600,25);
-        draw="Black's Morale Total: "+String.valueOf(moraleTotals[1]);
-        font.draw(batch,draw,600,555);
+        //draw the morale totals on screen, if flipBoard is true, draw the morale totals in opposite locations
+        //so the morale totals are always next to the proper army
+        if (flipBoard==false) {
+            draw = "Morale " + String.valueOf(moraleTotals[0]);
+            font.draw(batch, draw, 1000, 50);
+            draw = "Morale " + String.valueOf(moraleTotals[1]);
+            font.draw(batch, draw, 1000, 580);
+        }else{
+            draw = "Morale " + String.valueOf(moraleTotals[0]);
+            font.draw(batch, draw, 1000, 580);
+            draw = "Morale " + String.valueOf(moraleTotals[1]);
+            font.draw(batch, draw, 1000, 50);
+        }
 //if the game is over, draw a message saying who won
         if (gameOver==true){
             if (blackWins==true){
@@ -1244,15 +1343,45 @@ if (boardState[moveTargetx][moveTargety]==0){
                 draw="White Wins!";
             }
 
-            font.draw(batch,draw,600,600);
+            font.draw(batch,draw,1000,200);
         }
 
         //loop through all pieces that have not been captured and draw them
         for (int x = 0; x != allPiecesOnBoard.size(); x++) {
             if (allPiecesOnBoard.get(x).captured==false) {
-                allPiecesOnBoard.get(x).draw(batch);
+                int xPosOfPiece;
+                int yPosOfPiece;
+                if (flipBoard==true){
+                    xPosOfPiece = (int) ((7-allPiecesOnBoard.get(x).xLocation) * 77.25 + 38.625) + boardPosX;
+                    yPosOfPiece = (int) ((7-allPiecesOnBoard.get(x).yLocation) * 77.25 + 38.625) + boardPosY;
+                }else {
+                    xPosOfPiece = (int) (allPiecesOnBoard.get(x).xLocation * 77.25 + 38.625) + boardPosX;
+                    yPosOfPiece = (int) (allPiecesOnBoard.get(x).yLocation * 77.25 + 38.625) + boardPosY;
+                }
+                allPiecesOnBoard.get(x).draw(batch,boardPosX,boardPosY,xPosOfPiece,yPosOfPiece);
             }
         }
+        //this draws the moveset of the piece to the screen
+        String line="";
+        String spacing="  ";
+        for(int y=14;y>=0;y--){
+    for(int x=14;x>=0;x--){
+
+                if (x==7&&y==7){
+                    line+="x  ";
+                }else {
+                    if (String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]).length()==2){
+                        spacing=" ";
+                    }else{
+                        spacing="  ";
+                    }
+                    line += String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]) + spacing;
+                }
+                }
+            font.draw(batch,line,20,600-15*(14-y));
+            line="";
+}
+
     }
     //delete graphics objects, used when the game is being reset to avoid leaking memory
     void deleteGraphics(){

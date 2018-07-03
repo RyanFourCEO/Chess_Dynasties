@@ -9,25 +9,23 @@ import java.util.ArrayList;
 
 //this class contains all the information a piece has
 public class Piece {
-    static String vertexShader;
-    static String fragmentShader;
-    static ShaderProgram shaderProgram;
-    static ShaderProgram defaultShader;
-    //static array of all movetypes
-    static PieceMoveType[][] allMoveTypes=new PieceMoveType[2][12];
-     //all the pieces in the game, any time a piece gets added, that pieces name must be added here
-      static String[] allPieces={"Rook","Pawn","Bishop","Queen","King","Knight","Advisor","Ceasefire Armaments","Bait","Cannon","Conscript","Hired Blade","Slime","Warship"};
+    static final String vertexShader=Gdx.files.internal("VertShader.txt").readString();
+    static final String fragmentShader=Gdx.files.internal("FragmentShader.txt").readString();
+    static ShaderProgram shaderProgram=new ShaderProgram(vertexShader,fragmentShader);
+    static ShaderProgram defaultShader=SpriteBatch.createDefaultShader();
+      //static array of all movetypes
+      static final PieceMoveType[][] allMoveTypes =new PieceMoveType[2][12];
+      //all the pieces in the game, any time a piece gets added, that pieces name must be added here
+      static final String[] allPieces={"Rook","Pawn","Bishop","Queen","King","Knight","Advisor","Ceasefire Armaments","Bait","Cannon","Conscript","Hired Blade","Slime","Warship"};
       //the number of total pieces in the game, this must be updated along with the above array of strings
-      static int pieceCounter=14;
+      static final int pieceCounter=14;
       static int moveTypeCounter=0;
       //stores the index number of any movetype. A movetype may be the 5th index in the allMoveTypes array, but
       //it may be the 17th movetype on the "movetypes" file. This array is used to connect those two numbers
       //i.e moveTypeIndexes[5]=17 This is only used when loading in pieces from files, a file may say to use movetype
       //17 from the file, when the game currently only has 9 movetypes implemented
-      static int[] moveTypeIndexes=new int[12];
-    //board's location on screen
-    static int boardLocationx=400;
-    static int boardLocationy=50;
+      static final int[] moveTypeIndexes=new int[12];
+
     //initialize all the movetypes
     static void InitAllMoveTypes(){
 moveTypeCounter=0;
@@ -107,30 +105,30 @@ moveTypeCounter=0;
         moveTypeCounter++;
     }
 
-    static void initShaders(){
-        vertexShader=Gdx.files.internal("VertShader.txt").readString();
-        fragmentShader=Gdx.files.internal("FragmentShader.txt").readString();
-        shaderProgram=new ShaderProgram(vertexShader,fragmentShader);
-        defaultShader=SpriteBatch.createDefaultShader();
-
-    }
-
 //the StaticMoveset of a piece, 0 means no movement on that location, >0 gives the index of the movetype in the array allMoveTypes
-//this array never changes
+//this array will change very little
     int[][] staticMoveset=new int[15][15];
-//the moveset of a piece that can change, changes based on abilities and other things
+//the moveset of a piece that can change, changes based on abilities and maybe other things in the future
 //the changeableMoveSet trumps the moveset, if both moveset arrays contain a move on a square, the changeable moveset
-//array will be used over the moveset
+//movetype will be used over the moveset
     int[][] changeableMoveset=new int[15][15];
 //the moveset array, this array combines the staticMoveset and the changeableMoveset array into one
+//at the start of each turn
     int[][] moveset =new int[15][15];
     //the valid moves a piece has on a given turn
     boolean[][] validMoves=new boolean[15][15];
+
+
     String name;
-    //a pieces graphics objects
+
+    String abilityDescription;
+
+    String loreWriting;
+
+    //a piece's graphics objects
     Texture pieceImage;
     Sprite sprite;
-    // locations of the piece on the board
+    //locations of the piece on the board
     int xLocation;
     int yLocation;
 
@@ -161,9 +159,9 @@ moveTypeCounter=0;
     boolean justTargeted=false;
     //which piece is targeting this piece?
     Piece pieceTargetedBy;
-
+    //did this piece just use a movetype
     boolean justUsedMovetype=false;
-
+    //index of the movetype just used
     int movetypeUsed=0;
 
     int moveTypeCapturedBy;
@@ -335,6 +333,8 @@ moveTypeCounter=0;
         }
         moraleCost=Integer.valueOf(pieceVariablesFromFile[0]);
         this.name=pieceVariablesFromFile[1];
+        abilityDescription=pieceVariablesFromFile[2].replace("lineSeparatorString","\n");
+        loreWriting=pieceVariablesFromFile[5].replace("lineSeparatorString","\n");
 //pieceVariablesFromFile[4];
 
 
@@ -356,7 +356,6 @@ moveTypeCounter=0;
 
 //loop through all ability notation lines and set the piece's abilities
         for(int x=0;x!=y+1;x++){
-            System.out.println(name+" yeah");
             if (abilityLines[x].length()>0) {
                 setAbility(abilityLines[x]);
             }
@@ -663,7 +662,6 @@ for example, a rook with north=true but all other booleans false would only be a
 //if the status is timebased it's duration is decreased
             if(allStatuses.get(x).timeBased==true){
                 allStatuses.get(x).statusEffectLength--;
-                System.out.println( allStatuses.get(x).statusEffectLength+" test");
             }
 //if the duration reaches 0 the status is set to be removed
             if(allStatuses.get(x).statusEffectLength==0){
@@ -791,13 +789,14 @@ for example, a rook with north=true but all other booleans false would only be a
     void unselect(){
         selected=false;
 }
-//set the colour and graphics of a piece
+    //set the colour and graphics of a piece
     void setImage(){
 
         String filePath="pieces\\";
         filePath+=name.replace(" ","")+".png";
-pieceImage=new Texture(filePath);
-       // pieceImage.setFilter(Texture.TextureFilter.Linear,Texture.TextureFilter.Linear);
+pieceImage=new Texture(Gdx.files.internal(filePath),true);
+//pieceImage=new Texture(Gdx.files.internal(filePath));
+        pieceImage.setFilter(Texture.TextureFilter.MipMapLinearLinear,Texture.TextureFilter.Linear);
 sprite=new Sprite(pieceImage);
 
     }
@@ -826,14 +825,14 @@ if (isWhite==true){
         }
         staticMoveset =tempMoveset;
 }
-//draw the piece to the screen
-    void draw(SpriteBatch batch){
+    //draw the piece to the screen
+    void draw(SpriteBatch batch,int boardLocationx,int boardLocationy, int xLocToDraw,int yLocToDraw){
 
-        sprite.setSize((56),(56));
+        sprite.setSize((72),(72));
         if (selected==true){
             sprite.setCenter(Gdx.input.getX(),618-Gdx.input.getY());
         }else {
-            sprite.setCenter(xLocation * 60 + 30 + boardLocationx, yLocation * 60 + 30 + boardLocationy);
+            sprite.setCenter(xLocToDraw, yLocToDraw);
         }
 if (isWhite==true) {
     sprite.draw(batch);
@@ -845,7 +844,7 @@ if (isWhite==true) {
 
 }
     }
-//draw the piece in a specific location, not the location the piece has on the board
+    //draw the piece in a specific location, not the location the piece has on the board
     void drawSpecificLoc(SpriteBatch batch,int size,int centerx,int centery){
         sprite.setSize((size),(size));
         if (selected==true){
@@ -856,8 +855,8 @@ if (isWhite==true) {
         sprite.draw(batch);
     }
 
-//delete the graphics, used when the game ends
-void deleteGraphics(){
+    //delete the graphics, used when the game ends
+    void deleteGraphics(){
         pieceImage.dispose();
 }
 

@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextArea;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -21,15 +22,14 @@ import java.util.ArrayList;
 
 public class CEOV2 extends ApplicationAdapter {
 
-	//declare constants
+	//declare constants(unused, will be removed later in all likelihood)
 	public static final int WINDOW_SIZE_X=1100;
 	public static final int WINDOW_SIZE_Y=618;
-	public static final int SQUARE_SIZE=60;
+	public static final int SQUARE_SIZE=77;
 	public static final int LINE_WIDTH=4;
 	//Declare graphics objects
 	public Menu menu;
 
-	private Stage stage;
 	SpriteBatch batch;
 	Texture img;
 	BitmapFont font;
@@ -56,21 +56,23 @@ public class CEOV2 extends ApplicationAdapter {
 	//initialization/loading of the games resources
 	@Override
 	public void create () {
-		//every area of the game will have a menu associated with it
+		//load the menu, this same menu is used for all areas of the game currently
 menu=new Menu();
-menu.loadMenu();
+        //load the menu based on the current game state (which is currently at 0)
+loadCurrentMenu();
 //mouseVars holds the mouse's variables, it's position and whether or not it is clicked
+//every time the main loop executes this class finds the variables again
         mouseVars=new MouseVars();
 
 //graphics objects are initialized
 		batch = new SpriteBatch();
-		img = new Texture("unknown.png");
+		img = new Texture(Gdx.files.internal("unknown.png"),true);
+		img.setFilter(Texture.TextureFilter.MipMapLinearNearest,Texture.TextureFilter.Linear);
 		sprite1=new Sprite(img);
-sprite1.setSize(438,385);
-sprite1.setCenter(190,150);
+sprite1.setSize(200,200);
+sprite1.setCenter(1000,379);
 		font= new BitmapFont();
 		font.setColor(Color.RED);
-
 	}
 
 
@@ -79,12 +81,9 @@ sprite1.setCenter(190,150);
 	@Override
 	public void render () {
 
-
-
-
-		//collect the mouse variable for this
+		//collect the mouse variable for this frame
 mouseVars.setMouseVariables();
-
+//System.out.println(mouseVars.mousePosx+" x y "+mouseVars.mousePosy);
 //clear the screen
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -93,9 +92,8 @@ mouseVars.setMouseVariables();
 
 		batch.draw(sprite1,sprite1.getX(),sprite1.getY(),sprite1.getWidth(),sprite1.getHeight());
 
-
 		batch.end();
-
+updateTextAreas();
 		//draw the menu objects
 batch.begin();
 menu.stage.draw();
@@ -140,6 +138,8 @@ switch (currentGameState){
 	public void resize(int width, int height){
 		//viewport.setScreenSize(width,height);
 	}
+
+
 //the menu class, creates a stage and makes buttons for whatever state the game is in
 	public class Menu {
 		//what gets drawn to the screen, it holds all UI elements, just buttons for now
@@ -148,6 +148,9 @@ switch (currentGameState){
 		ArrayList<ClickListener> allClickListeners=new ArrayList<ClickListener>();
 		//array of buttons
 		ArrayList<TextButton> allButtons=new ArrayList<TextButton>();
+		//array of textfields
+	    ArrayList<TextArea> allTextAreas =new ArrayList<TextArea>();
+	    int[] textAreaIndexes=new int[10];
 		Skin skin;
 
 		public Menu(){
@@ -161,7 +164,7 @@ switch (currentGameState){
 			Gdx.input.setInputProcessor(stage);
 		}
 //load all button code into an array to be given to whatever buttons we wish
-		 void loadClickListeners(){
+void loadClickListeners(){
 			//index 0
 			 //start game button code
 			allClickListeners.add(new ClickListener(){
@@ -174,7 +177,7 @@ switch (currentGameState){
 					//state set to 1, which means game is currently being played
 					currentGameState =1;
 					//load the menu objects for the current stat
-					menu.loadMenu();
+					loadCurrentMenu();
 				}
 			});
 			//index 1
@@ -184,7 +187,7 @@ switch (currentGameState){
 				 public void clicked(InputEvent event, float x, float y){
 				 	armyMaker=new ArmyMaker();
 				 	currentGameState=2;
-				 	menu.loadMenu(
+				 	loadCurrentMenu(
 					);
 				 }
 			 });
@@ -206,7 +209,7 @@ switch (currentGameState){
 				 	//delete objects no longer in use
 				 	setAllObjectsNull();
 					 currentGameState=0;
-					 loadMenu();
+					 loadCurrentMenu();
 				 }
 			 });
 			 //index 4
@@ -269,16 +272,54 @@ switch (currentGameState){
 				 }
 			 });
 
+			 //index 9
+			 //flip board button
+	allClickListeners.add(new ClickListener(){
+		@Override
+		public void clicked(InputEvent event, float x, float y){
+			if (game!=null) {
+				game.state.flipBoard=!game.state.flipBoard;
+			}
+		}
+	});
 
-
+	         //index 10
+	         //execute move based on notation
+	//flip board button
+	allClickListeners.add(new ClickListener(){
+		@Override
+		public void clicked(InputEvent event, float x, float y){
+			if (game!=null) {
+				game.state.testThenExecuteMove(allTextAreas.get(2).getText());
+				allTextAreas.get(2).setText("");
+			}
+		}
+	});
 		 }
+
+
+public void addTextArea(int width,int height, int positionx,int positiony,int index){
+allTextAreas.add(new TextArea("",skin,"default"));
+allTextAreas.get(allTextAreas.size()-1).setPosition(positionx,positiony);
+allTextAreas.get(allTextAreas.size()-1).setSize(width,height);
+stage.addActor(allTextAreas.get(allTextAreas.size()-1));
+textAreaIndexes[allTextAreas.size()-1]=index;
+}
+
+public void addTextArea(String text, int width,int height, int positionx,int positiony,int index){
+	allTextAreas.add(new TextArea(text,skin,"default"));
+	allTextAreas.get(allTextAreas.size()-1).setPosition(positionx,positiony);
+	allTextAreas.get(allTextAreas.size()-1).setSize(width,height);
+	stage.addActor(allTextAreas.get(allTextAreas.size()-1));
+	textAreaIndexes[allTextAreas.size()-1]=index;
+}
 //add a button to the menu with the following variables deciding all it's factors
-	//buttonText is the text the button displays
-	//height and width are the size of the button
-	//positionx and y are the positions of the button on the stage, and thus on the screen
-	//buttonIndex is the index in the array of clickListeners, this variable assigns the button
-	//to execute the code contained in the clickListener
-		public void addButton(String buttonText,int width, int height, int positionx, int positiony, int buttonIndex){
+//buttonText is the text the button displays
+//height and width are the size of the button
+//positionx and y are the positions of the button on the stage, and thus on the screen
+//buttonIndex is the index in the array of clickListeners, this variable assigns the button
+//to execute the code contained in the clickListener
+public void addButton(String buttonText,int width, int height, int positionx, int positiony, int buttonIndex){
 
 
 			//"reset board" button initialized with the selected skin
@@ -292,64 +333,127 @@ switch (currentGameState){
 			stage.addActor(allButtons.get(allButtons.size()-1));
 
 		}
-//load the menu as specified by the currentGameState
-		void loadMenu(){
-			//clear the array of buttons
-			allButtons.clear();
-			//remove all UI elements from the stage
-			stage.clear();
-			//load the menu based on the current game state
-			//0=main menu, 1=game menu, 2=army building menu
-if (currentGameState==0){
-	loadMainMenu();
-}
-
-if (currentGameState==1){
-	loadGameMenu();
-}
-
-if (currentGameState==2){
-	loadArmyBuildingMenu();
-}
-
-
-		}
-//load the main menu's buttons
-void loadMainMenu(){
-	menu.addButton("Start Game",200,30,100,500,0);
-	menu.addButton("Army Building",200,30,100,400,1);
-}
-//load the game menu's buttons
-void loadGameMenu(){
-	menu.addButton("Reset Board",200,30,100,400,2);
-	menu.addButton("Return to Main Menu",200,30,100,500,3);
-}
-//load the army building menu's buttons
-void loadArmyBuildingMenu(){
-	menu.addButton("Return to Main Menu",200,30,100,500,3);
-    menu.addButton("increase page",150,30,500,500,4);
-	menu.addButton("decrease page",150,30,700,500,5);
-	menu.addButton("Save Army",150,30,900,130,6);
-	menu.addButton("army 1",150,30,400,15,8);
-	menu.addButton("army 2",150,30,570,15,7);
-}
-//set all objects to null so we can enter a new part of the game without old parts being loaded
-void setAllObjectsNull(){
-			if (game!=null) {
-				game.state.deleteGraphics();
-				game=null;
-			}
-			if (armyMaker!=null){
-				armyMaker.deleteGraphics();
-				armyMaker=null;
-			}
-}
 
 		void dispose(){
 			skin.dispose();
 			stage.dispose();
 		}
 	}
+
+
+
+	//load the menu as specified by the currentGameState
+	void loadCurrentMenu(){
+		//clear the array of buttons
+		menu.allButtons.clear();
+		//clear the array of textAreas
+		menu.allTextAreas.clear();
+		//remove all UI elements from the stage
+		menu.stage.clear();
+		//load the menu based on the current game state
+		//0=main menu, 1=game menu, 2=army building menu
+		if (currentGameState==0){
+			loadMainMenu();
+		}
+
+		if (currentGameState==1){
+			loadGameMenu();
+		}
+
+		if (currentGameState==2){
+			loadArmyBuildingMenu();
+		}
+
+
+	}
+
+	void updateTextAreas(){
+		for(int x=0;x!=menu.allTextAreas.size();x++){
+//do a switch statement for the index of the text area, the index determines which information should go in
+//the text area
+			switch(menu.textAreaIndexes[x]){
+
+
+				//text area that needs no update, the user can enter stuff, and stuff will happen based
+				//entirely on user input
+				case 0:
+
+					break;
+
+                //name of piece/ability description text area
+				case 1:
+					//depending on the currentGameState, the textArea may get it's information from different objects
+					//in this case, the text field gets it's information from either the LiveGame object, or the armyMaker
+					//object
+					switch (currentGameState) {
+						case 1:
+							menu.allTextAreas.get(x).setText(game.state.allPiecesOnBoard.get(game.state.pieceLastSelected).name+"\n"+game.state.allPiecesOnBoard.get(game.state.pieceLastSelected).abilityDescription);
+							break;
+
+						case 2:
+							menu.allTextAreas.get(x).setText(armyMaker.allPieces.get(armyMaker.lastPieceUserSelected).name+"\n"+armyMaker.allPieces.get(armyMaker.lastPieceUserSelected).abilityDescription);
+
+							break;
+					}
+					break;
+                //lore of a piece text area
+				case 2:
+					switch (currentGameState) {
+						case 1:
+							menu.allTextAreas.get(x).setText(game.state.allPiecesOnBoard.get(game.state.pieceLastSelected).loreWriting);
+							break;
+
+						case 2:
+							menu.allTextAreas.get(x).setText(armyMaker.allPieces.get(armyMaker.lastPieceUserSelected).loreWriting);
+							break;
+
+					}
+					break;
+
+			}
+		}
+	}
+	//load the main menu's buttons
+	void loadMainMenu(){
+		menu.addButton("Start Game",200,30,100,100,0);
+		menu.addButton("Army Building",200,30,100,50,1);
+	}
+	//load the game menu's buttons
+	void loadGameMenu(){
+		menu.addButton("Reset Board",200,30,100,60,2);
+		menu.addButton("Return to Main Menu",200,30,100,100,3);
+		menu.addButton("Flip Board",200,30,100,20,9);
+		menu.addButton("execute move",150,20,950,100,10);
+		menu.addTextArea(300,100,0,250,1);
+		menu.addTextArea(300,100,0,140,2);
+		menu.addTextArea("Copy paste move notation here, and press button to execute move",150,100,950,180,0);
+
+	}
+	//load the army building menu's buttons
+	void loadArmyBuildingMenu(){
+		menu.addButton("Return to Main Menu",200,30,100,100,3);
+		menu.addButton("increase page",150,30,500,500,4);
+		menu.addButton("decrease page",150,30,700,500,5);
+		menu.addButton("Save Army",150,30,900,130,6);
+		menu.addButton("army 1",150,30,400,15,8);
+		menu.addButton("army 2",150,30,570,15,7);
+		menu.addTextArea(300,100,0,250,1);
+		menu.addTextArea(300,100,0,140,2);
+	}
+	//set all objects to null so we can enter a new part of the game without old parts being loaded
+	void setAllObjectsNull(){
+		if (game!=null) {
+			game.state.deleteGraphics();
+			game=null;
+		}
+		if (armyMaker!=null){
+			armyMaker.deleteGraphics();
+			armyMaker=null;
+		}
+	}
+
+
+
 
 
 }
