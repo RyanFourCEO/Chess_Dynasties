@@ -13,7 +13,7 @@
 1|16","""Detente' is just a fancy word for 'Inevitable Betrayal'.""                       - Pragmatic Politics, Edition VII",yes,4:Pawn|8:16,,
 90,Bait,"When Bait is killed, create a [Dragon? some big primal beast thing] in the square behind it",1 in any direction,"1|1
 1|0|0|0|0|1|0|0|0|21","some blood sacrifice shit, blood attracting animals                         art: man bleeding (self inflicted?) w/shadow of dragon over him, cowering in fear",yes,4:Rook|1,✚Epic,
-25,Cannon,"Can't act for the first 2 turns, stacking with frontline penalty.","3 orthogonal up and down, must leap over a piece to attack. Infinity sideways, must leap over a piece to attack.Can leap over 1 piece when moving","3|1|0|0|0|1|0|0|0|7
+25,Cannon,,"3 orthogonal up and down, must leap over a piece to attack. Infinity sideways, must leap over a piece to attack.Can leap over 1 piece when moving","3|1|0|0|0|1|0|0|0|7
 7|0|0|1|0|0|0|1|0|7","""Once, we claimed the siege magician as the end of warfare. Heed my warning! This shall be no different!""                                     - Philosopher-King Mansa II",Yes,14:2|5,▪Common,
 0,Conscript,"at the start of the game, you lose 40 morale",1 forward,1|1|1|0|0|0|0|0|1|1,He is not quite willing to participate in the bloodshed.,yes,5:40|5:0,,Promoter
 9,Hired Blade,May not target the King.,"1 forward, may move exactly 2 orthogonally forward from start","2|1|0|0|0|0|0|0|0|4
