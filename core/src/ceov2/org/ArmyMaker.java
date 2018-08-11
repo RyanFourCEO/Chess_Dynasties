@@ -1,6 +1,7 @@
 package ceov2.org;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -8,12 +9,17 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 import java.util.ArrayList;
 
 //this class allows players to construct their own armies using all pieces in the game
 //in the future this will only allow units that a player's collection contains to be used
 public class ArmyMaker {
+    //the armyMaker menu
+    Menu menu;
+    boolean exitArmyMaker;
 //graphics objects declared
     Texture boardImage;
     Sprite boardSprite;
@@ -61,7 +67,10 @@ int lastPieceUserSelected=0;
 //the name of the piece in the collection that is selected
 String selectedCollectionPiece="";
 //constructor, called once when the player enters the armyMaker
-    public ArmyMaker(){
+    public ArmyMaker(InputMultiplexer inputMultiplexer){
+        //load the menu for army making
+        loadArmyMakingMenu(inputMultiplexer);
+
         Piece.InitAllMoveTypes();
         //load all pieces in the game so they may be added to the army and drawn
 loadAllPieces();
@@ -75,6 +84,11 @@ calculateMorale();
 
     //called every run through of the main loop
     public void runArmyMaker(SpriteBatch batch, MouseVars mouseVars){
+        //update and draw the menu
+        updateMenuObjects();
+        menu.stage.getViewport().apply();
+        menu.stage.draw();
+
         //find the mouse's location on the army grid
         mouseLocOnArmy =findSquareMouseIsOn(mouseVars.mousePosx,mouseVars.mousePosy,60,400,50,8,2);
         //perform logic based on the mouse location on the army grid and the mouse variables
@@ -88,6 +102,97 @@ calculateMorale();
         drawAll(batch,mouseVars);
         batch.end();
     }
+
+    void loadArmyMakingMenu(InputMultiplexer inputMultiplexer){
+        menu=new Menu(inputMultiplexer);
+ClickListener clickListener;
+
+
+        //return to main menu button
+        clickListener=new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                exitArmyMaker=true;
+            }
+        };
+        menu.addButton("Return to Main Menu",200,30,100,100,clickListener);
+
+
+        //increase page button
+        clickListener=new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                if (page<10) {
+                    page++;
+                }
+            }
+        };
+        menu.addButton("increase page",150,30,500,500,clickListener);
+
+
+
+        //decrease page button
+        clickListener=new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                if (page>1){
+                    page--;
+                }
+            }
+        };
+        menu.addButton("decrease page",150,30,700,500,clickListener);
+
+
+        //save army button
+
+        clickListener=new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                saveArmy();
+            }
+        };
+        menu.addButton("Save Army",150,30,900,130,clickListener);
+
+
+
+
+        //change to be editing army 1 button
+        clickListener=new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                armyBeingEdited=1;
+                loadCurrentArmy();
+            }
+        };
+        menu.addButton("army 1",150,30,400,15,clickListener);
+
+
+
+       //change to be editing army two button
+        clickListener=new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                armyBeingEdited=2;
+                loadCurrentArmy();
+            }
+        };
+        menu.addButton("army 2",150,30,570,15,clickListener);
+
+
+        //create two text areas, while in loop we will update these to have helpful information about each piece on them
+        menu.addTextArea(300,100,0,250);
+        menu.addTextArea(300,100,0,140);
+    }
+
+    void updateMenuObjects(){
+        updateTextAreas();
+    }
+
+    void updateTextAreas(){
+        menu.allTextAreas.get(0).setText(allPieces.get(lastPieceUserSelected).name+"\n"+allPieces.get(lastPieceUserSelected).abilityDescription);
+        menu.allTextAreas.get(1).setText(allPieces.get(lastPieceUserSelected).loreWriting);
+    }
+
 //loops through all pieces in the army and calculates the morale the army has used
     void calculateMorale(){
         moraleTotal=0;
@@ -263,6 +368,8 @@ if (allPieces.get(x).name.equals(name)){
     }
 
     void deleteGraphics(){
+
+        menu.dispose();
 font.dispose();
 for(int x=0;x!=allPieces.size();x++){
     allPieces.get(x).deleteGraphics();
@@ -482,6 +589,11 @@ errorMessage="";
     void resetMessages(){
         errorMessage="";
         successMessage="";
+    }
+
+    void unselectAll(){
+        pieceInCollectionSelected=false;
+        pieceInArmySelected=false;
     }
 }
 
