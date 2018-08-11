@@ -15,6 +15,7 @@ public class DesktopLauncher {
 		config.width=1100;
 		config.height=618;
 		config.resizable=false;
+
 		//create window
 		new LwjglApplication(new CEOV2(), config);
 

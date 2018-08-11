@@ -65,6 +65,8 @@ public class GameState {
     //the array of all Pieces that are on the board
     ArrayList<Piece> allPiecesOnBoard=new ArrayList<Piece>();
 
+
+
     //contains the information about what occupies each square of the board
     //0=empty square, 1=square occupied by white piece, 2=square occupied by black piece
     int[][] boardState = new int[8][8];
@@ -417,8 +419,6 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
     private void updateBoard(){
         turnCounter++;
         updatePieceCounters();
-
-
         turnJustEnded=true;
 
         testAndExecuteAbilities();
@@ -434,19 +434,6 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
 		else{
             playerTurn=1;
         }
-
-		//TODO: Promotion Logic
-		//intent: at the start of your turn your pieces promote by being on the back row
-
-
-
-
-
-		//TODO: Promotion Logic
-		//intent: at the start of your turn your pieces promote by being on the back row
-
-
-
 
         //reset the valid moves arrays and find the new set of valid moves
 
@@ -742,9 +729,6 @@ effect.inEffect=false;
     }
 
     void executeMove(int xTarget,int yTarget, Piece pieceMoving,int movetype){
-        String theString=String.valueOf(pieceMoving.xLocation)+String.valueOf(pieceMoving.yLocation)+String.valueOf(xTarget)+String.valueOf(yTarget);
-        StringSelection selection = new StringSelection(theString);
-        clipboard.setContents(selection, selection);
 
         //find if the movetype is blockable (if it's greater than 1000 it is blockable
         int blockable;
@@ -1315,6 +1299,24 @@ if (boardState[moveTargetx][moveTargety]==0){
 
 }
 
+   String getCurrentlySelectedPieceName(){
+        String name;
+        name=allPiecesOnBoard.get(pieceLastSelected).name;
+        return name;
+    }
+
+    String getCurrentlySelectedPieceDescription(){
+        String name;
+        name=allPiecesOnBoard.get(pieceLastSelected).abilityDescription;
+        return name;
+    }
+
+    String getCurrentlySelectedPieceLore(){
+        String name;
+        name=allPiecesOnBoard.get(pieceLastSelected).loreWriting;
+        return name;
+    }
+
     private void drawAll(SpriteBatch batch) {
 
 
@@ -1389,6 +1391,13 @@ if (boardState[moveTargetx][moveTargety]==0){
         boardImage.dispose();
         for(int x=0;x!=allPiecesOnBoard.size();x++){
             allPiecesOnBoard.get(x).deleteGraphics();
+        }
+    }
+
+    void unselectAll(){
+        pieceSelected=false;
+        for(int x=0;x!=allPiecesOnBoard.size();x++){
+            allPiecesOnBoard.get(x).selected=false;
         }
     }
 

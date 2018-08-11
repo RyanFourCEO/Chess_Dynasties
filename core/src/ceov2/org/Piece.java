@@ -11,8 +11,8 @@ import java.util.ArrayList;
 public class Piece {
     static final String vertexShader=Gdx.files.internal("VertShader.txt").readString();
     static final String fragmentShader=Gdx.files.internal("FragmentShader.txt").readString();
-    static ShaderProgram shaderProgram=new ShaderProgram(vertexShader,fragmentShader);
-    static ShaderProgram defaultShader=SpriteBatch.createDefaultShader();
+    static final ShaderProgram shaderProgram=new ShaderProgram(vertexShader,fragmentShader);
+    static final ShaderProgram defaultShader=SpriteBatch.createDefaultShader();
       //static array of all movetypes
       static final PieceMoveType[][] allMoveTypes =new PieceMoveType[2][12];
       //all the pieces in the game, any time a piece gets added, that pieces name must be added here
@@ -234,7 +234,7 @@ moveTypeCounter=0;
     }
 
     void loadPiecesVariablesFromFile(String name){
-        //load the entire csv text fileinto String fileText
+        //load the entire csv text file into String "fileText"
         String fileText="";
         fileText=Gdx.files.internal("PieceInfo\\Pieces.txt").readString();
         //separatedLines will hold all the values of each line in the csv
@@ -250,9 +250,9 @@ moveTypeCounter=0;
         //TODO this may only work some of the time, due to String things
         String split="\r\n";
         //separate the file into each of it's lines and store each line in separatedLines
-        for(int x=0;x!=counter;x++){
+
             separatedLines=fileText.split(split);
-        }
+
 
         int linePieceStartsOn=0;
         //loop through every line to find the name of the piece we are loading from the file
@@ -825,6 +825,7 @@ if (isWhite==true){
         }
         staticMoveset =tempMoveset;
 }
+
     //draw the piece to the screen
     void draw(SpriteBatch batch,int boardLocationx,int boardLocationy, int xLocToDraw,int yLocToDraw){
 
