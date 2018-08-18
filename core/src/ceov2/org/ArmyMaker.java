@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class ArmyMaker {
     //the armyMaker menu
     Menu menu;
-    boolean exitArmyMaker;
+    boolean exitToMainMenu;
 //graphics objects declared
     Texture boardImage;
     Sprite boardSprite;
@@ -27,9 +27,9 @@ public class ArmyMaker {
     //controls what pieces you currently have access to, the first 10 pieces are on page 1, the
     //next 10 are one page 2 etc.
     //how many columns of pieces are shown in one page
-    static int pageX=5;
+    int pageX=5;
     //how many rows of pieces are shown in one page
-    static int pageY=2;
+    int pageY=2;
     //when we have many pieces, not all pieces can be shown on one screen
     //this allows the user to switch pages to view more pieces
 int page=1;
@@ -43,7 +43,7 @@ String army;
 String errorMessage="";
 String successMessage="";
 //String containing all the names of pieces in the army
-String[][] armyPiece=new String[2][8];
+String[][] armyPiece;
 //arraylist containing all pieces in the game, in the future this will only contain
     //pieces in the player's collection, pieces in this array can be freely added to the army
 ArrayList<Piece> allPieces=new ArrayList<Piece>();
@@ -66,8 +66,11 @@ int lastPieceUserSelected=0;
 
 //the name of the piece in the collection that is selected
 String selectedCollectionPiece="";
+
 //constructor, called once when the player enters the armyMaker
     public ArmyMaker(InputMultiplexer inputMultiplexer){
+        armyPiece=new String[2][8];
+
         //load the menu for army making
         loadArmyMakingMenu(inputMultiplexer);
 
@@ -81,9 +84,20 @@ loadTextures();
 //calculate the morale of the current army
 calculateMorale();
     }
+//This constructor is no used for when the player enters the armyMaker, but is used when the player enters the
+//level editor, this constructor calls only general methods
+    public ArmyMaker(){
+        armyPiece=new String[8][8];
+
+        Piece.InitAllMoveTypes();
+        //load all pieces in the game so they may be added to the army and drawn
+        loadAllPieces();
+        //load graphics objects
+        loadTextures();
+    }
 
     //called every run through of the main loop
-    public void runArmyMaker(SpriteBatch batch, MouseVars mouseVars){
+    public void run(SpriteBatch batch, MouseVars mouseVars){
         //update and draw the menu
         updateMenuObjects();
         menu.stage.getViewport().apply();
@@ -112,7 +126,7 @@ ClickListener clickListener;
         clickListener=new ClickListener(){
             @Override
             public void clicked(InputEvent event, float x, float y){
-                exitArmyMaker=true;
+                exitToMainMenu =true;
             }
         };
         menu.addButton("Return to Main Menu",200,30,100,100,clickListener);
@@ -148,7 +162,7 @@ ClickListener clickListener;
         clickListener=new ClickListener(){
             @Override
             public void clicked(InputEvent event, float x, float y){
-                saveArmy();
+                saveSetup();
             }
         };
         menu.addButton("Save Army",150,30,900,130,clickListener);
@@ -231,7 +245,7 @@ ClickListener clickListener;
         errorMessage="";
         //load the string from the file, the String will look something like this
         //rook,knight,pawn,pawn, (etc for all 16 pieces in an army)
-    army=Gdx.files.internal("armies\\army"+String.valueOf(armyBeingEdited)+".txt").readString();
+    army=Gdx.files.internal("UserFiles\\armies\\army"+String.valueOf(armyBeingEdited)+".txt").readString();
     String[] separated=new String[16];
     //separate the names of pieces into an array, get rid of the commas
     for(int x=0;x!=16;x++) {
@@ -248,6 +262,7 @@ ClickListener clickListener;
     }
 //draw all graphics
     void drawAll(SpriteBatch batch,MouseVars mouseVars){
+        drawBoard(batch);
         //draw text
         drawText(batch);
         //draw the army
@@ -299,8 +314,12 @@ void drawArmyPieces(SpriteBatch batch, MouseVars mouseVars){
     }
 }
 
-void drawText(SpriteBatch batch){
+void drawBoard(SpriteBatch batch){
     boardSprite.draw(batch);
+}
+
+void drawText(SpriteBatch batch){
+
     String text="total morale allowed: "+String.valueOf(moraleAllowed);
     font.draw(batch,text,900,50);
     text="total morale used: "+String.valueOf(moraleTotal);
@@ -379,7 +398,7 @@ for(int x=0;x!=allPieces.size();x++){
     //find the location of the mouse within a grid with square size "size" and location on screen "locationx/locationy"
     //the grid being "gridx" squares long and "gridy" square tall
     //this method returns the mouse's location in the specified grid
-    private int[] findSquareMouseIsOn(int mousex,int mousey,int size,int locationx, int locationy,int gridx, int gridy){
+    public int[] findSquareMouseIsOn(int mousex,int mousey,int size,int locationx, int locationy,int gridx, int gridy){
         //the location of the mouse in the grid is specified by these variables
         //if they remain at -1 then the mouse is not within the grid
         int xLoc=-1;
@@ -476,9 +495,9 @@ if (pieceInArmySelected==true) {
                 //if collectionGridLoc is in the collection grid
                 if (collectionGridLoc[0] >= 0 && collectionGridLoc[1] >= 0 && collectionGridLoc[0] < pageX && collectionGridLoc[1] < pageY) {
                     //calculate which piece in the allPieces array is being selected (if any)
-                    //index golds the value of the index of the piece in the allPieces array
+                    //index holds the value of the index of the piece in the allPieces array
                     int newY = pageY - 1 - collectionGridLoc[1];
-                    int index = newY * 5 + collectionGridLoc[0];
+                    int index = newY * pageX + collectionGridLoc[0];
                     index+=page*pageX*pageY-pageX*pageY;
                     //if the index actually falls within the array
                     if (index < allPieces.size()) {
@@ -544,7 +563,7 @@ if (pieceInCollectionSelected==true) {
         calculateMorale();
     }
 //test to make sure the army made is valid, if it is write it to the army file
-    void saveArmy(){
+    void saveSetup(){
         int numberOfKings=0;
         boolean emptySquare=false;
         army="";
@@ -570,7 +589,7 @@ if (pieceInCollectionSelected==true) {
 if (numberOfKings==1){
 
             if (emptySquare==false) {
-                FileHandle file = Gdx.files.local("armies\\army" + String.valueOf(armyBeingEdited) + ".txt");
+                FileHandle file = Gdx.files.local("UserFiles\\armies\\army" + String.valueOf(armyBeingEdited) + ".txt");
                 file.writeString(army, false);
                 //if the army made is valid, set a friendly success message to let them know it was saved
 successMessage="Army successfully saved";
