@@ -45,7 +45,7 @@ public class Menu {
         stage.addActor(allTextAreas.get(allTextAreas.size()-1));
     }
 
-    public void addTextArea(String text, int width,int height, int positionx,int positiony,int index){
+    public void addTextArea(String text, int width,int height, int positionx,int positiony){
         allTextAreas.add(new TextArea(text,skin,"default"));
         allTextAreas.get(allTextAreas.size()-1).setPosition(positionx,positiony);
         allTextAreas.get(allTextAreas.size()-1).setSize(width,height);

@@ -27,6 +27,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 	public static final int MAIN_MENU_STATE=0;
 	public static final int GAME_IS_LIVE_STATE =1;
 	public static final int ARMY_BUILDING_STATE=2;
+	public static final int LEVEL_EDITOR_STATE=3;
 
     //allows multiple inputprocessors to be used at once
 	InputMultiplexer inputMultiplexer;
@@ -58,6 +59,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     LiveGame game;
     //armyMaker controls what happens when a player is making their army
     ArmyMaker armyMaker;
+    //Level editor is for when a person is creating campaign/single-player levels
+    LevelEditor levelEditor;
+
     //current state tells what "mode" the game is in
 	//depending on the state of the game different menus will be loaded
 	//and different logic will be executed. If a player is in a game
@@ -65,12 +69,13 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 	//when is is equal to 0, that means the player is at the main menu
     //when is equal to 1, that means a game is occurring
 	//when it is equal to 2, that means armies are being made
+	//when it is equal to 3, that means levels are being edited (leveleditor)
     int currentGameState=MAIN_MENU_STATE;
 	//initialization/loading of the games resources
 	@Override
 	public void create () {
 
-
+//currently does nothing, ignore all server stuff
 		try {
 		String ipAddress="127.0.0.1";
 		ServerSocketHints serverSocketHint = new ServerSocketHints();
@@ -131,11 +136,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
 //graphics objects are initialized
 		batch = new SpriteBatch();
-		img = new Texture(Gdx.files.internal("unknown.png"),true);
-		img.setFilter(Texture.TextureFilter.MipMapLinearNearest,Texture.TextureFilter.Linear);
-		sprite1=new Sprite(img);
-        sprite1.setSize(200,200);
-        sprite1.setCenter(1000,379);
 		font= new BitmapFont();
 		font.setColor(Color.RED);
 	}
@@ -150,10 +150,6 @@ mouseVars.setMouseVariables();
 //clear the screen
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-//this just draws f3's stupid drawing
-		batch.begin();
-		batch.draw(sprite1,sprite1.getX(),sprite1.getY(),sprite1.getWidth(),sprite1.getHeight());
-		batch.end();
 
 		//draw the options menu
 batch.begin();
@@ -183,8 +179,16 @@ switch (currentGameState){
 		break;
 
 	case ARMY_BUILDING_STATE:
-		armyMaker.runArmyMaker(batch,mouseVars);
-		if (armyMaker.exitArmyMaker==true){
+		armyMaker.run(batch,mouseVars);
+		if (armyMaker.exitToMainMenu ==true){
+			setAllObjectsNull();
+			currentGameState=MAIN_MENU_STATE;
+		}
+		break;
+
+	case LEVEL_EDITOR_STATE:
+		levelEditor.run(batch,mouseVars);
+		if (levelEditor.exitToMainMenu==true){
 			setAllObjectsNull();
 			currentGameState=MAIN_MENU_STATE;
 		}
@@ -198,7 +202,6 @@ switch (currentGameState){
 	public void dispose () {
 		//graphics objects deleted
 		batch.dispose();
-		img.dispose();
 		font.dispose();
 		mainMenu.dispose();
 	}
@@ -288,6 +291,19 @@ if (Gdx.input.isKeyPressed(Keys.ESCAPE)){
 			}
 		};
 		mainMenu.addButton("Army Building",200,30,100,50,clickListener);
+
+		//this clickListener enters level editing mode
+		clickListener=new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y){
+				hideMainMenu();
+				//set other objects not used by the game to be null
+				setAllObjectsNull();
+				levelEditor=new LevelEditor(inputMultiplexer);
+				currentGameState=LEVEL_EDITOR_STATE;
+			}
+		};
+		mainMenu.addButton("Level Editor",200,30,100,150,clickListener);
 	}
 
 	//hides the main menu, this should be called whenever the player moves to a new part of the game
@@ -306,6 +322,10 @@ if (Gdx.input.isKeyPressed(Keys.ESCAPE)){
 		if (armyMaker!=null){
 			armyMaker.deleteGraphics();
 			armyMaker=null;
+		}
+		if (levelEditor!=null){
+		levelEditor.deleteGraphics();
+		levelEditor=null;
 		}
 	}
 

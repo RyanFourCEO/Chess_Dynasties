@@ -9,10 +9,6 @@ import java.util.ArrayList;
 
 //this class contains all the information a piece has
 public class Piece {
-    static final String vertexShader=Gdx.files.internal("VertShader.txt").readString();
-    static final String fragmentShader=Gdx.files.internal("FragmentShader.txt").readString();
-    static final ShaderProgram shaderProgram=new ShaderProgram(vertexShader,fragmentShader);
-    static final ShaderProgram defaultShader=SpriteBatch.createDefaultShader();
       //static array of all movetypes
       static final PieceMoveType[][] allMoveTypes =new PieceMoveType[2][12];
       //all the pieces in the game, any time a piece gets added, that pieces name must be added here
@@ -839,9 +835,9 @@ if (isWhite==true) {
     sprite.draw(batch);
 }else{
             //if the piece is black, draw the piece with the colour inversion shaders
-            batch.setShader(shaderProgram);
+            batch.setShader(Shaders.inversionShader);
     sprite.draw(batch);
-    batch.setShader(defaultShader);
+    batch.setShader(Shaders.defaultShader);
 
 }
     }

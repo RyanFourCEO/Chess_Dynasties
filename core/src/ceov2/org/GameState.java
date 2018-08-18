@@ -347,7 +347,7 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
     //loads the current armies
     private void loadArmies(){
         //load the army1 file, this will contain the setup for the white army
-        String army=Gdx.files.internal("armies\\army1.txt").readString();
+        String army=Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
         String[] separated=new String[16];
         //separate the loaded string from the file into it's 16 piece names
             separated = army.split(",");
@@ -357,7 +357,7 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
             allPiecesOnBoard.add(new Piece(separated[x],true));
         }
 //repeat the above for the black pieces, which are loaded from army2
-        army=Gdx.files.internal("armies\\army2.txt").readString();
+        army=Gdx.files.internal("UserFiles\\armies\\army2.txt").readString();
             separated = army.split(",");
         for (int x=0;x!=16;x++) {
             allPiecesOnBoard.add(new Piece(separated[x],false));
