@@ -175,10 +175,6 @@ mouseVars.setMouseVariables(DEFAULT_SCREEN_HEIGHT,DEFAULT_SCREEN_WIDTH,viewport.
 			//make a move while doing options menu things
 			mouseVars.unSetMouseVariables();
 		}
-		//draw the options menu
-
-
-
 
 
 //based on the state of the game, execute certain code

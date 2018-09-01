@@ -327,7 +327,7 @@ String allColours="";
         errorMessage="";
         try {
             //load the level from a file
-            army = Gdx.files.local("UserFiles\\Levels\\" + menu.allTextAreas.get(2).getText()+".txt").readString();
+            army = Gdx.files.internal("UserFiles\\Levels\\" + menu.allTextAreas.get(2).getText()+".txt").readString();
             String[] lines = army.split("\n");
 
             //collect all the piece names into an array
