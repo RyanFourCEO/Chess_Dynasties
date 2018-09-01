@@ -1,11 +1,9 @@
 package ceov2.org;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.DistanceFieldFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
+
 
 public class Shaders {
     static final String vertexShader=Gdx.files.internal("Shaders\\VertShader.txt").readString();

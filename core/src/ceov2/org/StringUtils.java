@@ -12,4 +12,23 @@ public class StringUtils {
         return isValid;
     }
 
+    static String removeNonNumberCharacters(String string){
+     String newString="";
+     for(int x=0;x!=string.length();x++){
+         if (isNumber(string.charAt(x))==true){
+             newString+=String.valueOf(string.charAt(x));
+         }
+     }
+     return newString;
+    }
+
+    static boolean isNumber(char ch){
+        boolean isValid=false;
+        for(int x=0;x!=10;x++){
+            if (String.valueOf(x).equals(String.valueOf(ch))){
+                isValid=true;
+            }
+        }
+        return isValid;
+    }
 }

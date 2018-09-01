@@ -244,11 +244,11 @@ moveTypeCounter=0;
             }
         }
         //TODO this may only work some of the time, due to String things
-        String split="\r\n";
+        //fileText.replaceAll("\r\n","\n");
+        String split="[\\r\\n]+";
         //separate the file into each of it's lines and store each line in separatedLines
 
-            separatedLines=fileText.split(split);
-
+        separatedLines=fileText.split(split);
 
         int linePieceStartsOn=0;
         //loop through every line to find the name of the piece we are loading from the file
@@ -327,7 +327,7 @@ moveTypeCounter=0;
             //add this to the String so we know where the extra lines are
             singlePieceVariable+="lineSeparatorString";
         }
-        moraleCost=Integer.valueOf(pieceVariablesFromFile[0]);
+        moraleCost=Integer.valueOf(StringUtils.removeNonNumberCharacters(pieceVariablesFromFile[0]));
         this.name=pieceVariablesFromFile[1];
         abilityDescription=pieceVariablesFromFile[2].replace("lineSeparatorString","\n");
         loreWriting=pieceVariablesFromFile[5].replace("lineSeparatorString","\n");
@@ -357,7 +357,6 @@ moveTypeCounter=0;
             }
         }
     }
-
     void setAbility(String line){
         //calculate the number of triggers an ability has,
         //the number of triggers will be equal to the number of occurrences of |
