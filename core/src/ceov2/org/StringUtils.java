@@ -9,7 +9,6 @@ public class StringUtils {
                 isValid=true;
             }
         }
-
         return isValid;
     }
 
