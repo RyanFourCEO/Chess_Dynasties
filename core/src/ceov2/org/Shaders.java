@@ -19,11 +19,11 @@ public class Shaders {
 
     static void prepareDistanceFieldShader() {
         distanceFieldShader.begin();
-       // distanceFieldShader.setUniformf("smoothing",Gdx.input.getX()/1000f);
-       // System.out.println(Gdx.input.getX()/1000f);
         distanceFieldShader.setUniformf("smoothing",(0.17f*1100)/Gdx.app.getGraphics().getWidth());
         distanceFieldShader.end();
     }
+
+
 
 
 }
