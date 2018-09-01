@@ -790,11 +790,8 @@ for example, a rook with north=true but all other booleans false would only be a
 
         String filePath="pieces\\";
         filePath+=name.replace(" ","")+".png";
-pieceImage=new Texture(Gdx.files.internal(filePath),true);
-//pieceImage=new Texture(Gdx.files.internal(filePath));
-        pieceImage.setFilter(Texture.TextureFilter.MipMapLinearLinear,Texture.TextureFilter.Linear);
+pieceImage=GraphicsUtils.loadTexture(filePath);
 sprite=new Sprite(pieceImage);
-
     }
 
     void setColour(boolean isWhite){
@@ -823,19 +820,20 @@ if (isWhite==true){
 }
 
     //draw the piece to the screen
-    void draw(SpriteBatch batch,int boardLocationx,int boardLocationy, int xLocToDraw,int yLocToDraw){
+    void draw(SpriteBatch batch,int xLocToDraw,int yLocToDraw){
+
+
 
         sprite.setSize((72),(72));
-        if (selected==true){
-            sprite.setCenter(Gdx.input.getX(),618-Gdx.input.getY());
-        }else {
-            sprite.setCenter(xLocToDraw, yLocToDraw);
-        }
+        sprite.setCenter(xLocToDraw, yLocToDraw);
+
 if (isWhite==true) {
+
     sprite.draw(batch);
+
 }else{
             //if the piece is black, draw the piece with the colour inversion shaders
-            batch.setShader(Shaders.inversionShader);
+    batch.setShader(Shaders.inversionShader);
     sprite.draw(batch);
     batch.setShader(Shaders.defaultShader);
 
@@ -844,14 +842,25 @@ if (isWhite==true) {
     //draw the piece in a specific location, not the location the piece has on the board
     void drawSpecificLoc(SpriteBatch batch,int size,int centerx,int centery){
         sprite.setSize((size),(size));
-        if (selected==true){
-            sprite.setCenter(Gdx.input.getX(),618-Gdx.input.getY());
-        }else{
+
             sprite.setCenter(centerx, centery);
+        if (isWhite==true) {
+            sprite.draw(batch);
+        }else{
+            //if the piece is black, draw the piece with the colour inversion shaders
+            batch.setShader(Shaders.inversionShader);
+            sprite.draw(batch);
+            batch.setShader(Shaders.defaultShader);
+
         }
+    }
+    //same as above method, but does not use different shaders depending on white/black, just uses the currently
+    //selected shader
+    void drawSpecificLoc2(SpriteBatch batch,int size,int centerx,int centery){
+        sprite.setSize((size),(size));
+        sprite.setCenter(centerx, centery);
         sprite.draw(batch);
     }
-
     //delete the graphics, used when the game ends
     void deleteGraphics(){
         pieceImage.dispose();

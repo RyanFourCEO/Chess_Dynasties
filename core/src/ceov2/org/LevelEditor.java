@@ -84,7 +84,7 @@ public class LevelEditor extends ArmyMaker{
         if (pieceInCollectionSelected==true){
             for(int x=0;x!=allPieces.size();x++){
                 if (allPieces.get(x).name.equals(selectedCollectionPiece)){
-                    allPieces.get(x).drawSpecificLoc(batch,60,mouseVars.mousePosx,mouseVars.mousePosy);
+                    allPieces.get(x).drawSpecificLoc(batch,(int)(60*1.2),mouseVars.mousePosx,mouseVars.mousePosy);
                 }
             }
         }
@@ -183,16 +183,18 @@ public class LevelEditor extends ArmyMaker{
                 if (colourOfPieceOnBoard[y][x]==true) {
                     int xCenter;
                     int yCenter;
+                    int size=56;
 //if the piece is selected it will be drawn where the cursor is
                     if (pieceInArmySelected == true && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
                         xCenter = mouseVars.mousePosx;
                         yCenter = mouseVars.mousePosy;
+                        size=(int)(56*1.2);
 //Otherwise it will be drawn on the army grid
                     } else {
                         xCenter = 400 + 60 * x + 30;
                         yCenter = 50 + 60 * y + 30;
                     }
-                    drawPiece(batch, armyPiece[y][x], xCenter, yCenter);
+                    drawPiece(batch, armyPiece[y][x], xCenter, yCenter,size);
                 }
             }
         }
@@ -204,16 +206,18 @@ public class LevelEditor extends ArmyMaker{
                 if (colourOfPieceOnBoard[y][x]==false) {
                     int xCenter;
                     int yCenter;
+                    int size=56;
 //if the piece is selected it will be drawn where the cursor is
                     if (pieceInArmySelected == true && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
                         xCenter = mouseVars.mousePosx;
                         yCenter = mouseVars.mousePosy;
+                        size=(int)(56*1.2);
 //Otherwise it will be drawn on the army grid
                     } else {
                         xCenter = 400 + 60 * x + 30;
                         yCenter = 50 + 60 * y + 30;
                     }
-                    drawPiece(batch, armyPiece[y][x], xCenter, yCenter);
+                    drawPiece(batch, armyPiece[y][x], xCenter, yCenter,size);
                 }
             }
         }

@@ -14,8 +14,9 @@ GameState state;
 Menu menu;
 boolean gameOver=false;
 
-    public LiveGame(){
+    public LiveGame(InputMultiplexer inputMultiplexer){
 state=new GameState();
+loadGameMenu(inputMultiplexer);
 }
 
     void performGameLogic(SpriteBatch batch, MouseVars mouseVars){
@@ -84,6 +85,9 @@ gameOver=true;
         menu.allTextAreas.get(1).setText(state.getCurrentlySelectedPieceLore());
     }
 
+    void reloadGraphics(){
+        state.reloadGraphics();
+    }
     void deleteGraphics(){
     state.deleteGraphics();
     menu.dispose();

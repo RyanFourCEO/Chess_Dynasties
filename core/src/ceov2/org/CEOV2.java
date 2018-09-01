@@ -7,14 +7,20 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.net.ServerSocket;
 import com.badlogic.gdx.net.ServerSocketHints;
 import com.badlogic.gdx.net.Socket;
 import com.badlogic.gdx.net.SocketHints;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.GdxRuntimeException;
-import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.io.BufferedReader;
@@ -24,11 +30,16 @@ import java.io.InputStreamReader;
 public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
 	//declare constants
+	public static final int DEFAULT_SCREEN_WIDTH=1100;
+	public static final int DEFAULT_SCREEN_HEIGHT=618;
+
 	public static final int MAIN_MENU_STATE=0;
 	public static final int GAME_IS_LIVE_STATE =1;
 	public static final int ARMY_BUILDING_STATE=2;
 	public static final int LEVEL_EDITOR_STATE=3;
 
+
+	boolean fullScreenMode=false;
     //allows multiple inputprocessors to be used at once
 	InputMultiplexer inputMultiplexer;
 	//Declare graphics objects
@@ -39,16 +50,15 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
 	//the options menu will always be available to the user
     public Menu optionsMenu;
-
-
     boolean currentlyInOptionsMenu=false;
 
 
 	SpriteBatch batch;
-	Texture img;
 	BitmapFont font;
-    Sprite sprite1;
     MouseVars mouseVars;
+	Pixmap pixmap;
+	Texture texture;
+	Sprite sprite1;
 
     //unused probably important later
 	Viewport viewport;
@@ -108,20 +118,25 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 			System.out.println("failed to connect to server");
 		}
 
-
+		pixmap = new Pixmap( 290, 300, Pixmap.Format.RGBA8888 );
+		pixmap.setColor( 0,0,0,0.75f);
+		pixmap.fillRectangle(0,0,290,300);
+		texture=new Texture( pixmap );
+		sprite1=new Sprite(texture);
+		sprite1.setCenter(550,309);
+		pixmap.dispose();
 
 
 		camera = new PerspectiveCamera();
-		viewport = new FitViewport(1100, 618, camera);
-
+		viewport = new StretchViewport(1100, 618, camera);
 		inputMultiplexer = new InputMultiplexer();
 
-
-		//load the mainMenu, this menu is the first menu the user sees
-        mainMenu =new Menu(inputMultiplexer);
-        //load the options menu, this is just one button that can bring up further options for the player
+		//load the options menu, this is just one button that can bring up further options for the player
 		//including screen resolution options and audio options
 		optionsMenu=new Menu(inputMultiplexer);
+		//load the mainMenu, this menu is the first menu the user sees
+        mainMenu =new Menu(inputMultiplexer);
+
         Gdx.input.setInputProcessor(inputMultiplexer);
         inputMultiplexer.addProcessor(this);
 
@@ -136,8 +151,13 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
 //graphics objects are initialized
 		batch = new SpriteBatch();
-		font= new BitmapFont();
-		font.setColor(Color.RED);
+
+		texture = new Texture(Gdx.files.internal("Fonts\\ArialDistanceField2.png"), true);
+		texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
+		font = new BitmapFont(Gdx.files.internal("Fonts\\ArialDistanceField2.fnt"), new TextureRegion(texture), false);
+		font.setColor(Color.WHITE);
+
+
 	}
 
 //The main loop of the game, all graphics will be drawn here, and game logic is executed here
@@ -146,16 +166,20 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
 
 		//collect the mouse variable for this frame
-mouseVars.setMouseVariables();
+mouseVars.setMouseVariables(DEFAULT_SCREEN_HEIGHT,DEFAULT_SCREEN_WIDTH,viewport.getScreenHeight(),viewport.getScreenWidth());
 //clear the screen
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+		if (currentlyInOptionsMenu==true){
+			//if the user is in the options menu, we unset the mouse variables so the user can't accidentalluy
+			//make a move while doing options menu things
+			mouseVars.unSetMouseVariables();
+		}
 		//draw the options menu
-batch.begin();
-	optionsMenu.stage.getViewport().apply();
-	optionsMenu.stage.draw();
-batch.end();
+
+
+
+
 
 //based on the state of the game, execute certain code
 switch (currentGameState){
@@ -196,27 +220,93 @@ switch (currentGameState){
 
 }
 
+		if (currentlyInOptionsMenu==true){
+			//draw the black rectangle the optionsMenu is contained within
+			batch.begin();
+			sprite1.draw(batch);
+			batch.end();
+            //prepare font shader
+			Shaders.prepareDistanceFieldShader();
+			batch.setShader(Shaders.distanceFieldShader);
+            String volume;
+
+            //draw the menu text
+			batch.begin();
+
+            font.draw(batch,"Graphics Quality",440,270);
+
+            volume=String.valueOf((int)optionsMenu.allContainers.get(0).getActor().getValue())+"%";
+            font.draw(batch,"Effects Volume "+volume,440,370);
+
+			volume=String.valueOf((int)optionsMenu.allContainers.get(1).getActor().getValue())+"%";
+			font.draw(batch,"Music Volume "+volume,440,320);
+
+			font.draw(batch,"Fullscreen Mode:",440,420);
+
+			batch.end();
+
+			batch.setShader(Shaders.defaultShader);
+
+		}
+
+		//draw the optionsMenu UI components
+		optionsMenu.stage.getViewport().apply();
+		optionsMenu.stage.draw();
+
 }
-	
+	//delete graphics objects
 	@Override
 	public void dispose () {
 		//graphics objects deleted
 		batch.dispose();
 		font.dispose();
 		mainMenu.dispose();
+		optionsMenu.dispose();
+		texture.dispose();
+	}
+
+	void reloadGraphics(){
+		switch (currentGameState){
+//if in the main menu, ensure the main menu is enabled and draw the main menu components
+
+			case GAME_IS_LIVE_STATE:
+                game.reloadGraphics();
+				break;
+
+			case ARMY_BUILDING_STATE:
+				armyMaker.reloadGraphics();
+				break;
+
+			case LEVEL_EDITOR_STATE:
+				levelEditor.reloadGraphics();
+				break;
+
+		}
 	}
 
 	//later when screen resizing is supported this will be important,currently does nothing
 	@Override
 	public void resize(int width, int height){
 		viewport.update(width,height);
+		optionsMenu.stage.getViewport().update(width, height);
+		mainMenu.stage.getViewport().update(width, height);
+		if (game!=null) {
+			game.menu.stage.getViewport().update(width, height);
+		}
+		if (levelEditor!=null){
+			levelEditor.menu.stage.getViewport().update(width, height);
+		}
+		if (armyMaker!=null){
+			armyMaker.menu.stage.getViewport().update(width, height);
+		}
+
 	}
 
 
 	@Override
 	public boolean keyDown(int keycode) {
 if (Gdx.input.isKeyPressed(Keys.ESCAPE)){
-//bringUpOptionMenu();
+toggleOptionsMenu();
 }
 		return true;
 	}
@@ -271,8 +361,7 @@ if (Gdx.input.isKeyPressed(Keys.ESCAPE)){
 				//set other objects not used by the game to be null
 				setAllObjectsNull();
 				//game object created
-				game=new LiveGame();
-				game.loadGameMenu(inputMultiplexer);
+				game=new LiveGame(inputMultiplexer);
 				//state set to 1, which means game is currently being played
 				currentGameState= GAME_IS_LIVE_STATE;
 			}
@@ -334,24 +423,145 @@ if (Gdx.input.isKeyPressed(Keys.ESCAPE)){
 			@Override
 			public void clicked(InputEvent event, float x, float y){
 				//set other objects not used by the game to be null
-					bringUpOptionMenu();
+					toggleOptionsMenu();
 				}
 
 		};
 		optionsMenu.addButton("settings",80,20,10,20,clickListener);
 	}
 
-	void bringUpOptionMenu(){
+	void toggleOptionsMenu()	{
 		unselectAll();
 		currentlyInOptionsMenu=!currentlyInOptionsMenu;
+
 		if (currentlyInOptionsMenu==true) {
-			//optionsMenu.addButton();
+			//create a buttonGroup to put all graphics quality options into
+			optionsMenu.addGroup();
+			//always have exactly one button checked
+			optionsMenu.allGroups.get(0).setMaxCheckCount(1);
+			optionsMenu.allGroups.get(0).setMinCheckCount(1);
+			optionsMenu.allGroups.get(0).setUncheckLast(true);
+
+			//toggle fullscreen mode button
+			ClickListener clickListener=new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y){
+					fullScreenMode=!fullScreenMode;
+					if (fullScreenMode==true) {
+						Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+					}else{
+						Gdx.graphics.setWindowedMode(1100,618);
+					}
+
+				}
+			};
+			optionsMenu.addButton("toggle",70,25,590,402,clickListener);
+
+			//use bad graphics settings button
+			clickListener=new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y){
+					GraphicsUtils.graphicsQuality=0;
+					reloadGraphics();
+				}
+			};
+
+			optionsMenu.addButtonToGroup(0,"bad",50,50,435,200,clickListener);
+
+			//use decent graphics settings button
+			clickListener=new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y){
+					GraphicsUtils.graphicsQuality=1;
+					reloadGraphics();
+				}
+			};
+			optionsMenu.addButtonToGroup(0,"okay",50,50,495,200,clickListener);
+
+
+			//use good graphics settings button
+			clickListener=new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y){
+					GraphicsUtils.graphicsQuality=2;
+					reloadGraphics();
+				}
+			};
+			optionsMenu.addButtonToGroup(0,"good",50,50,555,200,clickListener);
+
+
+			//use best graphics settings button
+			clickListener=new ClickListener(){
+				@Override
+				public void clicked(InputEvent event, float x, float y){
+					GraphicsUtils.graphicsQuality=3;
+					reloadGraphics();
+				}
+			};
+			optionsMenu.addButtonToGroup(0,"best",50,50,615,200,clickListener);
+			Array<TextButton2> buttons = new Array();
+			buttons=optionsMenu.allGroups.get(0).getButtons();
+			//check the button which is currently selected
+			switch(GraphicsUtils.graphicsQuality){
+
+				case 0:
+					setButtonSelected(buttons,"bad");
+					break;
+
+				case 1:
+					setButtonSelected(buttons,"okay");
+					break;
+
+				case 2:
+					setButtonSelected(buttons,"good");
+					break;
+
+				case 3:
+					setButtonSelected(buttons,"best");
+					break;
+
+
+			}
+			//add volume sliders
+			optionsMenu.addSlider(500,340,0,100,1);
+			optionsMenu.addSlider(500,290,0,100,1);
+		}
+
+
+//if the options menu is closed, remove most of the UI components
+		if (currentlyInOptionsMenu==false) {
+			//loop through and remove all buttons on the options menu, but the very first one (which is the
+			//button that allows you to bring up the other buttons)
+			for(int x=optionsMenu.allButtons.size()-1;x!=0;x--) {
+				optionsMenu.allButtons.get(x).remove();
+				optionsMenu.allButtons.remove(x);
+			}
+			for (int x=optionsMenu.allGroups.size()-1;x!=-1;x--){
+				optionsMenu.allGroups.clear();
+			}
+
+			for (int x=optionsMenu.allContainers.size()-1;x!=-1;x--){
+				optionsMenu.allContainers.get(x).getActor().remove();
+				optionsMenu.allContainers.get(x).remove();
+				optionsMenu.allContainers.remove(x);
+			}
 		}
 	}
+
+	//set a textbutton that has text "buttontext" in an array of buttons to be selected
+	void setButtonSelected(Array<TextButton2> buttons,String buttonText){
+		for(int x=0;x!=buttons.size;x++){
+			String string1=String.valueOf(buttons.get(x).getText());
+			if(string1.equals(buttonText)){
+				buttons.get(x).setChecked(true);
+			}
+		}
+	}
+
+
 	//based on the state of the game, unselect everything in the current area of the game
 	//this is so that when the user presses escape to look at the menu, they don't
 	//stay having a piece selected, for example.
-
 	void unselectAll(){
 		//based on the state of the game, unselect everything in the current area of the game
 		switch (currentGameState){
@@ -366,6 +576,10 @@ if (Gdx.input.isKeyPressed(Keys.ESCAPE)){
 
 			case ARMY_BUILDING_STATE:
 				armyMaker.unselectAll();
+				break;
+
+			case LEVEL_EDITOR_STATE:
+				levelEditor.unselectAll();
 				break;
 
 

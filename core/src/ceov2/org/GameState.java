@@ -5,12 +5,12 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
 import java.util.ArrayList;
 //temporary for clipboard pasting stuff
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-
 
 
 //this class deals with all the logic of a live game.
@@ -77,10 +77,11 @@ public class GameState {
 
     //in the future the constructor will take 2 army objects as its parameters to set up the game
     public GameState() {
-        loadTextures();
+
         initFont();
         Piece.InitAllMoveTypes();
         loadArmies();
+        loadGraphics();
         setBoard(allPiecesOnBoard);
         turnJustStarted=true;
         testAndExecuteAbilities();
@@ -90,8 +91,8 @@ public class GameState {
 
     }
 
-	private void loadTextures(){
-        boardImage=new Texture("Board.png");
+	private void loadGraphics(){
+        boardImage=GraphicsUtils.loadTexture("Board.png");
         sprite=new Sprite(boardImage);
         sprite.setSize(618,618);
         sprite.setCenter(640,309);
@@ -105,13 +106,17 @@ public class GameState {
         processMouseInputAndDoThingsBasedOnTheMouseInput(mouseVars);
         //draw everything
         batch.begin();
-        drawAll(batch);
+        drawAll(batch,mouseVars);
         batch.end();
     }
 
     private void initFont(){
-    font= new BitmapFont();
-    font.setColor(Color.BLACK);
+        //load font texture
+        Texture texture = new Texture(Gdx.files.internal("Fonts\\ArialDistanceField2.png"), true);
+        texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
+        //create font object using above texture
+        font = new BitmapFont(Gdx.files.internal("Fonts\\ArialDistanceField2.fnt"), new TextureRegion(texture), false);
+        font.setColor(Color.BLACK);
 }
 //put all pieces on the board, set their locations
     public void setBoard(ArrayList <Piece> pieces) {
@@ -344,6 +349,7 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
         // setMoveSet(moveset,line2);
         // setMoveSet(moveset,line3);
     }
+
     //loads the current armies
     private void loadArmies(){
         //load the army1 file, this will contain the setup for the white army
@@ -362,60 +368,11 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
         for (int x=0;x!=16;x++) {
             allPiecesOnBoard.add(new Piece(separated[x],false));
         }
-        //clear tempPieces as we no longer need to load pieces, which is tempPieces only purpose
+        //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
         tempPieces.clear();
     }
-	//TODO: move these to proper place
-	//functions for interacting with pieces
-	//current use: pawn promotion
-	//commented out since useless
-	//TODO: figure out how allPiecesOnBoard array works !important
 
-	/*
-	public void createPieceInEmpty(int x, int y, string pieceName){ //create pieces: only works in empty location
-		if(piecesOnBoard[x][y]=-1){
-			piecesOnBoard[x][y]=equalsIgnoreCase(pieceName);
-			if(boardState[x][y]=1){
-				moraleTotals[0]+=allPiecesOnBoard.get(x+8*y-1).moraleCost;
-			}
-			else{
-				moraleTotals[1]+=allPiecesOnBoard.get(x+8*y-1).moraleCost;
-			}
-		}
-	}
-
-
-
-
-
-
-	public void destroyPiece(int x, int y) {
-		//placeholder for destroy effects
-		//does not belong here i don't think
-		//actually not sure how this is different from removepiece
-	}
-
-
-	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
-		if(piecesOnBoard[x][y]!=-1){ //used for promote
-			removePiece([x][y]);
-
-
-	public void transformPiece(int x, int y, string pieceName){ //destroy and create different piece
-		if(piecesOnBoard[x][y]!=-1){ //used for promote
-			removePiece([x][y]);
-			createPieceInEmpty([x][y], equalsIgnoreCase(pieceName));
-		}
-	}
-	*/
-
-
-
-
-
-
-
-    //prepare the board for the next turn
+  //prepare the board for the next turn
     private void updateBoard(){
         turnCounter++;
         updatePieceCounters();
@@ -1299,29 +1256,33 @@ if (boardState[moveTargetx][moveTargety]==0){
 
 }
 
-   String getCurrentlySelectedPieceName(){
+    String getCurrentlySelectedPieceName(){
         String name;
         name=allPiecesOnBoard.get(pieceLastSelected).name;
         return name;
     }
 
     String getCurrentlySelectedPieceDescription(){
-        String name;
-        name=allPiecesOnBoard.get(pieceLastSelected).abilityDescription;
-        return name;
+        String description;
+        description=allPiecesOnBoard.get(pieceLastSelected).abilityDescription;
+        return description;
     }
 
     String getCurrentlySelectedPieceLore(){
-        String name;
-        name=allPiecesOnBoard.get(pieceLastSelected).loreWriting;
-        return name;
+        String lore;
+        lore=allPiecesOnBoard.get(pieceLastSelected).loreWriting;
+        return lore;
     }
 
-    private void drawAll(SpriteBatch batch) {
+    private void drawAll(SpriteBatch batch,MouseVars mouseVars) {
 
 
         sprite.draw(batch);
 
+        batch.end();
+        batch.begin();
+        Shaders.prepareDistanceFieldShader();
+        batch.setShader(Shaders.distanceFieldShader);
         String draw="";
         //draw the morale totals on screen, if flipBoard is true, draw the morale totals in opposite locations
         //so the morale totals are always next to the proper army
@@ -1348,6 +1309,30 @@ if (boardState[moveTargetx][moveTargety]==0){
             font.draw(batch,draw,1000,200);
         }
 
+        //this draws the moveset of the piece to the screen
+        String line="";
+        String spacing="  ";
+        for(int y=14;y>=0;y--){
+            for(int x=14;x>=0;x--){
+
+                if (x==7&&y==7){
+                    line+="x  ";
+                }else {
+                    if (String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]).length()==2){
+                        spacing=" ";
+                    }else{
+                        spacing="  ";
+                    }
+                    line += String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]) + spacing;
+                }
+            }
+            font.draw(batch,line,20,600-15*(14-y));
+            line="";
+        }
+        batch.end();
+        batch.begin();
+        batch.setShader(Shaders.defaultShader);
+
         //loop through all pieces that have not been captured and draw them
         for (int x = 0; x != allPiecesOnBoard.size(); x++) {
             if (allPiecesOnBoard.get(x).captured==false) {
@@ -1360,31 +1345,26 @@ if (boardState[moveTargetx][moveTargety]==0){
                     xPosOfPiece = (int) (allPiecesOnBoard.get(x).xLocation * 77.25 + 38.625) + boardPosX;
                     yPosOfPiece = (int) (allPiecesOnBoard.get(x).yLocation * 77.25 + 38.625) + boardPosY;
                 }
-                allPiecesOnBoard.get(x).draw(batch,boardPosX,boardPosY,xPosOfPiece,yPosOfPiece);
+                if (allPiecesOnBoard.get(x).selected==false) {
+                    allPiecesOnBoard.get(x).draw(batch, xPosOfPiece, yPosOfPiece);
+                }else{
+                    allPiecesOnBoard.get(x).drawSpecificLoc(batch,(int)(72*1.1),mouseVars.mousePosx,mouseVars.mousePosy);
+                }
             }
         }
-        //this draws the moveset of the piece to the screen
-        String line="";
-        String spacing="  ";
-        for(int y=14;y>=0;y--){
-    for(int x=14;x>=0;x--){
-
-                if (x==7&&y==7){
-                    line+="x  ";
-                }else {
-                    if (String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]).length()==2){
-                        spacing=" ";
-                    }else{
-                        spacing="  ";
-                    }
-                    line += String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]) + spacing;
-                }
-                }
-            font.draw(batch,line,20,600-15*(14-y));
-            line="";
-}
 
     }
+
+    void reloadGraphics(){
+        deleteGraphics();
+        loadGraphics();
+        initFont();
+        for(int x=0;x!=allPiecesOnBoard.size();x++){
+            allPiecesOnBoard.get(x).setImage();
+        }
+    }
+
+
     //delete graphics objects, used when the game is being reset to avoid leaking memory
     void deleteGraphics(){
         font.dispose();

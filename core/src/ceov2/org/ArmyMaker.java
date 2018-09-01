@@ -84,7 +84,7 @@ loadTextures();
 //calculate the morale of the current army
 calculateMorale();
     }
-//This constructor is no used for when the player enters the armyMaker, but is used when the player enters the
+//This constructor is not used for when the player enters the armyMaker, but is used when the player enters the
 //level editor, this constructor calls only general methods
     public ArmyMaker(){
         armyPiece=new String[8][8];
@@ -222,15 +222,18 @@ ClickListener clickListener;
     }
 //loads graphics objects
     void loadTextures(){
-        font=new BitmapFont();
+        //load font texture
+        Texture texture = new Texture(Gdx.files.internal("Fonts\\ArialDistanceField2.png"), true);
+        texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
+        //create font using above texture
+        font = new BitmapFont(Gdx.files.internal("Fonts\\ArialDistanceField2.fnt"), new TextureRegion(texture), false);
         font.setColor(Color.BLACK);
-        boardImage=new Texture("Board.png");
+
+        //create board texture
+        boardImage=GraphicsUtils.loadTexture("Board.png");
         TextureRegion boardRegion=new TextureRegion(boardImage,0,(int)(boardImage.getHeight()*0.25),boardImage.getWidth(),(int)(boardImage.getHeight()*0.25));
-
-       // boardImage.dispose();
-        boardSprite =new Sprite(boardRegion);
+        boardSprite=new Sprite(boardRegion);
         boardSprite.setSize(480,120);
-
         boardSprite.setCenter(640,110);
     }
 //load all pieces currently in the game
@@ -276,6 +279,10 @@ ClickListener clickListener;
 void drawPieceInfo(SpriteBatch batch){
     String line="";
     String spacing="  ";
+    batch.end();
+    batch.begin();
+    Shaders.prepareDistanceFieldShader();
+    batch.setShader(Shaders.distanceFieldShader);
     for(int y=14;y>=0;y--){
         for(int x=14;x>=0;x--){
 
@@ -293,6 +300,10 @@ void drawPieceInfo(SpriteBatch batch){
         font.draw(batch,line,20,600-15*(14-y));
         line="";
     }
+
+    batch.end();
+    batch.begin();
+    batch.setShader(Shaders.defaultShader);
 }
 //loop through all army pieces and draw them
 void drawArmyPieces(SpriteBatch batch, MouseVars mouseVars){
@@ -300,16 +311,18 @@ void drawArmyPieces(SpriteBatch batch, MouseVars mouseVars){
         for(int x=0;x!=8;x++){
             int xCenter;
             int yCenter;
+            int size=56;
 //if the piece is selected it will be drawn where the cursor is
             if (pieceInArmySelected ==true&&selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
                 xCenter = mouseVars.mousePosx;
                 yCenter = mouseVars.mousePosy;
+                size=(int)(56*1.2);
 //Otherwise it will be drawn on the army grid
             }else{
                 xCenter = 400 + 60 * x + 30;
                 yCenter = 50 + 60 * y + 30;
             }
-            drawPiece(batch,armyPiece[y][x],xCenter,yCenter);
+            drawPiece(batch,armyPiece[y][x],xCenter,yCenter,size);
         }
     }
 }
@@ -319,7 +332,10 @@ void drawBoard(SpriteBatch batch){
 }
 
 void drawText(SpriteBatch batch){
-
+        batch.end();
+        batch.begin();
+Shaders.prepareDistanceFieldShader();
+batch.setShader(Shaders.distanceFieldShader);
     String text="total morale allowed: "+String.valueOf(moraleAllowed);
     font.draw(batch,text,900,50);
     text="total morale used: "+String.valueOf(moraleTotal);
@@ -332,11 +348,13 @@ void drawText(SpriteBatch batch){
     font.setColor(Color.RED);
     font.draw(batch,text,400,200);
     font.setColor(Color.BLACK);
-
     text=successMessage;
     font.setColor(Color.GREEN);
     font.draw(batch,text,400,200);
     font.setColor(Color.BLACK);
+    batch.end();
+    batch.begin();
+    batch.setShader(Shaders.defaultShader);
 }
 //draw the pieces currently visible on the collection
 void drawCollectionPieces(SpriteBatch batch,MouseVars mouseVars){
@@ -350,14 +368,14 @@ if (indexToDrawFrom>allPieces.size()){
     //draw nothing
 }else{
     //loop through pieces and draw them
-    int numberOfPiecesToDraw=0;
+    int numberOfPiecesToDraw;
     if ((allPieces.size()-indexToDrawFrom)>(pageX*pageY)){
       numberOfPiecesToDraw=10;
     }else{
         numberOfPiecesToDraw=allPieces.size()%(pageX*pageY);
     }
     for(int x=indexToDrawFrom;x!=indexToDrawFrom+numberOfPiecesToDraw;x++){
-        allPieces.get(x).drawSpecificLoc(batch,60,500+60*xLocation,450-60*yLocation);
+        allPieces.get(x).drawSpecificLoc2(batch,60,500+60*xLocation,450-60*yLocation);
         if (xLocation==pageX-1){
             xLocation=0;
             yLocation++;
@@ -370,7 +388,7 @@ if (indexToDrawFrom>allPieces.size()){
 if (pieceInCollectionSelected==true){
     for(int x=0;x!=allPieces.size();x++){
         if (allPieces.get(x).name.equals(selectedCollectionPiece)){
-            allPieces.get(x).drawSpecificLoc(batch,60,mouseVars.mousePosx,mouseVars.mousePosy);
+            allPieces.get(x).drawSpecificLoc2(batch,(int)(60*1.2),mouseVars.mousePosx,mouseVars.mousePosy);
         }
     }
 }
@@ -380,20 +398,22 @@ if (pieceInCollectionSelected==true){
         //loop through all pieces until we find the name of the piece that should be drawn, and draw it
         for (int x=0; x!=allPieces.size();x++) {
 if (allPieces.get(x).name.equals(name)){
-    allPieces.get(x).drawSpecificLoc(batch,56,xCenter,yCenter);
+    allPieces.get(x).drawSpecificLoc2(batch,56,xCenter,yCenter);
     break;
 }
         }
     }
 
-    void deleteGraphics(){
+    void drawPiece(SpriteBatch batch, String name,int xCenter, int yCenter,int size) {
+        //loop through all pieces until we find the name of the piece that should be drawn, and draw it
+        for (int x=0; x!=allPieces.size();x++) {
+            if (allPieces.get(x).name.equals(name)){
+                allPieces.get(x).drawSpecificLoc2(batch,size,xCenter,yCenter);
+                break;
+            }
+        }
+    }
 
-        menu.dispose();
-font.dispose();
-for(int x=0;x!=allPieces.size();x++){
-    allPieces.get(x).deleteGraphics();
-}
-}
 
     //find the location of the mouse within a grid with square size "size" and location on screen "locationx/locationy"
     //the grid being "gridx" squares long and "gridy" square tall
@@ -614,5 +634,30 @@ errorMessage="";
         pieceInCollectionSelected=false;
         pieceInArmySelected=false;
     }
+
+    void reloadGraphics(){
+        deleteAllNonMenuGraphics();
+        loadTextures();
+        for (int x=0;x!=allPieces.size();x++){
+            allPieces.get(x).setImage();
+        }
+
+}
+
+    void deleteGraphics(){
+        menu.dispose();
+        font.dispose();
+        for(int x=0;x!=allPieces.size();x++){
+            allPieces.get(x).deleteGraphics();
+        }
+    }
+    //same as above but menu graphics untouched
+    void deleteAllNonMenuGraphics(){
+        font.dispose();
+        for(int x=0;x!=allPieces.size();x++){
+            allPieces.get(x).deleteGraphics();
+        }
+    }
+
 }
 

@@ -14,7 +14,7 @@ public class DesktopLauncher {
 		config.title="Chess Dynasties";
 		config.width=1100;
 		config.height=618;
-		config.resizable=false;
+		config.resizable=true;
 
 		//create window
 		new LwjglApplication(new CEOV2(), config);
