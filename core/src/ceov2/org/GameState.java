@@ -15,13 +15,13 @@ import java.awt.datatransfer.Clipboard;
 
 //this class deals with all the logic of a live game.
 public class GameState {
-    //clipboard copying stuff, temporary
-    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
     //holds morale of both players,index 0=player 1(white)index 1=player 2(black)
     int[] moraleTotals=new int[2];
     //tells the game when the board should be flipped, this changes the functionality
     //of the findSquareMouseIsOn method, and the drawAll Method, when all the piece's get drawn
      boolean flipBoard=false;
+     //colourOfUser tells what colour the user is playing as 1=white, 2=black
+     int colourOfUser;
     //playerturn tells who's turn it is, 1=player 1's turn(white), 2=player 2's turn(black)
      int playerTurn=1;
      //tells if a piece is selected by a player(they have clicked it)
@@ -51,7 +51,9 @@ public class GameState {
      int turnCounter=0;
 
      Texture boardImage;
+     Texture reticleTexture;
      Sprite sprite;
+
      //the variables controlling the board
      int boardSize=618;
      int boardPosX=331;
@@ -65,6 +67,8 @@ public class GameState {
     //the array of all Pieces that are on the board
     ArrayList<Piece> allPiecesOnBoard=new ArrayList<Piece>();
 
+    //allows messages to be sent to server
+    ServerCommunications serverComms;
 
 
     //contains the information about what occupies each square of the board
@@ -75,27 +79,39 @@ public class GameState {
     //i.e. it is equal to the index of the piece in the array of Pieces,-1 means unoccupied
     int[][] piecesOnBoard = new int[8][8];
 
-    //in the future the constructor will take 2 army objects as its parameters to set up the game
+    //single player practice game constructor
     public GameState() {
-
         initFont();
         Piece.InitAllMoveTypes();
         loadArmies();
         loadGraphics();
-        setBoard(allPiecesOnBoard);
+        setBoard();
         turnJustStarted=true;
         testAndExecuteAbilities();
         turnJustStarted=false;
-
         findAllValidMoves();
-
     }
 
-	private void loadGraphics(){
-        boardImage=GraphicsUtils.loadTexture("Board.png");
-        sprite=new Sprite(boardImage);
-        sprite.setSize(618,618);
-        sprite.setCenter(640,309);
+    //multiplayer game constructor
+    //colour=1 means user is white, colour=2 means user is black
+    public GameState(int colour,String army, String oppArmy,ServerCommunications serverComms) {
+        this.serverComms=serverComms;
+        //set the colour of the user
+        colourOfUser=colour;
+        initFont();
+        Piece.InitAllMoveTypes();
+        loadArmies(colour,army,oppArmy);
+        //if the player is not player one, the board is flipped so their pieces are still located on the
+        //bottom of the board
+        if (colour!=1){
+            flipBoard=!flipBoard;
+        }
+        loadGraphics();
+        setBoard();
+        turnJustStarted=true;
+        testAndExecuteAbilities();
+        turnJustStarted=false;
+        findAllValidMoves();
     }
 
     //this method executes every tick
@@ -103,7 +119,30 @@ public class GameState {
 
         //see if the player has clicked on a piece, or it trying to move a piece
         //if the player has made a valid move this method will also execute it
-        processMouseInputAndDoThingsBasedOnTheMouseInput(mouseVars);
+        processMouseInputClick(mouseVars);
+        processMouseInputRelease(mouseVars);
+        //draw everything
+        batch.begin();
+        drawAll(batch,mouseVars);
+        batch.end();
+    }
+    //version of above method for multiplayer games, minor differences
+    public void runMultiplayerGame(SpriteBatch batch, MouseVars mouseVars){
+
+        //see if the player has clicked on/selected a piece
+            processMouseInputClick(mouseVars);
+        //If it is the user's turn, see if the player has released the mouse while selecting a piece
+        //if so, the piece may be moved.
+            if (playerTurn==colourOfUser) {
+                processMouseInputRelease(mouseVars);
+            }else{
+                //make sure no pieces are currently selected
+                if (mouseVars.mouseReleased==true){
+                    allPiecesOnBoard.get(piecesOnBoard[selectedPieceLocx][selectedPieceLocy]).unselect();
+                    pieceSelected=false;
+               }
+            }
+
         //draw everything
         batch.begin();
         drawAll(batch,mouseVars);
@@ -119,8 +158,7 @@ public class GameState {
         font.setColor(Color.BLACK);
 }
 //put all pieces on the board, set their locations
-    public void setBoard(ArrayList <Piece> pieces) {
-        allPiecesOnBoard=pieces;
+    public void setBoard() {
         //set pieceOnBoard to -1, which means the square is unnoccupied
         for(int x=0;x!=8;x++){
             for(int y=0;y!=8;y++){
@@ -271,39 +309,43 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
         return pieceIsProtected;
 }
 
-//use mouse input to see if the player is trying to make a move
-    public void processMouseInputAndDoThingsBasedOnTheMouseInput(MouseVars mouseVars){
-        //loc is set to the squares on the board that the mouse cursor is located at
-        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+//use mouse input to see if the user is clicking on or has selected a piece
+public void processMouseInputClick(MouseVars mouseVars){
+    //loc is set to the squares on the board that the mouse cursor is located at
+    int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
 
-        if (mouseVars.mouseClicked==true) {
-            //if loc is actually on the board, we have to test to see if the square is occupied
-            if (loc[0] >= 0 && loc[1] >= 0&&loc[0]<=7&&loc[1]<=7) {
+    if (mouseVars.mouseClicked==true) {
+        //if loc is actually on the board, we have to test to see if the square is occupied
+        if (loc[0] >= 0 && loc[1] >= 0&&loc[0]<=7&&loc[1]<=7) {
 
-                //this happens so that the player can click on pieces and see what they are, it has no
-                //relevance on the code occurring here
-                if (boardState[loc[0]][loc[1]]!=0){
-                    pieceLastSelected=piecesOnBoard[loc[0]][loc[1]];
-                }
+            //this happens so that the player can click on pieces and see what they are, it has no
+            //relevance on the code occurring here
+            if (boardState[loc[0]][loc[1]]!=0){
+                pieceLastSelected=piecesOnBoard[loc[0]][loc[1]];
+            }
 
-                //if the square is a piece the player owns, they might be able to pick it up
-                if (boardState[loc[0]][loc[1]] == playerTurn) {
-                    //if they haven't already selected a piece, the player can pick up a new piece
-                    if (pieceSelected==false) {
-                        //the piece is selected
-                        allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).select();
-                        //the selected pieces location and index are stored
-                        selectedPieceLocx=loc[0];
-                        selectedPieceLocy=loc[1];
-                        selectedPiece=piecesOnBoard[loc[0]][loc[1]];
-                        //pieceInArmySelected is set true, so 2 pieces can't be selected at once
-                        pieceSelected = true;
-                    }
+            //if the square is a piece the player owns, they might be able to pick it up
+            if (boardState[loc[0]][loc[1]] == playerTurn) {
+                //if they haven't already selected a piece, the player can pick up a new piece
+                if (pieceSelected==false) {
+                    //the piece is selected
+                    allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).select();
+                    //the selected piece's location and index are stored
+                    selectedPieceLocx=loc[0];
+                    selectedPieceLocy=loc[1];
+                    selectedPiece=piecesOnBoard[loc[0]][loc[1]];
+                    //pieceSelected is set true, so 2 pieces can't be selected at once
+                    pieceSelected = true;
                 }
             }
         }
+    }
 
-
+}
+//use mouse input to see if the player is trying to make a move by releasing the mouse
+    public void processMouseInputRelease(MouseVars mouseVars){
+        //loc is set to the squares on the board that the mouse cursor is located at
+        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
         if (mouseVars.mouseReleased==true){
 
             boolean validMove=false;
@@ -371,6 +413,45 @@ if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgn
         //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
         tempPieces.clear();
     }
+    //loads the two armies from "army" and "oppArmy"
+    //strings are in the following format "pawn,pawn,pawn,....knight,rook"
+    //if the user is white, colour=1, if the user is black colour=2
+    private void loadArmies(int colour,String army, String oppArmy){
+
+
+ //this if statement exists only to ensure the first 16 pieces added to the array allPiecesOnBoard
+ //are white.If the user is player one, aka white, load their pieces first,otherwise load their opponent's
+ //pieces
+    if (colour==1) {
+        //separate the loaded string from the file into it's 16 piece names
+        String[] separated = army.split(",");
+        //load all the pieces corresponding to the piece names from the String
+        //load all of player 1's pieces first, so they take up the first 16 places in the array
+        for (int x = 0; x != 16; x++) {
+            allPiecesOnBoard.add(new Piece(separated[x], true));
+        }
+//repeat the above for the black pieces, which are loaded from army2
+        separated = oppArmy.split(",");
+        for (int x = 0; x != 16; x++) {
+            allPiecesOnBoard.add(new Piece(separated[x], false));
+        }
+    }else{
+        //separate the loaded string from the file into it's 16 piece names
+        String[] separated = oppArmy.split(",");
+        //load all the pieces corresponding to the piece names from the String
+        //load all of player 1's pieces first, so they take up the first 16 places in the array
+        for (int x = 0; x != 16; x++) {
+            allPiecesOnBoard.add(new Piece(separated[x], true));
+        }
+//repeat the above for the black pieces, which are loaded from army2
+        separated = army.split(",");
+        for (int x = 0; x != 16; x++) {
+            allPiecesOnBoard.add(new Piece(separated[x], false));
+        }
+    }
+    //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
+        tempPieces.clear();
+}
 
   //prepare the board for the next turn
     private void updateBoard(){
@@ -687,6 +768,20 @@ effect.inEffect=false;
 
     void executeMove(int xTarget,int yTarget, Piece pieceMoving,int movetype){
 
+        //if the user is the one that made the move, the move is sent to the server
+        if (playerTurn == colourOfUser) {
+            //take the location of the piece moving, and the location of the square targeted and put them into a string
+            //String is in format "####" where the first two numbers are the x and y coords of the piece moving, and
+            //the next two are the coords of the square being targeted
+            String move=String.valueOf(pieceMoving.xLocation)+String.valueOf(pieceMoving.yLocation)+String.valueOf(xTarget)+String.valueOf(yTarget);
+            System.out.println(move);
+            //convert move to hex
+            move=StringUtils.convertToHex(move);
+            //create the message to be sent to server, and send it
+            String message="MOVE "+move;
+            serverComms.sendMessageToServer(message+"\n");
+        }
+
         //find if the movetype is blockable (if it's greater than 1000 it is blockable
         int blockable;
         if (movetype>1000&&movetype<2000){
@@ -699,13 +794,13 @@ effect.inEffect=false;
         if (Piece.allMoveTypes[blockable][movetype].moveType!=0){
 pieceMoving.removeOneTimeMovesMoves();
         }
-        //movetypes set to just used, and abilities may occur based on this
+        //the movetype is set to just used, and abilities may occur based on this
         pieceMoving.movetypeUsed=movetype;
         pieceMoving.justUsedMovetype=true;
         testAndExecuteAbilities();
         pieceMoving.justUsedMovetype=false;
 
-        //piece set to have made a move, and abilities may occur because of this
+        //piece is set to having made a move,and  abilities may occur based on this
         pieceMoving.numberOfMovesMade++;
         pieceMoving.justMoved=true;
         testAndExecuteAbilities();
@@ -737,7 +832,7 @@ pieceMoving.removeOneTimeMovesMoves();
                     swapPiece(pieceMoving.xLocation, pieceMoving.yLocation, xTarget, yTarget);
                 }
                break;
-//movetype 4, the sacrifice self movetype, captures the piece that uses this
+//movetype 4, the sacrifice self movetype, captures the piece that uses it
             case 4:
                 capturePieceWithMove(pieceMoving.xLocation,pieceMoving.yLocation,pieceMoving,movetype);
                 break;
@@ -745,10 +840,11 @@ pieceMoving.removeOneTimeMovesMoves();
         }
 
     }
+
 //make a move based on a String containing the location, and the destination of the move
 //example string 1765, where (1,7) is the initial location of the piece, and (6,5) is the location
 //the piece is moving to
-    void testThenExecuteMove(String move){
+    void executeMoveFromServer(String move){
         //the String must be exactly 4 characters long or it won't execute
         if (move.length()==4) {
             //array storing the four integers
@@ -795,6 +891,7 @@ if (validInputString==true) {
    //if the move is valid, execute the move
     if (validMove==true){
         executeMove(moveLocx,moveLocy,allPiecesOnBoard.get(indexOfPieceMoving),movetypePieceUsing);
+        updateBoard();
     }
 
 }
@@ -1254,6 +1351,12 @@ if (boardState[moveTargetx][moveTargety]==0){
             whiteWins=true;
         }
 
+        if (gameOver==true){
+            if (serverComms!=null) {
+                serverComms.sendMessageToServer("RANKED_MATCH_OVER\n");
+            }
+        }
+
 }
 
     String getCurrentlySelectedPieceName(){
@@ -1274,15 +1377,51 @@ if (boardState[moveTargetx][moveTargety]==0){
         return lore;
     }
 
+
+
     private void drawAll(SpriteBatch batch,MouseVars mouseVars) {
-
-
+        //draw board Sprite
         sprite.draw(batch);
 
+        drawReticle(batch, mouseVars);
+
+        drawText(batch);
+
+        drawPieces(batch, mouseVars);
+
+    }
+    //indicate which piece is targeted
+    //draw reticle, there has got to be a better word for this
+    private void drawReticle(SpriteBatch batch,MouseVars mouseVars){
+        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+
+        float xPosOfTarget = (float) (loc[0] * 77.25 + boardPosX);
+        float yPosOfTarget = (float) (loc[1] * 77.25 + boardPosY);
+
+        if(loc[0] >= 0 && loc[1] >= 0){
+            batch.draw(reticleTexture,xPosOfTarget,(float)yPosOfTarget,(float)77.25,(float)77.25);
+        }
+    }
+
+    private void drawText(SpriteBatch batch){
+//start a fresh batch
         batch.end();
         batch.begin();
+//prepare fond shader
         Shaders.prepareDistanceFieldShader();
         batch.setShader(Shaders.distanceFieldShader);
+//draw text
+drawMoraleValues(batch);
+drawGameResult(batch);
+drawMoveSet(batch);
+//end the batch and start a new one for the draw methods that occur after this one
+        batch.end();
+        batch.begin();
+//return to default shader
+        batch.setShader(Shaders.defaultShader);
+    }
+
+    private void drawMoraleValues(SpriteBatch batch){
         String draw="";
         //draw the morale totals on screen, if flipBoard is true, draw the morale totals in opposite locations
         //so the morale totals are always next to the proper army
@@ -1297,7 +1436,11 @@ if (boardState[moveTargetx][moveTargety]==0){
             draw = "Morale " + String.valueOf(moraleTotals[1]);
             font.draw(batch, draw, 1000, 50);
         }
-//if the game is over, draw a message saying who won
+    }
+
+    private void drawGameResult(SpriteBatch batch){
+        String draw="";
+        //if the game is over, draw a message saying who won
         if (gameOver==true){
             if (blackWins==true){
                 draw="Black Wins!";
@@ -1305,34 +1448,53 @@ if (boardState[moveTargetx][moveTargety]==0){
             if(whiteWins==true){
                 draw="White Wins!";
             }
-
             font.draw(batch,draw,1000,200);
         }
+    }
 
+    private void drawMoveSet(SpriteBatch batch){
         //this draws the moveset of the piece to the screen
         String line="";
         String spacing="  ";
-        for(int y=14;y>=0;y--){
-            for(int x=14;x>=0;x--){
-
-                if (x==7&&y==7){
-                    line+="x  ";
-                }else {
-                    if (String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]).length()==2){
-                        spacing=" ";
-                    }else{
-                        spacing="  ";
+        if (flipBoard==false){
+            for(int y=14;y>=0;y--){
+                for(int x=14;x>=0;x--){
+                    if (x==7&&y==7){
+                        line+="x  ";
+                    }else {
+                        if (String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]).length()==2){
+                            spacing=" ";
+                        }else{
+                            spacing="  ";
+                        }
+                        line += String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]) + spacing;
                     }
-                    line += String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][y] % 1000]) + spacing;
                 }
+                font.draw(batch,line,20,600-15*(14-y));
+                line="";
             }
-            font.draw(batch,line,20,600-15*(14-y));
-            line="";
-        }
-        batch.end();
-        batch.begin();
-        batch.setShader(Shaders.defaultShader);
+        }else{
+            for(int y=14;y>=0;y--){
+                for(int x=14;x>=0;x--){
 
+                    if (x==7&&y==7){
+                        line+="x  ";
+                    }else {
+                        if (String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][14-y] % 1000]).length()==2){
+                            spacing=" ";
+                        }else{
+                            spacing="  ";
+                        }
+                        line += String.valueOf(Piece.moveTypeIndexes[allPiecesOnBoard.get(pieceLastSelected).staticMoveset[x][14-y] % 1000]) + spacing;
+                    }
+                }
+                font.draw(batch,line,20,600-15*(14-y));
+                line="";
+            }
+        }
+    }
+
+    private void drawPieces(SpriteBatch batch,MouseVars mouseVars){
         //loop through all pieces that have not been captured and draw them
         for (int x = 0; x != allPiecesOnBoard.size(); x++) {
             if (allPiecesOnBoard.get(x).captured==false) {
@@ -1352,7 +1514,14 @@ if (boardState[moveTargetx][moveTargety]==0){
                 }
             }
         }
+    }
 
+    private void loadGraphics(){
+        boardImage=GraphicsUtils.loadTexture("Board.png");
+        reticleTexture = GraphicsUtils.loadTexture("reticule.png");
+        sprite=new Sprite(boardImage);
+        sprite.setSize(618,618);
+        sprite.setCenter(640,309);
     }
 
     void reloadGraphics(){
@@ -1369,6 +1538,7 @@ if (boardState[moveTargetx][moveTargety]==0){
     void deleteGraphics(){
         font.dispose();
         boardImage.dispose();
+        reticleTexture.dispose();
         for(int x=0;x!=allPiecesOnBoard.size();x++){
             allPiecesOnBoard.get(x).deleteGraphics();
         }

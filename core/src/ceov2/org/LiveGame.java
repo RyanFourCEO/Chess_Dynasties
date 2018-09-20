@@ -13,17 +13,27 @@ public class LiveGame {
 GameState state;
 Menu menu;
 boolean gameOver=false;
-
+boolean multiplayerGame=false;
     public LiveGame(InputMultiplexer inputMultiplexer){
 state=new GameState();
 loadGameMenu(inputMultiplexer);
+}
+//colour =1 means the user is white, colour =2 means the user is black
+public LiveGame(InputMultiplexer inputMultiplexer,int colour,String army,String oppArmy,ServerCommunications serverComms){
+    state=new GameState(colour,army,oppArmy,serverComms);
+    loadGameMenu(inputMultiplexer);
+    multiplayerGame=true;
 }
 
     void performGameLogic(SpriteBatch batch, MouseVars mouseVars){
         updateMenuObjects();
     menu.stage.getViewport().apply();
     menu.stage.draw();
-    state.runGame(batch,mouseVars);
+    if (multiplayerGame==true){
+        state.runMultiplayerGame(batch, mouseVars);
+    }else {
+        state.runGame(batch, mouseVars);
+    }
 }
 
     void unselectAll(){
@@ -33,21 +43,10 @@ loadGameMenu(inputMultiplexer);
     void loadGameMenu(InputMultiplexer inputMultiplexer){
 menu=new Menu(inputMultiplexer);
 
-         //reset the board button
-                ClickListener clickListener=new ClickListener(){
-            @Override
-            public void clicked(InputEvent event, float x, float y){
-                state.deleteGraphics();
-                state=null;
-                state=new GameState();
-            }
-        };
-        menu.addButton("Reset Board",200,30,100,60,clickListener);
-
 
 
         //return to main menu button
-        clickListener=new ClickListener(){
+        ClickListener clickListener=new ClickListener(){
             @Override
             public void clicked(InputEvent event, float x, float y){
 gameOver=true;

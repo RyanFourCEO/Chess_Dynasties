@@ -24,8 +24,10 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.Buffer;
 
 public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
@@ -37,7 +39,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 	public static final int GAME_IS_LIVE_STATE =1;
 	public static final int ARMY_BUILDING_STATE=2;
 	public static final int LEVEL_EDITOR_STATE=3;
-
+    //ServerCommunications object, used to send and receive messages from the server
+	//automatically decodes all messages to hex, encodes sent messages to hex
+	ServerCommunications serverComms;
 
 	boolean fullScreenMode=false;
     //allows multiple inputprocessors to be used at once
@@ -51,6 +55,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 	//the options menu will always be available to the user
     public Menu optionsMenu;
     boolean currentlyInOptionsMenu=false;
+
+    //this string is displayed to the user, the String will tell the user if they are connected or not
+    String connectionMessage="Not Connected To Server";
 
 
 	SpriteBatch batch;
@@ -84,40 +91,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 	//initialization/loading of the games resources
 	@Override
 	public void create () {
+		serverComms=new ServerCommunications("127.0.0.1",9021);
 
-//currently does nothing, ignore all server stuff
-		try {
-		String ipAddress="127.0.0.1";
-		ServerSocketHints serverSocketHint = new ServerSocketHints();
-		serverSocketHint.acceptTimeout = 500;
-		ServerSocket serverSocket = Gdx.net.newServerSocket(Protocol.TCP,ipAddress, 9021, serverSocketHint);
-		SocketHints socketHints = new SocketHints();
-		socketHints.connectTimeout = 500;
-		//Socket socket2 = serverSocket.accept(socketHints);
-
-			Socket socket = Gdx.net.newClientSocket(Protocol.TCP, ipAddress, 9022, socketHints);
-			System.out.println("hello");
-			String test = "testeroo \n";
-			try {
-				// write our entered message to the stream
-				socket.getOutputStream().write(test.getBytes());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-		Socket socket2 = serverSocket.accept(null);
-		try {
-			BufferedReader buffer = new BufferedReader(new InputStreamReader(socket2.getInputStream()));
-			System.out.println(buffer.readLine());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-
-		}catch(GdxRuntimeException e){
-			System.out.println("failed to connect to server");
-		}
-
+		//create semi-transparent black box texture
 		pixmap = new Pixmap( 290, 300, Pixmap.Format.RGBA8888 );
 		pixmap.setColor( 0,0,0,0.75f);
 		pixmap.fillRectangle(0,0,290,300);
@@ -164,7 +140,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 	@Override
 	public void render () {
 
-
 		//collect the mouse variable for this frame
 mouseVars.setMouseVariables(DEFAULT_SCREEN_HEIGHT,DEFAULT_SCREEN_WIDTH,viewport.getScreenHeight(),viewport.getScreenWidth());
 //clear the screen
@@ -175,6 +150,9 @@ mouseVars.setMouseVariables(DEFAULT_SCREEN_HEIGHT,DEFAULT_SCREEN_WIDTH,viewport.
 			//make a move while doing options menu things
 			mouseVars.unSetMouseVariables();
 		}
+
+         //process Server input
+		processServerInput();
 
 
 //based on the state of the game, execute certain code
@@ -244,7 +222,14 @@ switch (currentGameState){
 			batch.setShader(Shaders.defaultShader);
 
 		}
-
+		Shaders.prepareDistanceFieldShader();
+		batch.setShader(Shaders.distanceFieldShader);
+batch.begin();
+font.setColor(Color.BLACK);
+		font.draw(batch,connectionMessage,900,600);
+		font.setColor(Color.WHITE);
+batch.end();
+batch.setShader(Shaders.defaultShader);
 		//draw the optionsMenu UI components
 		optionsMenu.stage.getViewport().apply();
 		optionsMenu.stage.draw();
@@ -259,6 +244,7 @@ switch (currentGameState){
 		mainMenu.dispose();
 		optionsMenu.dispose();
 		texture.dispose();
+		serverComms.closeStreams();
 	}
 
 	void reloadGraphics(){
@@ -343,9 +329,83 @@ toggleOptionsMenu();
 		return false;
 	}
 
+void processServerInput(){
+	//check the state of the server
+	if (serverComms.getState()==false){
+		connectionMessage="Not Connected to Server";
+	}else{
+		connectionMessage="Connected to Server";
 
+	}
+	//attempt to read any new messages the server may have sent
+	serverComms.readMessages();
+	//if their is a message in the queue to process
+	if (serverComms.getFirstClientMessageInQueue()!=null) {
+		//process it, then remove it from the queue
+		dealWithServerMessage(serverComms.getFirstClientMessageInQueue());
+		serverComms.removeFirstClientMessageInQueue();
+	}
+}
+//process a single server message
+	void dealWithServerMessage(String message){
+		//split the message into it's two parts, the command, and the arguments
+		String[] commandThenArgs=message.split(" ");
+		String command=commandThenArgs[0];
+		String args=commandThenArgs[1];
+		System.out.println(command+" is executed");
 
+		//deal with the heartBeat command
+		if (command.equals("HEARTBEAT")){
+			//reply with HEARTBEAT command of our own
+			serverComms.sendMessageToServer("HEARTBEAT"+"\n");
+		}else{
+			//deal with RANKED_MATCH_FOUND command
+			if (command.equals("RANKED_MATCH_FOUND")){
+				dealWithRankedMatchFoundCommand(args);
+			}else{
+				if (command.equals("MOVE")){
+					String move=StringUtils.convertFromHex(args);
+					System.out.println(move);
+					game.state.executeMoveFromServer(move);
+				}
+			}
+		}
+	}
 
+	void dealWithRankedMatchFoundCommand(String args){
+		//count number of commas in the string, this is the number of arguments sent
+		int commaNumber=StringUtils.countOccurrences(args,',');
+		//split the String by commas
+		String[] splitArgs=args.split(",");
+		//convert all strings from hex
+		for(int x=0;x!=commaNumber+1;x++){
+			splitArgs[x]=StringUtils.convertFromHex(splitArgs[x]);
+		}
+		//the first arg in the RANKEDMATCHFOUND command is the colour
+		int colour=Integer.valueOf(splitArgs[0]);
+		//the other args are pieces
+		String army="";
+		//loop through all other args and put them in a String
+		for(int x=1;x!=commaNumber+1;x++){
+			if (x!=commaNumber) {
+				army += splitArgs[x] + ",";
+			}else{
+				army += splitArgs[x];
+			}
+		}
+		System.out.println(army+" hmm");
+		//load the army the user is using
+		String army2=Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
+		hideMainMenu();
+		//set other objects not used by the game to be null
+		setAllObjectsNull();
+		//game object created using the army sent by the server, the colour sent by the server
+		//and the army the user is using. ServerComms also sent to LiveGame object so it can
+		//send messages to the server
+		game=new LiveGame(inputMultiplexer,colour,army2,army,serverComms);
+		//state set to 1, which means game is currently being played
+		currentGameState= GAME_IS_LIVE_STATE;
+	}
 
 	//load the main menu's buttons
 	void loadMainMenuUIComponents(){
@@ -362,7 +422,32 @@ toggleOptionsMenu();
 				currentGameState= GAME_IS_LIVE_STATE;
 			}
 		};
-		mainMenu.addButton("Start Game",200,30,100,100,clickListener);
+		mainMenu.addButton("Practice Game",200,30,100,100,clickListener);
+
+		//this clickListener has the player enter the multiplayer queue
+		clickListener=new ClickListener(){
+			@Override
+			public void clicked(InputEvent event, float x, float y){
+				String army=Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
+                String message="ENTER_RANKED_QUEUE ";
+                String[] pieces=army.split(",");
+                for(int w=0;w!=16;w++){
+                	pieces[w]=StringUtils.convertToHex(pieces[w]);
+				}
+				String hexArmy="";
+				for(int w=0;w!=16;w++){
+					if(w!=15) {
+						hexArmy += pieces[w] + ",";
+					}else{
+						hexArmy += pieces[w];
+					}
+				}
+				message+=hexArmy;
+				serverComms.sendMessageToServer(message+"\n");
+			}
+		};
+
+		mainMenu.addButton("Multiplayer Game",200,30,100,200,clickListener);
 
 		//this clickListener enters army building mode
 		clickListener=new ClickListener(){
@@ -577,8 +662,6 @@ toggleOptionsMenu();
 			case LEVEL_EDITOR_STATE:
 				levelEditor.unselectAll();
 				break;
-
-
 
 		}
 	}
