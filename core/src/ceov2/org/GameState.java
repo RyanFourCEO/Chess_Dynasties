@@ -8,9 +8,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.ArrayList;
-//temporary for clipboard pasting stuff
+
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
+//temporary for clipboard pasting stuff
 
 
 //this class deals with all the logic of a live game.
@@ -34,7 +35,6 @@ public class GameState {
      //the index of the last piece that was selected, this is used to display that piece's
      //moveset and abilities to the user. This allows the user to click on a piece to have it's information
      //displayed
-     //displayed
      int pieceLastSelected;
      //booleans for the state of the game
      boolean whiteWins=false;
@@ -52,6 +52,8 @@ public class GameState {
 
      Texture boardImage;
      Texture reticleTexture;
+     Texture reticleTextureBlocked;
+     Texture reticleTextureSelected;
      Sprite sprite;
 
      //the variables controlling the board
@@ -159,49 +161,175 @@ public class GameState {
 }
 //put all pieces on the board, set their locations
     public void setBoard() {
-        //set pieceOnBoard to -1, which means the square is unnoccupied
-        for(int x=0;x!=8;x++){
-            for(int y=0;y!=8;y++){
-                piecesOnBoard[x][y]=-1;
+        //set pieceOnBoard to -1, which means the square is unoccupied
+        for (int x = 0; x != 8; x++) {
+            for (int y = 0; y != 8; y++) {
+                piecesOnBoard[x][y] = -1;
             }
         }
-        int counter=0;
+        int counter = 0;
         //which row the pieces will be placed on, from 0-7
-        int row=0;
+        int row = 0;
         //what colour the pieces are, 1 means white, 2 means black
-        int colour=0;
+        int colour = 0;
 
         //4*8 loop to loop through all 32 pieces
         for (int x = 0; x != 4; x++) {
             //the row and colour are set the the right numbers
-            if (x==0){
-                row=0;
-                colour=1;
+            if (x == 0) {
+                row = 0;
+                colour = 1;
             }
-            if (x==1){
-                row=1;
+            if (x == 1) {
+                row = 1;
             }
-            if (x==2){
-                colour=2;
-                row=7;
+            if (x == 2) {
+                colour = 2;
+                row = 7;
             }
-            if (x==3){
-                row=6;
+            if (x == 3) {
+                row = 6;
             }
             //the boards values are updated
             for (int y = 0; y < 8; y++) {
                 //the array boardState is set to the colour of the piece, a value of 0 means unoccupied
                 boardState[y][row] = colour;
-                if (colour==1){
-                    moraleTotals[0]+=allPiecesOnBoard.get(counter).moraleCost;
-                } else if(colour==2) {
-                        moraleTotals[1] += allPiecesOnBoard.get(counter).moraleCost;
+                if (colour == 1) {
+                    moraleTotals[0] += allPiecesOnBoard.get(counter).moraleCost;
+                } else if (colour == 2) {
+                    moraleTotals[1] += allPiecesOnBoard.get(counter).moraleCost;
                 }
                 //The array of pieces: each piece has its position on the board set
                 allPiecesOnBoard.get(counter).setLocation(y, row);
                 //the array piecesOnBoard is set to the index of the piece
-                piecesOnBoard[y][row]=counter;
+                piecesOnBoard[y][row] = counter;
                 counter++;
+            }
+        }
+    }
+    //find if a move is valid
+    public void findIfValidMove(int x, int y, int a){
+
+        //if the piece has been captured, obviously it can't move
+        //if movesDisabled is true, then the piece's moves have been disabled by a status effect
+        if(allPiecesOnBoard.get(a).captured==false&&allPiecesOnBoard.get(a).movesDisabled==false) {
+            //if the piece has no movement on the square, obviously it can't move there
+            if (allPiecesOnBoard.get(a).moveset[x][y] != 0) {
+                //using the location of the move in the 15*15 array moveset, and the location of the piece being moved
+                //the destination of the move on the board is found
+                int xOffset = x - 7;
+                int yOffset = y - 7;
+                int xOnBoard = allPiecesOnBoard.get(a).xLocation + xOffset;
+                int yOnBoard = allPiecesOnBoard.get(a).yLocation + yOffset;
+                //if the destination is off the board,obviously the piece can't move there
+                if (xOnBoard >= 0 && xOnBoard <= 7 && yOnBoard >= 0 && yOnBoard <= 7) {
+
+
+
+                    boolean validTarget=false;
+                    boolean targetProtected=false;
+                    //if the square is occupied by a piece, test to see if the piece is protected by abilities/statuses, if so, the piece may be protected from certain movetypes, these movetypes will
+                    //be set as invalid moves
+                    if (piecesOnBoard[xOnBoard][yOnBoard]!=-1) {
+                        targetProtected = checkIfTargetIsProtected(boardState[xOnBoard][yOnBoard],allPiecesOnBoard.get(a).moveset[x][y]%1000,xOnBoard,yOnBoard,allPiecesOnBoard.get(a));
+                    }
+
+                    //test if the square is a valid target for the piece to move to
+                    //for example a piece that can move/attack can go to an empty square or an enemy occupied square
+                    //but not an ally square. (if a piece is immovable, this method also checks to make sure it's moves that
+                    //would cause movement are disabled)
+                    validTarget = Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y]%1000].checkIsValidTarget(boardState[xOnBoard][yOnBoard],playerTurn,allPiecesOnBoard.get(a).immovable);
+
+
+                    //if the target is not valid, the piece can't move there
+                    if (validTarget == true&&targetProtected==false) {
+                        //check if the piece is blocked, (bishops can't move through other pieces)
+                        boolean blocked=false;
+                        //if the piece can jump over pieces, a different method is run to check the validity of the move
+                        if (Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y]%1000].canJumpOverOnePiece==false) {
+                            //some movetypes can't be blocked, so if that isn't an issue, blocked remains false
+                            //a piece with moveset value greater than 1000 is unblockable
+                            if (allPiecesOnBoard.get(a).moveset[x][y] < 1000) {
+                                //method to check if the piece is blocked
+                                blocked = checkIfPieceIsBlocked(xOnBoard, yOnBoard, allPiecesOnBoard.get(a).xLocation, allPiecesOnBoard.get(a).yLocation);
+                            }
+                        }else{
+                            //method to check if the piece is blocked, made specifically for cannon
+                            blocked=checkIfPieceIsBlockedCannonVersion(xOnBoard, yOnBoard, allPiecesOnBoard.get(a).xLocation, allPiecesOnBoard.get(a).yLocation);
+                        }
+
+                        //if the move is not blocked, the piece object's array of valid moves
+                        //has that index marked true, meaning it can make that move
+                        if (blocked==false) {
+                            allPiecesOnBoard.get(a).validMoves[x][y] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //OVERLOAD: uses two sets of coords instead of piece index
+    public void findIfValidMove(int x, int y, int x2, int y2){
+
+        int a = 0;
+        a = piecesOnBoard[x2][y2];
+
+        //if the piece has been captured, obviously it can't move
+        //if movesDisabled is true, then the piece's moves have been disabled by a status effect
+        if(allPiecesOnBoard.get(a).captured==false&&allPiecesOnBoard.get(a).movesDisabled==false&&a!=0) {
+            //if the piece has no movement on the square, obviously it can't move there
+            if (allPiecesOnBoard.get(a).moveset[x][y] != 0) {
+                //using the location of the move in the 15*15 array moveset, and the location of the piece being moved
+                //the destination of the move on the board is found
+                int xOffset = x - 7;
+                int yOffset = y - 7;
+                int xOnBoard = allPiecesOnBoard.get(a).xLocation + xOffset;
+                int yOnBoard = allPiecesOnBoard.get(a).yLocation + yOffset;
+                //if the destination is off the board,obviously the piece can't move there
+                if (xOnBoard >= 0 && xOnBoard <= 7 && yOnBoard >= 0 && yOnBoard <= 7) {
+
+
+
+                    boolean validTarget=false;
+                    boolean targetProtected=false;
+                    //if the square is occupied by a piece, test to see if the piece is protected by abilities/statuses, if so, the piece may be protected from certain movetypes, these movetypes will
+                    //be set as invalid moves
+                    if (piecesOnBoard[xOnBoard][yOnBoard]!=-1) {
+                        targetProtected = checkIfTargetIsProtected(boardState[xOnBoard][yOnBoard],allPiecesOnBoard.get(a).moveset[x][y]%1000,xOnBoard,yOnBoard,allPiecesOnBoard.get(a));
+                    }
+
+                    //test if the square is a valid target for the piece to move to
+                    //for example a piece that can move/attack can go to an empty square or an enemy occupied square
+                    //but not an ally square. (if a piece is immovable, this method also checks to make sure it's moves that
+                    //would cause movement are disabled)
+                    validTarget = Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y]%1000].checkIsValidTarget(boardState[xOnBoard][yOnBoard],playerTurn,allPiecesOnBoard.get(a).immovable);
+
+
+                    //if the target is not valid, the piece can't move there
+                    if (validTarget == true&&targetProtected==false) {
+                        //check if the piece is blocked, (bishops can't move through other pieces)
+                        boolean blocked=false;
+                        //if the piece can jump over pieces, a different method is run to check the validity of the move
+                        if (Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y]%1000].canJumpOverOnePiece==false) {
+                            //some movetypes can't be blocked, so if that isn't an issue, blocked remains false
+                            //a piece with moveset value greater than 1000 is unblockable
+                            if (allPiecesOnBoard.get(a).moveset[x][y] < 1000) {
+                                //method to check if the piece is blocked
+                                blocked = checkIfPieceIsBlocked(xOnBoard, yOnBoard, allPiecesOnBoard.get(a).xLocation, allPiecesOnBoard.get(a).yLocation);
+                            }
+                        }else{
+                            //method to check if the piece is blocked, made specifically for cannon
+                            blocked=checkIfPieceIsBlockedCannonVersion(xOnBoard, yOnBoard, allPiecesOnBoard.get(a).xLocation, allPiecesOnBoard.get(a).yLocation);
+                        }
+
+                        //if the move is not blocked, the piece object's array of valid moves
+                        //has that index marked true, meaning it can make that move
+                        if (blocked==false) {
+                            allPiecesOnBoard.get(a).validMoves[x][y] = true;
+                        }
+                    }
+                }
             }
         }
     }
@@ -215,65 +343,9 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
     allPiecesOnBoard.get(a).setMoveset();
 
 //loop through the movesets of each piece
-    for(int x=0;x!=15;x++){
-        for(int y=0;y!=15;y++) {
-            //if the piece has been captured, obviously it can't move
-            //if movesDisabled is true, then the piece's moves have been disabled by a status effect
-            if(allPiecesOnBoard.get(a).captured==false&&allPiecesOnBoard.get(a).movesDisabled==false) {
-                //if the piece has no movement on the square, obviously it can't move there
-                if (allPiecesOnBoard.get(a).moveset[x][y] != 0) {
-                    //using the location of the move in the 15*15 array moveset, and the location of the piece being moved
-                    //the destination of the move on the board is found
-                    int xOffset = x - 7;
-                    int yOffset = y - 7;
-                    int xOnBoard = allPiecesOnBoard.get(a).xLocation + xOffset;
-                    int yOnBoard = allPiecesOnBoard.get(a).yLocation + yOffset;
-                    //if the destination is off the board,obviously the piece can't move there
-                    if (xOnBoard >= 0 && xOnBoard <= 7 && yOnBoard >= 0 && yOnBoard <= 7) {
-
-
-
-                        boolean validTarget=false;
-                        boolean targetProtected=false;
-                        //if the square is occupied by a piece, test to see if the piece is protected by abilities/statuses, if so, the piece may be protected from certain movetypes, these movetypes will
-                        //be set as invalid moves
-                        if (piecesOnBoard[xOnBoard][yOnBoard]!=-1) {
-                                targetProtected = checkIfTargetIsProtected(boardState[xOnBoard][yOnBoard],allPiecesOnBoard.get(a).moveset[x][y]%1000,xOnBoard,yOnBoard,allPiecesOnBoard.get(a));
-                        }
-
-                        //test if the square is a valid target for the piece to move to
-                        //for example a piece that can move/attack can go to an empty square or an enemy occupied square
-                        //but not an ally square. (if a piece is immovable, this method also checks to make sure it's moves that
-                        //would cause movement are disabled)
-                        validTarget = Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y]%1000].checkIsValidTarget(boardState[xOnBoard][yOnBoard],playerTurn,allPiecesOnBoard.get(a).immovable);
-
-
-                        //if the target is not valid, the piece can't move there
-                        if (validTarget == true&&targetProtected==false) {
-                            //check if the piece is blocked, (bishops can't move through other pieces)
-                            boolean blocked=false;
-                        //if the piece can jump over pieces, a different method is run to check the validity of the move
-                            if (Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y]%1000].canJumpOverOnePiece==false) {
-                                //some movetypes can't be blocked, so if that isn't an issue, blocked remains false
-                                //a piece with moveset value greater than 1000 is unblockable
-                                if (allPiecesOnBoard.get(a).moveset[x][y] < 1000) {
-                                    //method to check if the piece is blocked
-                                    blocked = checkIfPieceIsBlocked(xOnBoard, yOnBoard, allPiecesOnBoard.get(a).xLocation, allPiecesOnBoard.get(a).yLocation);
-                                }
-                            }else{
-                                //method to check if the piece is blocked, made specifically for cannon
-                                blocked=checkIfPieceIsBlockedCannonVersion(xOnBoard, yOnBoard, allPiecesOnBoard.get(a).xLocation, allPiecesOnBoard.get(a).yLocation);
-                            }
-
-                              //if the move is not blocked, the piece object's array of valid moves
-                              //has that index marked true, meaning it can make that move
-                            if (blocked==false) {
-                                allPiecesOnBoard.get(a).validMoves[x][y] = true;
-                            }
-                        }
-                    }
-                }
-            }
+    for(int x=0;x!=15;x++) {
+        for (int y = 0; y != 15; y++) {
+            findIfValidMove(x,y,a);
         }
     }
 }
@@ -1164,12 +1236,15 @@ return numberOfAdjacentAllies;
     }
 //check if a move is blocked by another piece
     private boolean checkIfPieceIsBlocked(int moveTargetx,int moveTargety,int pieceLocx,int pieceLocy){
-        boolean blocked=false;
+        boolean blocked=true;
         //find the difference between the target and the pieces location
         //for example, a piece on square 0,0 trying to move to 3,3 has xDiff and yDiff =3
         int xDiff=moveTargetx-pieceLocx;
         int yDiff=moveTargety-pieceLocy;
 
+        if(xDiff == 0 || yDiff == 0 || xDiff == yDiff || xDiff == -yDiff){
+            blocked = false;
+        }
 
             //values decreased by 1, if a piece has a xDiff of 3, that means there are only 2 squares
             //that could potentially block the piece from moving
@@ -1203,13 +1278,16 @@ return numberOfAdjacentAllies;
     private boolean checkIfPieceIsBlockedCannonVersion(int moveTargetx,int moveTargety,int pieceLocx,int pieceLocy){
         //for cannon, there must be 1 piece on the path to target an enemy, and 0 or 1 to target an empty square
         int piecesInPath=0;
-        boolean blocked=false;
+        boolean blocked=true;
 
         //find the difference between the target and the pieces location
         //for example, a piece on square 0,0 trying to move to 3,3 has xDiff and yDiff =3
         int xDiff=moveTargetx-pieceLocx;
         int yDiff=moveTargety-pieceLocy;
-
+		
+		if(xDiff == 0 || yDiff == 0 || xDiff == yDiff || xDiff == -yDiff){
+            blocked = false;
+        }
 
         //values decreased by 1, if a piece has a xDiff of 3, that means there are only 2 squares
         //that could potentially block the piece from moving
@@ -1392,16 +1470,33 @@ if (boardState[moveTargetx][moveTargety]==0){
     }
     //indicate which piece is targeted
     //draw reticle, there has got to be a better word for this
-    private void drawReticle(SpriteBatch batch,MouseVars mouseVars){
+    private void drawReticle(SpriteBatch batch,MouseVars mouseVars) {
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
 
         float xPosOfTarget = (float) (loc[0] * 77.25 + boardPosX);
         float yPosOfTarget = (float) (loc[1] * 77.25 + boardPosY);
 
-        if(loc[0] >= 0 && loc[1] >= 0){
-            batch.draw(reticleTexture,xPosOfTarget,(float)yPosOfTarget,(float)77.25,(float)77.25);
+        boolean valid = false;
+
+        boolean selectedPieceSelected = (loc[0] == selectedPieceLocx && loc[1] == selectedPieceLocy);
+
+            if (loc[0] >= 0 && loc[1] >= 0 && !selectedPieceSelected) {
+                if (boardState[loc[0]][loc[1]] != 0 || pieceSelected /*|| boardStateLocationEffects[loc[0]][loc[1]] != 0*/) {
+                    if (pieceSelected) {
+                        if (valid) {
+                            batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                        }
+                        else {
+                            batch.draw(reticleTexture, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                        }
+                    } else if(!valid) {
+                        batch.draw(reticleTexture, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                    }
+                }
+            } else if (selectedPieceSelected) {
+                batch.draw(reticleTextureSelected, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+            }
         }
-    }
 
     private void drawText(SpriteBatch batch){
 //start a fresh batch
@@ -1519,6 +1614,8 @@ drawMoveSet(batch);
     private void loadGraphics(){
         boardImage=GraphicsUtils.loadTexture("Board.png");
         reticleTexture = GraphicsUtils.loadTexture("reticule.png");
+        reticleTextureBlocked = GraphicsUtils.loadTexture("reticuleBlocked.png");
+        reticleTextureSelected = GraphicsUtils.loadTexture("reticuleSelected.png");
         sprite=new Sprite(boardImage);
         sprite.setSize(618,618);
         sprite.setCenter(640,309);

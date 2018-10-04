@@ -412,7 +412,7 @@ for(int x=0;x!=numOfTriggers;x++){
         triggerRequirement[x] = Integer.valueOf(triggerVariables[x][1]);
     }
 }
-//TODO seems functional, but needs more testing
+//TODO: seems functional, but needs more testing
 //Using all the variables we have calculated above, initialize a new Ability
 allAbilities.add(new PieceAbility(numOfTriggers,triggerIndexes,triggerRequirement,numOfEffectVariables,effectIndex,onlyEffectStrengthVariables));
 }
