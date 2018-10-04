@@ -8,9 +8,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.ArrayList;
+
 //temporary for clipboard pasting stuff
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
 
 
 //this class deals with all the logic of a live game.
@@ -52,6 +51,7 @@ public class GameState {
 
      Texture boardImage;
      Texture reticleTexture;
+     Texture reticleTextureBlocked;
      Sprite sprite;
 
      //the variables controlling the board
@@ -159,7 +159,7 @@ public class GameState {
 }
 //put all pieces on the board, set their locations
     public void setBoard() {
-        //set pieceOnBoard to -1, which means the square is unnoccupied
+        //set pieceOnBoard to -1, which means the square is unoccupied
         for(int x=0;x!=8;x++){
             for(int y=0;y!=8;y++){
                 piecesOnBoard[x][y]=-1;
@@ -1164,12 +1164,15 @@ return numberOfAdjacentAllies;
     }
 //check if a move is blocked by another piece
     private boolean checkIfPieceIsBlocked(int moveTargetx,int moveTargety,int pieceLocx,int pieceLocy){
-        boolean blocked=false;
+        boolean blocked=true;
         //find the difference between the target and the pieces location
         //for example, a piece on square 0,0 trying to move to 3,3 has xDiff and yDiff =3
         int xDiff=moveTargetx-pieceLocx;
         int yDiff=moveTargety-pieceLocy;
 
+        if(xDiff == 0 || yDiff == 0 || xDiff == yDiff || xDiff == -yDiff){
+            blocked = false;
+        }
 
             //values decreased by 1, if a piece has a xDiff of 3, that means there are only 2 squares
             //that could potentially block the piece from moving
@@ -1399,7 +1402,13 @@ if (boardState[moveTargetx][moveTargety]==0){
         float yPosOfTarget = (float) (loc[1] * 77.25 + boardPosY);
 
         if(loc[0] >= 0 && loc[1] >= 0){
-            batch.draw(reticleTexture,xPosOfTarget,(float)yPosOfTarget,(float)77.25,(float)77.25);
+            if(boardState[loc[0]][loc[1]] != 0 || pieceSelected /*|| boardStateLocationEffects[loc[0]][loc[1]] != 0*/) {
+                if(checkIfPieceIsBlocked(loc[0],loc[1],selectedPieceLocx,selectedPieceLocy) && pieceSelected) {
+                    batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                }else{
+                    batch.draw(reticleTexture, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                }
+            }
         }
     }
 
@@ -1519,6 +1528,7 @@ drawMoveSet(batch);
     private void loadGraphics(){
         boardImage=GraphicsUtils.loadTexture("Board.png");
         reticleTexture = GraphicsUtils.loadTexture("reticule.png");
+        reticleTextureBlocked = GraphicsUtils.loadTexture("reticuleBlocked.png");
         sprite=new Sprite(boardImage);
         sprite.setSize(618,618);
         sprite.setCenter(640,309);
