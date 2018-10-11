@@ -3,6 +3,7 @@ package ceov2.org;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 //import sun.util.cldr.CLDRLocaleDataMetaInfo;
 
