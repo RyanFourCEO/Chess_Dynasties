@@ -24,7 +24,6 @@ public class GameState {
     //colourOfUser tells what colour the user is playing as 1=white, 2=black
     int colourOfUser;
     //playerturn tells who's turn it is, 1=player 1's turn(white), 2=player 2's turn(black)
-<<<<<<< HEAD
     int playerTurn=1;
     //tells if a piece is selected by a player(they have clicked it)
     boolean pieceSelected;
@@ -66,7 +65,6 @@ public class GameState {
     BitmapFont font;
 
     //boardPieces is only used because Piece files do not exist yet
-=======
      int playerTurn=1;
      //tells if a piece is selected by a player(they have clicked it)
      boolean pieceSelected;
@@ -108,7 +106,6 @@ public class GameState {
      BitmapFont font;
 
      //boardPieces is only used because Piece files do not exist yet
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
     ArrayList<Piece> tempPieces = new ArrayList<Piece>();
     //the array of all Pieces that are on the board
     ArrayList<Piece> allPiecesOnBoard=new ArrayList<Piece>();
@@ -315,13 +312,8 @@ public class GameState {
 
     //OVERLOAD: uses two sets of coords instead of piece index
     public void findIfValidMove(int x, int y, int x2, int y2){
-
-<<<<<<< HEAD
+        
         int a = piecesOnBoard[x2][y2];
-=======
-        int a = 0;
-        a = piecesOnBoard[x2][y2];
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
 
         //if the piece has been captured, obviously it can't move
         //if movesDisabled is true, then the piece's moves have been disabled by a status effect
@@ -336,12 +328,6 @@ public class GameState {
                 int yOnBoard = allPiecesOnBoard.get(a).yLocation + yOffset;
                 //if the destination is off the board,obviously the piece can't move there
                 if (xOnBoard >= 0 && xOnBoard <= 7 && yOnBoard >= 0 && yOnBoard <= 7) {
-
-<<<<<<< HEAD
-=======
-
-
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
                     boolean validTarget=false;
                     boolean targetProtected=false;
                     //if the square is occupied by a piece, test to see if the piece is protected by abilities/statuses, if so, the piece may be protected from certain movetypes, these movetypes will
@@ -385,7 +371,6 @@ public class GameState {
         }
     }
 
-<<<<<<< HEAD
     //find all the valid moves on any given turn
     public void findAllValidMoves(){
 //loop through the arrayList of pieces
@@ -403,7 +388,6 @@ public class GameState {
         }
     }
     //check if a piece is protected by statuses or any other reason, if the piece is protected for any reason
-=======
 //find all the valid moves on any given turn
     public void findAllValidMoves(){
 //loop through the arrayList of pieces
@@ -421,7 +405,6 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
 }
 }
 //check if a piece is protected by statuses or any other reason, if the piece is protected for any reason
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
     //it will not be targetable by certain pieces/movetypes
     private boolean checkIfTargetIsProtected(int boardState, int moveTypeUsed,int xPosOfPiece,int yPosOfPiece,Piece pieceMoving){
         boolean pieceIsProtected=false;
@@ -1355,13 +1338,8 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
         //for example, a piece on square 0,0 trying to move to 3,3 has xDiff and yDiff =3
         int xDiff=moveTargetx-pieceLocx;
         int yDiff=moveTargety-pieceLocy;
-<<<<<<< HEAD
 
-        if(xDiff == 0 || yDiff == 0 || xDiff == yDiff || xDiff == -yDiff){
-=======
-		
 		if(xDiff == 0 || yDiff == 0 || xDiff == yDiff || xDiff == -yDiff){
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
             blocked = false;
         }
 
@@ -1551,8 +1529,7 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
 
         float xPosOfTarget = (float) (loc[0] * 77.25 + boardPosX);
         float yPosOfTarget = (float) (loc[1] * 77.25 + boardPosY);
-
-<<<<<<< HEAD
+        
         int x = selectedPieceLocx;
         int y = selectedPieceLocy;
 
@@ -1585,7 +1562,6 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
             /*case 3:
                 batch.draw(reticleTextureSelected, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
                 break;*/
-=======
         boolean valid = false;
 
         boolean selectedPieceSelected = (loc[0] == selectedPieceLocx && loc[1] == selectedPieceLocy);
@@ -1605,7 +1581,6 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
             } else if (selectedPieceSelected) {
                 batch.draw(reticleTextureSelected, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
             }
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
         }
 
     private void drawText(SpriteBatch batch){
