@@ -10,6 +10,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import java.util.ArrayList;
 
 //temporary for clipboard pasting stuff
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
 
 //this class deals with all the logic of a live game.
 public class GameState {
