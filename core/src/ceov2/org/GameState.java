@@ -850,7 +850,7 @@ public class GameState {
         //find if the movetype is blockable (if it's greater than 1000 it is blockable
         int blockable;
         if (movetype>1000&&movetype<2000){
-            movetype=movetype%1000;
+            movetype%=1000;
             blockable=1;
         }else{
             blockable=0;
@@ -905,19 +905,181 @@ public class GameState {
         }
 
     }
+    private ArrayList<ArrayList<Integer>> simulateMove(int x, int y, Piece pieceMoving, MouseVars mouseVars){
 
-    private ArrayList<ArrayList<Integer>> findMoveEffects(int x, int y, int piece){
         ArrayList<ArrayList<Integer>> moveEffects = new ArrayList<ArrayList<Integer>>();
+
+        int piece = selectedPiece;
+
+        //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA TEST AND EXECUTE ABILITIES
+        //if the piece has been captured, it's abilities can't execute
+        //if a piece has it's abilities disabled, it's abilities don't execute
+        if (allPiecesOnBoard.get(piece).captured!=true&&allPiecesOnBoard.get(piece).abilitiesDisabled==false) {
+            //loop through all a piece's abilities
+            for (int i = 0; i != allPiecesOnBoard.get(piece).allAbilities.size(); i++) {
+                //triggersMet: all a piece's trigger must be met for the ability to execute
+                //every time a trigger is met, this is increased by 1, if this value
+                //is not equal to the number of triggers, the ability doesn't trigger
+                int triggersMet = 0;
+                //loop through all a piece's triggers
+                for (int j = 0; j != allPiecesOnBoard.get(piece).allAbilities.get(i).allTriggers.size(); j++) {
+                    //test to see if the trigger's condition is met
+                    if (checkAbilityTrigger(allPiecesOnBoard.get(piece).allAbilities.get(i).allTriggers.get(j), allPiecesOnBoard.get(piece)) == true) {
+                        triggersMet++;
+                    }
+                }
+                //if triggersmet is equal to the number of triggers a piece's ability has, the ability is executed
+                if (triggersMet == allPiecesOnBoard.get(piece).allAbilities.get(i).allTriggers.size()) {
+                    executeAbilityEffect(allPiecesOnBoard.get(piece).allAbilities.get(i).effect, allPiecesOnBoard.get(piece));
+
+                    AbilityEffect effect = allPiecesOnBoard.get(piece).allAbilities.get(i).effect;
+                    //this prevents infinite loops, if an ability's effect has not yet been completed it can't activate again
+                    if(effect.inEffect==false) {
+                        effect.inEffect=true;
+                        switch (effect.effectIndex) {
+//destroy self ability
+                            case 0:
+                                capturePieceWithAbility(pieceMoving.xLocation, pieceMoving.yLocation, pieceMoving, 0);
+                                break;
+//give status effect to self ability
+                            case 2:
+                                pieceMoving.addStatusEffect(Integer.valueOf(effect.effectVar2),Integer.valueOf(effect.effectVar1));
+                                break;
+//give status to piece which just attacked
+                            case 3:
+                                pieceMoving.pieceTargetedBy.addStatusEffect(Integer.valueOf(effect.effectVar2),Integer.valueOf(effect.effectVar1));
+                                break;
+//summon a piece on locations marked with movetype 20/21
+                            case 4:
+                                for(int k=0;k!=15;k++){
+                                    for(int l=0;l!=15;l++){
+                                        if (Piece.moveTypeIndexes[pieceMoving.moveset[k][l]%1000]==20||Piece.moveTypeIndexes[pieceMoving.moveset[k][l]%1000]==21){
+                                            int[] locOnBoard=findLocationOnBoard(k,l,pieceMoving.xLocation,pieceMoving.yLocation);
+                                            if (locOnBoard[0]>=0&&locOnBoard[0]<=7&&locOnBoard[1]>=0&&locOnBoard[1]<=7){
+                                                if (boardState[locOnBoard[0]][locOnBoard[1]]==0){
+                                                    summonPiece(effect.effectVar1,locOnBoard[0],locOnBoard[1],pieceMoving.isWhite);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+//lose x morale on death effect
+                            case 5:
+                                if (pieceMoving.isWhite==true){
+                                    moraleTotals[0]-=Integer.valueOf(effect.effectVar1);
+                                }else{
+                                    moraleTotals[1]-=Integer.valueOf(effect.effectVar1);
+                                }
+                                break;
+
+//give self unable to target king status
+                            case 6:
+                                pieceMoving.addStatusEffect(10,Integer.valueOf(effect.effectVar1));
+                                break;
+//transform ability
+                            case 20:
+                                transformPiece(effect.effectVar1,pieceMoving.xLocation,pieceMoving.yLocation,pieceMoving.isWhite);
+                                break;
+                            //gain the swap places with ally move on the location of ally king aka become able to swap with ally king
+                            case 21:
+                                pieceMoving.setChangeableMovesetEmpty();
+
+                                for(int j=0;j!=allPiecesOnBoard.size();j++){
+                                    if (allPiecesOnBoard.get(j).name.equalsIgnoreCase("king")){
+                                        if (allPiecesOnBoard.get(j).isWhite==pieceMoving.isWhite){
+                                            int xOnMovesetArray= allPiecesOnBoard.get(j).xLocation-pieceMoving.xLocation+7;
+                                            int yOnMovesetArray= allPiecesOnBoard.get(j).yLocation-pieceMoving.yLocation+7;
+                                            pieceMoving.changeableMoveset[xOnMovesetArray][yOnMovesetArray]=1008;
+                                        }
+                                    }
+
+                                }
+                                break;
+//gain the ability to move to any unoccupied space not adjacent to any pieces
+                            case 22:
+                                pieceMoving.setChangeableMovesetEmpty();
+                                for(int k=0;k!=8;k++){
+                                    for(int j=0;j!=8;j++){
+                                        if (boardState[k][j]==0){
+                                            if (findNumberOfPiecesAdjacentTo(k,j)==0){
+                                                int xOnMovesetArray= k-pieceMoving.xLocation+7;
+                                                int yOnMovesetArray= j-pieceMoving.yLocation+7;
+                                                pieceMoving.changeableMoveset[xOnMovesetArray][yOnMovesetArray]=1002;
+                                            }
+                                        }
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                    effect.inEffect=false;
+                }
+
+
+            }
+        }
+
+        //AAAAAAAAAAAAAAAAAAAAAAAAA EXECUTE MOVE
+        int movetype = allPiecesOnBoard.get(piece).moveset[x][y];
+        int blockable;
+        if (movetype>1000&&movetype<2000){
+            movetype=movetype%1000;
+            blockable=1;
+        }else{
+            blockable=0;
+        }
+        //the movetype is set to just used, and abilities may occur based on this
+        pieceMoving.movetypeUsed=movetype;
+        pieceMoving.justUsedMovetype=true;
+        testAndExecuteAbilities();
+        pieceMoving.justUsedMovetype=false;
+
+        //piece is set to having made a move,and  abilities may occur based on this
+        pieceMoving.numberOfMovesMade++;
+        pieceMoving.justMoved=true;
+        testAndExecuteAbilities();
+        pieceMoving.justMoved=false;
+
+
+        switch(Piece.allMoveTypes[blockable][movetype].moveType){
+            case 0:
+//movetype 0, the empty square movetype, does nothing
+                break;
+            case 1:
+//movetype 1, the standard movetype, attack a square, if the square is empty, move to it
+                capturePieceWithMove(x,y,pieceMoving,movetype);
+                if (boardState[x][y]==0) {
+                    movePiece(pieceMoving.xLocation, pieceMoving.yLocation, x, y);
+                }
+                break;
+//movetype 2, the ranged attack movetype, attack a square, but do not move to it unless the square is empty
+            case 2:
+                if (boardState[x][y]==0){
+                    movePiece(pieceMoving.xLocation, pieceMoving.yLocation, x, y);
+                }else {
+                    capturePieceWithMove(x, y, pieceMoving, movetype);
+                }
+                break;
+//movetype 3, the swap movetype, swap places with a square
+            case 3:
+                if (boardState[x][y]!=0) {
+                    swapPiece(pieceMoving.xLocation, pieceMoving.yLocation, x, y);
+                }
+                break;
+//movetype 4, the sacrifice self movetype, captures the piece that uses it
+            case 4:
+                capturePieceWithMove(pieceMoving.xLocation,pieceMoving.yLocation,pieceMoving,movetype);
+                break;
+
+        }
 
         return moveEffects;
     }
-    //overload
-    //private arrayList<list<Integer>> findMoveEffects(int x, int y, int pieceX, int pieceY){}
 
     private void drawMoveEffects(SpriteBatch batch,MouseVars mouseVars){
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
-        int x = selectedPieceLocx; int y = selectedPieceLocy; int id = selectedPiece;
-        ArrayList<ArrayList<Integer>> moveEffects = findMoveEffects(loc[0],loc[1],id);
+        ArrayList<ArrayList<Integer>> moveEffects = simulateMove(loc[0],loc[1],allPiecesOnBoard.get(selectedPiece),mouseVars);
     }
 
     //make a move based on a String containing the location, and the destination of the move
