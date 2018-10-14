@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.ArrayList;
-import java.awt.*;
 //temporary for clipboard pasting stuff
 
 //this class deals with all the logic of a live game.
@@ -915,8 +914,10 @@ public class GameState {
     //overload
     //private arrayList<list<Integer>> findMoveEffects(int x, int y, int pieceX, int pieceY){}
 
-    private void drawMoveEffects(){
-
+    private void drawMoveEffects(SpriteBatch batch,MouseVars mouseVars){
+        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+        int x = selectedPieceLocx; int y = selectedPieceLocy; int id = selectedPiece;
+        ArrayList<ArrayList<Integer>> moveEffects = findMoveEffects(loc[0],loc[1],id);
     }
 
     //make a move based on a String containing the location, and the destination of the move
@@ -1473,6 +1474,7 @@ public class GameState {
 
         drawPieces(batch, mouseVars);
 
+        //drawMoveEffects(batch, mouseVars); unfinished
     }
     //indicate which piece is targeted
     //draw reticle, there has got to be a better word for this
