@@ -9,10 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.ArrayList;
 
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
 //temporary for clipboard pasting stuff
-
 
 //this class deals with all the logic of a live game.
 public class GameState {
@@ -24,7 +21,6 @@ public class GameState {
     //colourOfUser tells what colour the user is playing as 1=white, 2=black
     int colourOfUser;
     //playerturn tells who's turn it is, 1=player 1's turn(white), 2=player 2's turn(black)
-<<<<<<< HEAD
     int playerTurn=1;
     //tells if a piece is selected by a player(they have clicked it)
     boolean pieceSelected;
@@ -66,49 +62,6 @@ public class GameState {
     BitmapFont font;
 
     //boardPieces is only used because Piece files do not exist yet
-=======
-     int playerTurn=1;
-     //tells if a piece is selected by a player(they have clicked it)
-     boolean pieceSelected;
-     //the location of the selected piece
-     int selectedPieceLocx;
-     int selectedPieceLocy;
-     //the index of the selected piece in the array of pieces
-     int selectedPiece;
-     //the index of the last piece that was selected, this is used to display that piece's
-     //moveset and abilities to the user. This allows the user to click on a piece to have it's information
-     //displayed
-     int pieceLastSelected;
-     //booleans for the state of the game
-     boolean whiteWins=false;
-     boolean blackWins=false;
-     boolean gameOver=false;
-     boolean turnJustStarted=false;
-     boolean turnJustEnded=false;
-
-//variables storing whether a move was just used, and what move was just used,these variables are currently unused
-     boolean moveTypeJustUsed=false;
-     int moveTypeUsed=0;
-
-
-     int turnCounter=0;
-
-     Texture boardImage;
-     Texture reticleTexture;
-     Texture reticleTextureBlocked;
-     Texture reticleTextureSelected;
-     Sprite sprite;
-
-     //the variables controlling the board
-     int boardSize=618;
-     int boardPosX=331;
-     int boardPosY=0;
-
-     //font object for writing morale values to the screen
-     BitmapFont font;
-
-     //boardPieces is only used because Piece files do not exist yet
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
     ArrayList<Piece> tempPieces = new ArrayList<Piece>();
     //the array of all Pieces that are on the board
     ArrayList<Piece> allPiecesOnBoard=new ArrayList<Piece>();
@@ -316,12 +269,7 @@ public class GameState {
     //OVERLOAD: uses two sets of coords instead of piece index
     public void findIfValidMove(int x, int y, int x2, int y2){
 
-<<<<<<< HEAD
         int a = piecesOnBoard[x2][y2];
-=======
-        int a = 0;
-        a = piecesOnBoard[x2][y2];
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
 
         //if the piece has been captured, obviously it can't move
         //if movesDisabled is true, then the piece's moves have been disabled by a status effect
@@ -337,11 +285,6 @@ public class GameState {
                 //if the destination is off the board,obviously the piece can't move there
                 if (xOnBoard >= 0 && xOnBoard <= 7 && yOnBoard >= 0 && yOnBoard <= 7) {
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
                     boolean validTarget=false;
                     boolean targetProtected=false;
                     //if the square is occupied by a piece, test to see if the piece is protected by abilities/statuses, if so, the piece may be protected from certain movetypes, these movetypes will
@@ -385,7 +328,6 @@ public class GameState {
         }
     }
 
-<<<<<<< HEAD
     //find all the valid moves on any given turn
     public void findAllValidMoves(){
 //loop through the arrayList of pieces
@@ -403,25 +345,6 @@ public class GameState {
         }
     }
     //check if a piece is protected by statuses or any other reason, if the piece is protected for any reason
-=======
-//find all the valid moves on any given turn
-    public void findAllValidMoves(){
-//loop through the arrayList of pieces
-for(int a=0;a<allPiecesOnBoard.size();a++){
-
-    //update the moveset of a piece, abilities may have changed it
-    allPiecesOnBoard.get(a).setMoveset();
-
-//loop through the movesets of each piece
-    for(int x=0;x!=15;x++) {
-        for (int y = 0; y != 15; y++) {
-            findIfValidMove(x,y,a);
-        }
-    }
-}
-}
-//check if a piece is protected by statuses or any other reason, if the piece is protected for any reason
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
     //it will not be targetable by certain pieces/movetypes
     private boolean checkIfTargetIsProtected(int boardState, int moveTypeUsed,int xPosOfPiece,int yPosOfPiece,Piece pieceMoving){
         boolean pieceIsProtected=false;
@@ -1355,13 +1278,8 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
         //for example, a piece on square 0,0 trying to move to 3,3 has xDiff and yDiff =3
         int xDiff=moveTargetx-pieceLocx;
         int yDiff=moveTargety-pieceLocy;
-<<<<<<< HEAD
 
         if(xDiff == 0 || yDiff == 0 || xDiff == yDiff || xDiff == -yDiff){
-=======
-		
-		if(xDiff == 0 || yDiff == 0 || xDiff == yDiff || xDiff == -yDiff){
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
             blocked = false;
         }
 
@@ -1546,33 +1464,42 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
     }
     //indicate which piece is targeted
     //draw reticle, there has got to be a better word for this
+    //TODO: BUG WHERE A1 IS ALWAYS SELECTED AFTER MOVE, MAKE RYAN FIX THIS
     private void drawReticle(SpriteBatch batch,MouseVars mouseVars) {
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
 
         float xPosOfTarget = (float) (loc[0] * 77.25 + boardPosX);
         float yPosOfTarget = (float) (loc[1] * 77.25 + boardPosY);
 
-<<<<<<< HEAD
         int x = selectedPieceLocx;
         int y = selectedPieceLocy;
+        //for movesets
+        int msX = loc[0]-selectedPieceLocx+7;
+        int msY = loc[1]-selectedPieceLocy+7;
 
         boolean safe = (x >= 0 && x <= 7 && y >= 0 && y <= 7 && loc[0] >= 0 && loc[0] <= 7 && loc[1] >= 0 && loc[1] <= 7);
+
         //find what reticle type to draw
         boolean isMove = false;
         boolean valid = false;
+        boolean blocked = false;
+        //int moveType = 0;
 
         //set reticle types based on these
         int retType = 0;
         if(safe) {
-            isMove = allPiecesOnBoard.get(selectedPiece).moveset[loc[0]-selectedPieceLocx+7][loc[1]-selectedPieceLocy+7] != 0;
-            valid = allPiecesOnBoard.get(selectedPiece).validMoves[loc[0]-selectedPieceLocx+7][loc[1]-selectedPieceLocy+7];
-            System.out.println(loc[0]-selectedPieceLocx+7);
-            System.out.println(loc[1]-selectedPieceLocy+7);
-            //always false pls fix
+            isMove = allPiecesOnBoard.get(selectedPiece).moveset[msX][msY] != 0;
+            valid = allPiecesOnBoard.get(selectedPiece).validMoves[msX][msY];
+            blocked = checkIfPieceIsBlocked(loc[0],loc[1],x,y);
 
-            if(valid) {retType=1;}
-            else if(isMove) {retType = 2;}
-            else if (loc[0] == selectedPieceLocx && loc[1] == selectedPieceLocy) {retType = 3;}
+            if (valid) {retType=1;}
+            else if (blocked && isMove) {retType = 2;}
+            else if (isMove) {retType = 3;}
+            else if (loc[0] == selectedPieceLocx && loc[1] == selectedPieceLocy) {retType = 4;}
+            //find movetype to draw additional reticle stuff
+            //moveType = allPiecesOnBoard.get(selectedPiece).moveset[msX][msY];
+            //remove unblockable component
+            //moveType %= 1000;
         }
 
         switch (retType){
@@ -1582,32 +1509,16 @@ for(int a=0;a<allPiecesOnBoard.size();a++){
             case 2:
                 batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
                 break;
-            /*case 3:
+            case 3:
+                batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                break;
+            /*case 4:
                 batch.draw(reticleTextureSelected, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
                 break;*/
-=======
-        boolean valid = false;
-
-        boolean selectedPieceSelected = (loc[0] == selectedPieceLocx && loc[1] == selectedPieceLocy);
-
-            if (loc[0] >= 0 && loc[1] >= 0 && !selectedPieceSelected) {
-                if (boardState[loc[0]][loc[1]] != 0 || pieceSelected /*|| boardStateLocationEffects[loc[0]][loc[1]] != 0*/) {
-                    if (pieceSelected) {
-                        if (valid) {
-                            batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
-                        }
-                        else {
-                            batch.draw(reticleTexture, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
-                        }
-                    } else if(!valid) {
-                        batch.draw(reticleTexture, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
-                    }
-                }
-            } else if (selectedPieceSelected) {
-                batch.draw(reticleTextureSelected, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
-            }
->>>>>>> a522cb64f9de974027d91ef5f7e39c9483ef2867
         }
+        //TODO: draw icons with reticle for movetypes
+        //switch(moveType){ }
+    }
 
     private void drawText(SpriteBatch batch){
 //start a fresh batch
