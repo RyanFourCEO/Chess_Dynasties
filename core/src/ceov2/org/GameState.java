@@ -8,10 +8,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.ArrayList;
-
-//temporary for clipboard pasting stuff
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
+//temporary for clipboard pasting stuff
 
 //this class deals with all the logic of a live game.
 public class GameState {
@@ -834,7 +832,7 @@ public class GameState {
         effect.inEffect=false;
     }
 
-    void executeMove(int xTarget,int yTarget, Piece pieceMoving,int movetype){
+    void executeMove(int xTarget, int yTarget, Piece pieceMoving, int movetype){
 
         //if the user is the one that made the move, the move is sent to the server
         if (playerTurn == colourOfUser) {
@@ -906,6 +904,18 @@ public class GameState {
                 break;
 
         }
+
+    }
+
+    private ArrayList<ArrayList<Integer>> findMoveEffects(int x, int y, int piece){
+        ArrayList<ArrayList<Integer>> moveEffects = new ArrayList<ArrayList<Integer>>();
+
+        return moveEffects;
+    }
+    //overload
+    //private arrayList<list<Integer>> findMoveEffects(int x, int y, int pieceX, int pieceY){}
+
+    private void drawMoveEffects(){
 
     }
 
