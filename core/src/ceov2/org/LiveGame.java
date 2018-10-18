@@ -16,7 +16,6 @@ public class LiveGame {
 
     public LiveGame(InputMultiplexer inputMultiplexer) {
         state = new GameState();
-        sim = new GameState(state.moves);
         loadGameMenu(inputMultiplexer);
     }
 
@@ -31,11 +30,14 @@ public class LiveGame {
         updateMenuObjects();
         menu.stage.getViewport().apply();
         menu.stage.draw();
-        if (multiplayerGame == true) {
+        if (multiplayerGame) {
             state.runMultiplayerGame(batch, mouseVars);
         } else {
             state.runGame(batch, mouseVars);
         }
+        GameState sim = new GameState(state.moves,mouseVars);
+        sim.projectHoveredMove(mouseVars);
+        stage.drawDifference(state.moves,sim.moves);
     }
 
     void unselectAll() {

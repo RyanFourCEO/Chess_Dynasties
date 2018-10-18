@@ -44,7 +44,6 @@ public class GameState {
     boolean moveTypeJustUsed = false;
     int moveTypeUsed = 0;
 
-
     int turnCounter = 0;
 
     Texture boardImage;
@@ -114,19 +113,33 @@ public class GameState {
 
     ArrayList<ArrayList<Integer>> moves = new ArrayList<ArrayList<Integer>>();
 
-    //takes in an array of moves and immediately executes them
-    GameState(ArrayList<ArrayList<Integer>> moves) {
+    //creates a new gamestate with all previous moves and the projected move executed
+    GameState(ArrayList<ArrayList<Integer>> moves, MouseVars mouseVars) {
         //note: does not check if those moves are valid
         Piece.InitAllMoveTypes();
         loadArmies();
         setBoard();
+        projectHoveredMove(mouseVars);
         for (int i = 0; i < (moves.get(0) == null ? 0 : moves.get(0).size()); i++) {
             executeMove(moves.get(i).get(0), moves.get(i).get(1), allPiecesOnBoard.get(moves.get(i).get(2)), moves.get(i).get(3));
         }
     }
 
+    void projectHoveredMove(MouseVars mouseVars){
+        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+        Integer turn = turnCounter;
+        moves.get(turn).add(loc[0]);
+        moves.get(turn).add(loc[1]);
+        moves.get(turn).add(selectedPiece);
+        moves.get(turn).add(allPiecesOnBoard.get(selectedPiece).moveset[loc[0]][loc[1]]);
+    }
+
+    void drawDifference(ArrayList<ArrayList<Integer>> m, ArrayList<ArrayList<Integer>> s){
+        
+    }
+
     //this method executes every tick
-    public void runGame(SpriteBatch batch, MouseVars mouseVars) {
+    void runGame(SpriteBatch batch, MouseVars mouseVars) {
         //see if the player has clicked on a piece, or it trying to move a piece
         //if the player has made a valid move this method will also execute it
         processMouseInputClick(mouseVars);
@@ -138,7 +151,7 @@ public class GameState {
     }
 
     //version of above method for multiplayer games, minor differences
-    public void runMultiplayerGame(SpriteBatch batch, MouseVars mouseVars) {
+    void runMultiplayerGame(SpriteBatch batch, MouseVars mouseVars) {
         //see if the player has clicked on/selected a piece
         processMouseInputClick(mouseVars);
         //If it is the user's turn, see if the player has released the mouse while selecting a piece
@@ -168,9 +181,8 @@ public class GameState {
         font.setColor(Color.BLACK);
     }
 
-
     //put all pieces on the board, set their locations
-    public void setBoard() {
+    void setBoard() {
         //set pieceOnBoard to -1, which means the square is unoccupied
         for (int x = 0; x != 8; x++) {
             for (int y = 0; y != 8; y++) {
@@ -249,7 +261,6 @@ public class GameState {
                     //but not an ally square. (if a piece is immovable, this method also checks to make sure it's moves that
                     //would cause movement are disabled)
                     validTarget = Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y] % 1000].checkIsValidTarget(boardState[xOnBoard][yOnBoard], playerTurn, allPiecesOnBoard.get(a).immovable);
-
 
                     //if the target is not valid, the piece can't move there
                     if (validTarget == true && targetProtected == false) {

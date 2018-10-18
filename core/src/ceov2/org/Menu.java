@@ -36,12 +36,11 @@ public class Menu {
         //add the stage to the input multiplexer, this allows the stage to receive mouse input
         inputMultiplexer.addProcessor(stage);
         Gdx.input.setInputProcessor(inputMultiplexer);
-
-
     }
 
     public void addTextArea(int width, int height, int positionx, int positiony) {
-        allTextAreas.add(new TextArea("", skin, "default"));
+        allTextAreas.add(new
+                TextArea("", skin, "default"));
         allTextAreas.get(allTextAreas.size() - 1).setPosition(positionx, positiony);
         allTextAreas.get(allTextAreas.size() - 1).setSize(width, height);
         stage.addActor(allTextAreas.get(allTextAreas.size() - 1));
