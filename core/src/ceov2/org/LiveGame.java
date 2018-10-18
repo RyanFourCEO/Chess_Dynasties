@@ -37,7 +37,8 @@ public class LiveGame {
         }
         GameState sim = new GameState(state.moves,mouseVars);
         sim.projectHoveredMove(mouseVars);
-        stage.drawDifference(state.moves,sim.moves);
+        state.drawDifference(state,sim);
+
     }
 
     void unselectAll() {

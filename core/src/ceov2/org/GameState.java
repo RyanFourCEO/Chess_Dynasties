@@ -125,7 +125,7 @@ public class GameState {
         }
     }
 
-    void projectHoveredMove(MouseVars mouseVars){
+    void projectHoveredMove(MouseVars mouseVars) {
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
         Integer turn = turnCounter;
         moves.get(turn).add(loc[0]);
@@ -134,8 +134,97 @@ public class GameState {
         moves.get(turn).add(allPiecesOnBoard.get(selectedPiece).moveset[loc[0]][loc[1]]);
     }
 
-    void drawDifference(ArrayList<ArrayList<Integer>> m, ArrayList<ArrayList<Integer>> s){
-        
+    ArrayList<ArrayList<Integer>> findDifference(GameState main, GameState sim) {
+        //return thing
+        ArrayList<ArrayList<Integer>> toDraw = new ArrayList<ArrayList<Integer>>();
+        //toDraw Morale Change from move
+        //index of array to enter
+        int entry = 0;
+        int color = main.colourOfUser;
+        int notColor;
+        if (color == 1) {
+            notColor = 0;
+        } else {
+            notColor = 1;
+        }
+        int mDiff = main.moraleTotals[color] - sim.moraleTotals[color];
+        //changetype
+        toDraw.get(0).add(0);
+        toDraw.get(0).add(main.moraleTotals[color]);
+        toDraw.get(0).add(sim.moraleTotals[color]);
+        toDraw.get(0).add(mDiff);
+
+        //check if loss
+        if (sim.moraleTotals[color] <= 0 && sim.moraleTotals[notColor] <= 0) {
+            toDraw.get(entry).add(2);
+        } else if (sim.moraleTotals[color] <= 0) {
+            toDraw.get(entry).add(1);
+        } else {
+            toDraw.get(entry).add(0);
+        }
+        entry++;
+        int pieceX, pieceY, simX, simY, xDiff, yDiff;
+        //find piece location change
+        for (int i = 1; i <= allPiecesOnBoard.size() + 1; i++) {
+            int index = i - 1;
+            simX = sim.allPiecesOnBoard.get(index).xLocation;
+            simY = sim.allPiecesOnBoard.get(index).yLocation;
+            pieceX = main.allPiecesOnBoard.get(index).xLocation;
+            pieceY = main.allPiecesOnBoard.get(index).yLocation;
+            xDiff = simX - pieceX;
+            yDiff = simY - pieceY;
+            //draw movement
+            if (xDiff != 0 && yDiff != 0) {
+                toDraw.get(entry).add(1);
+                toDraw.get(entry).add(pieceX);
+                toDraw.get(entry).add(pieceY);
+                toDraw.get(entry).add(xDiff);
+                toDraw.get(entry).add(yDiff);
+                //movetypeofMove
+                toDraw.get(entry).add(allPiecesOnBoard.get(i).moveset[xDiff + 7][yDiff + 7]);
+                entry++;
+            }
+            //draw deaths
+            if(allPiecesOnBoard.get(index).captured){
+                toDraw.get(entry).add(2);
+                toDraw.get(entry).add(simX);
+                toDraw.get(entry).add(simY);
+                entry++;
+            }
+        }
+
+
+        return toDraw;
+    }
+
+    //draw the difference
+    void drawDifference(GameState main, GameState sim) {
+        ArrayList<ArrayList<Integer>> d = findDifference(main, sim);
+        //draw morale change
+        for(int i = 0; i > d.size(); i++) {
+            //morale change: should only be one
+            if(d.get(i).get(0) == 0) {
+                int moraleChange = d.get(i).get(3);
+                switch (d.get(i).get(4)) {
+                    case 1:
+                        //draw loss
+                        break;
+                    case 2:
+                        //draw tie
+                        break;
+                    //default draw nothing
+                }
+            }
+            //draw location changes
+            if(d.get(i).get(0) == 1){
+
+            }
+            //draw deaths
+            if(d.get(i).get(0) == 2){
+
+            }
+        }
+        //draw
     }
 
     //this method executes every tick
