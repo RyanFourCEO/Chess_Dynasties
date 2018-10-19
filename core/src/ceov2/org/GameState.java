@@ -165,12 +165,11 @@ public class GameState {
         entry++;
         int pieceX, pieceY, simX, simY, xDiff, yDiff;
         //find piece location change
-        for (int i = 1; i <= allPiecesOnBoard.size() + 1; i++) {
-            int index = i - 1;
-            simX = sim.allPiecesOnBoard.get(index).xLocation;
-            simY = sim.allPiecesOnBoard.get(index).yLocation;
-            pieceX = main.allPiecesOnBoard.get(index).xLocation;
-            pieceY = main.allPiecesOnBoard.get(index).yLocation;
+        for (int i = 0; i <= allPiecesOnBoard.size(); i++) {
+            simX = sim.allPiecesOnBoard.get(i).xLocation;
+            simY = sim.allPiecesOnBoard.get(i).yLocation;
+            pieceX = main.allPiecesOnBoard.get(i).xLocation;
+            pieceY = main.allPiecesOnBoard.get(i).yLocation;
             xDiff = simX - pieceX;
             yDiff = simY - pieceY;
             //draw movement
@@ -178,6 +177,8 @@ public class GameState {
                 toDraw.get(entry).add(1);
                 toDraw.get(entry).add(pieceX);
                 toDraw.get(entry).add(pieceY);
+                toDraw.get(entry).add(simX);
+                toDraw.get(entry).add(simY);
                 toDraw.get(entry).add(xDiff);
                 toDraw.get(entry).add(yDiff);
                 //movetypeofMove
@@ -185,14 +186,18 @@ public class GameState {
                 entry++;
             }
             //draw deaths
-            if(allPiecesOnBoard.get(index).captured){
+            if(allPiecesOnBoard.get(i).captured) {
                 toDraw.get(entry).add(2);
                 toDraw.get(entry).add(simX);
                 toDraw.get(entry).add(simY);
                 entry++;
             }
         }
+        //get new pieces created, draw them
+        //TODO make it so that pieces have indicators where they are summoned instead of where they end up
+        for(int i = main.allPiecesOnBoard.size(); i <= sim.allPiecesOnBoard.size(); i++){
 
+        }
 
         return toDraw;
     }
@@ -217,11 +222,25 @@ public class GameState {
             }
             //draw location changes
             if(d.get(i).get(0) == 1){
-
+                //draw the arrow between start and end
+                //draw the moved piece at end
             }
             //draw deaths
             if(d.get(i).get(0) == 2){
-
+                //draw death icon on death location
+            }
+            //draw creates
+            if(d.get(i).get(0)==3){
+                //draw create icon on create location
+            }
+            //draw attacks
+            if(d.get(i).get(0)==4){
+                //draw the attacks arrow
+                //based on movetype
+            }
+            //draw applied statuses
+            if(d.get(i).get(0)==5){
+                //draw the status icon on statused piece
             }
         }
         //draw
