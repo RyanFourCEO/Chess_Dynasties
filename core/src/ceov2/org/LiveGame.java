@@ -36,9 +36,7 @@ public class LiveGame {
             state.runGame(batch, mouseVars);
         }
         GameState sim = new GameState(state.moves,mouseVars);
-        sim.projectHoveredMove(mouseVars);
         state.drawDifference(state,sim);
-
     }
 
     void unselectAll() {

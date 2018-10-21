@@ -119,27 +119,43 @@ public class GameState {
         Piece.InitAllMoveTypes();
         loadArmies();
         setBoard();
-        projectHoveredMove(mouseVars);
-        for (int i = 0; i < (moves.get(0) == null ? 0 : moves.get(0).size()); i++) {
-            executeMove(moves.get(i).get(0), moves.get(i).get(1), allPiecesOnBoard.get(moves.get(i).get(2)), moves.get(i).get(3));
+        if (!moves.isEmpty()) {
+            for (int i = 0; i < (moves.get(0) == null ? 0 : moves.get(0).size()); i++) {
+                executeMove(moves.get(i).get(0), moves.get(i).get(1), allPiecesOnBoard.get(moves.get(i).get(2)), moves.get(i).get(3));
+            }
         }
+        projectHoveredMove(mouseVars);
     }
 
     void projectHoveredMove(MouseVars mouseVars) {
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
-        Integer turn = turnCounter;
-        moves.get(turn).add(loc[0]);
-        moves.get(turn).add(loc[1]);
-        moves.get(turn).add(selectedPiece);
-        moves.get(turn).add(allPiecesOnBoard.get(selectedPiece).moveset[loc[0]][loc[1]]);
+        //if the input string was valid, continue on
+        //if the input string was valid, but the move is illegal on the board, it won't occur
+        boolean validMove = false;
+        //find the index of the piece moving
+        int indexOfPieceMoving = piecesOnBoard[selectedPieceLocx][selectedPieceLocy];
+        //find the location of the move in the 15x15 moveset array
+        int moveLocXOnMoveset = loc[0] + 7 - selectedPieceLocx;
+        int moveLocYOnMoveset = loc[0] + 7 - selectedPieceLocy;
+        //see if the move is valid
+        if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset] == true) {
+            validMove = true;
+        }
+        //find the movetype the piece is using
+        int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
+        //if the move is valid, execute the move
+        if (validMove == true) {
+            executeMove(loc[0], loc[1], allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
+            updateBoard();
+        }
     }
 
     ArrayList<ArrayList<Integer>> findDifference(GameState main, GameState sim) {
         //return thing
         ArrayList<ArrayList<Integer>> toDraw = new ArrayList<ArrayList<Integer>>();
+        ArrayList<Integer> a = new ArrayList<Integer>();
         //toDraw Morale Change from move
         //index of array to enter
-        int entry = 0;
         int color = main.colourOfUser;
         int notColor;
         if (color == 1) {
@@ -149,23 +165,24 @@ public class GameState {
         }
         int mDiff = main.moraleTotals[color] - sim.moraleTotals[color];
         //changetype
-        toDraw.get(0).add(0);
-        toDraw.get(0).add(main.moraleTotals[color]);
-        toDraw.get(0).add(sim.moraleTotals[color]);
-        toDraw.get(0).add(mDiff);
+        a.add(0);
+        a.add(main.moraleTotals[color]);
+        a.add(sim.moraleTotals[color]);
+        a.add(mDiff);
+        a.clear();
 
         //check if loss
         if (sim.moraleTotals[color] <= 0 && sim.moraleTotals[notColor] <= 0) {
-            toDraw.get(entry).add(2);
+            a.add(2);
         } else if (sim.moraleTotals[color] <= 0) {
-            toDraw.get(entry).add(1);
+            a.add(1);
         } else {
-            toDraw.get(entry).add(0);
+            a.add(0);
         }
-        entry++;
+        toDraw.add(a);
         int pieceX, pieceY, simX, simY, xDiff, yDiff;
         //find piece location change
-        for (int i = 0; i <= allPiecesOnBoard.size(); i++) {
+        for (int i = 0; i <= allPiecesOnBoard.size() - 1; i++) {
             simX = sim.allPiecesOnBoard.get(i).xLocation;
             simY = sim.allPiecesOnBoard.get(i).yLocation;
             pieceX = main.allPiecesOnBoard.get(i).xLocation;
@@ -174,31 +191,29 @@ public class GameState {
             yDiff = simY - pieceY;
             //draw movement
             if (xDiff != 0 && yDiff != 0) {
-                toDraw.get(entry).add(1);
-                toDraw.get(entry).add(pieceX);
-                toDraw.get(entry).add(pieceY);
-                toDraw.get(entry).add(simX);
-                toDraw.get(entry).add(simY);
-                toDraw.get(entry).add(xDiff);
-                toDraw.get(entry).add(yDiff);
+                a.add(1);
+                a.add(pieceX);
+                a.add(pieceY);
+                a.add(simX);
+                a.add(simY);
+                a.add(xDiff);
+                a.add(yDiff);
                 //movetypeofMove
-                toDraw.get(entry).add(allPiecesOnBoard.get(i).moveset[xDiff + 7][yDiff + 7]);
-                entry++;
+                a.add(allPiecesOnBoard.get(i).moveset[xDiff + 7][yDiff + 7]);
             }
             //draw deaths
-            if(allPiecesOnBoard.get(i).captured) {
-                toDraw.get(entry).add(2);
-                toDraw.get(entry).add(simX);
-                toDraw.get(entry).add(simY);
-                entry++;
+            if (allPiecesOnBoard.get(i).captured) {
+                a.add(2);
+                a.add(simX);
+                a.add(simY);
+                toDraw.add(a);
             }
         }
         //get new pieces created, draw them
         //TODO make it so that pieces have indicators where they are summoned instead of where they end up
-        for(int i = main.allPiecesOnBoard.size(); i <= sim.allPiecesOnBoard.size(); i++){
-
+        for (int i = main.allPiecesOnBoard.size(); i <= sim.allPiecesOnBoard.size(); i++) {
+            //get created pieces
         }
-
         return toDraw;
     }
 
@@ -206,9 +221,9 @@ public class GameState {
     void drawDifference(GameState main, GameState sim) {
         ArrayList<ArrayList<Integer>> d = findDifference(main, sim);
         //draw morale change
-        for(int i = 0; i > d.size(); i++) {
+        for (int i = 0; i > d.size(); i++) {
             //morale change: should only be one
-            if(d.get(i).get(0) == 0) {
+            if (d.get(i).get(0) == 0) {
                 int moraleChange = d.get(i).get(3);
                 switch (d.get(i).get(4)) {
                     case 1:
@@ -221,25 +236,25 @@ public class GameState {
                 }
             }
             //draw location changes
-            if(d.get(i).get(0) == 1){
+            if (d.get(i).get(0) == 1) {
                 //draw the arrow between start and end
                 //draw the moved piece at end
             }
             //draw deaths
-            if(d.get(i).get(0) == 2){
+            if (d.get(i).get(0) == 2) {
                 //draw death icon on death location
             }
             //draw creates
-            if(d.get(i).get(0)==3){
+            if (d.get(i).get(0) == 3) {
                 //draw create icon on create location
             }
             //draw attacks
-            if(d.get(i).get(0)==4){
+            if (d.get(i).get(0) == 4) {
                 //draw the attacks arrow
                 //based on movetype
             }
             //draw applied statuses
-            if(d.get(i).get(0)==5){
+            if (d.get(i).get(0) == 5) {
                 //draw the status icon on statused piece
             }
         }
