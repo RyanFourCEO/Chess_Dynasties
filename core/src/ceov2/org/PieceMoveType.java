@@ -88,29 +88,17 @@ public class PieceMoveType {
         if (playerTurn==1) {
             if (target == 1 && allyIsTarget == true) {
 
-                isValidTarget = true;
-                if(immovable==true&&movetypeMovesPieceWhenTargetingAlly==true) {
-                    isValidTarget=false;
-                }
+                isValidTarget = immovable != true || movetypeMovesPieceWhenTargetingAlly != true;
             }
             if (target == 2 && enemyIsTarget == true) {
-                isValidTarget = true;
-                if(immovable==true&&movetypeMovesPieceWhenTargetingEnemy==true) {
-                    isValidTarget=false;
-                }
+                isValidTarget = immovable != true || movetypeMovesPieceWhenTargetingEnemy != true;
             }
         }else{
             if (target == 2 && allyIsTarget == true) {
-               isValidTarget = true;
-                if(immovable==true&&movetypeMovesPieceWhenTargetingAlly==true) {
-                    isValidTarget=false;
-                }
+                isValidTarget = immovable != true || movetypeMovesPieceWhenTargetingAlly != true;
             }
             if (target == 1 && enemyIsTarget == true) {
-                isValidTarget = true;
-                if(immovable==true&&movetypeMovesPieceWhenTargetingEnemy==true) {
-                    isValidTarget=false;
-                }
+                isValidTarget = immovable != true || movetypeMovesPieceWhenTargetingEnemy != true;
             }
        }
 
