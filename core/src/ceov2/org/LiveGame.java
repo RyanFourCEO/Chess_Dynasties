@@ -35,8 +35,8 @@ public class LiveGame {
         } else {
             state.runGame(batch, mouseVars);
         }
-        GameState sim = new GameState(state.moves,mouseVars);
-        state.drawDifference(state,sim);
+        //GameState sim = new GameState(state.moves,mouseVars);
+        //state.drawDifference(state,sim);
     }
 
     void unselectAll() {
