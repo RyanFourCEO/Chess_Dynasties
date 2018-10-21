@@ -1,5 +1,3 @@
 # Chess_Dynasties
 
-a project by some people about a thing
-
-donut steel
+You found this project! Contact chessdynasties@gmail.com for... something?
