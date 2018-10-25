@@ -163,7 +163,7 @@ public class GameState {
         } else {
             notColor = 1;
         }
-        int mDiff = main.moraleTotals[color] - sim.moraleTotals[color];
+        int mDiff = sim.moraleTotals[color] - main.moraleTotals[color];
         //changetype
         a.add(0);
         a.add(main.moraleTotals[color]);
