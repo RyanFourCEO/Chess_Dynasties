@@ -106,6 +106,7 @@ public class Piece {
     int[][] staticMoveset = new int[15][15];
     //the moveset of a piece that can change, changes based on abilities and maybe other things in the future
 //the changeableMoveSet trumps the moveset, if both moveset arrays contain a move on a square, the changeable moveset
+
 //movetype will be used over the moveset
     int[][] changeableMoveset = new int[15][15];
     //the moveset array, this array combines the staticMoveset and the changeableMoveset array into one
@@ -190,6 +191,21 @@ public class Piece {
         setColour(isWhite);
         //set the piece's image
         setImage();
+        //find which movetypes the piece has
+        findMovetypesPieceHas();
+        //update the statuses for the very first turn
+        for (int x = 0; x != allStatuses.size(); x++) {
+            updateStatusBooleans(allStatuses.get(x));
+        }
+
+    }
+    //same as above constructor, but doesn't load graphics
+    public Piece(boolean isWhite, String name){
+        //using the piece's name, load all it's variables in from a file
+        loadPiecesVariablesFromFile(name);
+        //set the piece's colour
+        setColour(isWhite);
+
         //find which movetypes the piece has
         findMovetypesPieceHas();
         //update the statuses for the very first turn

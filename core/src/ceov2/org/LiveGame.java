@@ -10,9 +10,13 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 public class LiveGame {
     GameState state;
     GameState sim;
+    int[] squareMouseIsHoveredOver = {-1,-1};
+
+
     Menu menu;
     boolean gameOver = false;
     boolean multiplayerGame = false;
+    int loopNumber = 0;
 
     public LiveGame(InputMultiplexer inputMultiplexer) {
         state = new GameState();
@@ -35,9 +39,58 @@ public class LiveGame {
         } else {
             state.runGame(batch, mouseVars);
         }
-        //GameState sim = new GameState(state.moves,mouseVars);
-        //state.drawDifference(state,sim);
+        detectIfMousePosChanged(mouseVars);
+        detectAndDisplayMovePreviews(mouseVars);
+
+        //if user has done something and the projected move has changed, set loopnumber back to 0
+
     }
+
+    void detectIfMousePosChanged(MouseVars mouseVars){
+        if (state.pieceSelected == true){
+            int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx,mouseVars.mousePosy);
+
+            if (mousePosOnBoard[0] != squareMouseIsHoveredOver[0] || mousePosOnBoard[1] != squareMouseIsHoveredOver[1]){
+                loopNumber = 0;
+                squareMouseIsHoveredOver[0] = mousePosOnBoard[0];
+                squareMouseIsHoveredOver[1] = mousePosOnBoard[1];
+            }
+        }
+    }
+    void detectAndDisplayMovePreviews(MouseVars mouseVars){
+        long startTime = System.currentTimeMillis();
+
+        if(squareMouseIsHoveredOver[0] != -1 && squareMouseIsHoveredOver[1] != -1) {
+            switch (loopNumber) {
+                case 0:
+                    sim = new GameState(true);
+                    System.out.println("part 1 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    break;
+                case 1:
+                    sim.loadArmiesNoGraphics();
+                    System.out.println("part 2 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    break;
+                case 2:
+                    sim.setBoard();
+                    System.out.println("part 3 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    break;
+                case 3:
+                    System.out.println("part 4 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    sim.executeArrayOfMoves(state.allMovesMade);
+                    break;
+                case 4:
+                    sim.projectHoveredMove(mouseVars);
+                    break;
+            }
+            if (loopNumber != 5) {
+                loopNumber++;
+            } else {
+                state.drawDifference(state, sim);
+            }
+        }
+
+    }
+
 
     void unselectAll() {
         state.unselectAll();
