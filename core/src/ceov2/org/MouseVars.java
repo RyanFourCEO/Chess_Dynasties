@@ -56,4 +56,9 @@ public class MouseVars {
         realMousePosy=0;
         realMousePosx=0;
     }
+    //convenience method for testing
+    void printMouseLoc(){
+        System.out.println("x " + mousePosx);
+        System.out.println("y " + mousePosy);
+    }
 }

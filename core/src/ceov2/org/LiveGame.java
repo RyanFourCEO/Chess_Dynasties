@@ -14,7 +14,7 @@ public class LiveGame {
     GameState sim;
     int[] squareMouseIsHoveredOver = {-1,-1};
     int indexOfSelectedPiece;
-    ArrayList<ArrayList<Integer>> listOfThingsToDraw = new ArrayList<ArrayList<Integer>>();
+    DiffBetweenGameStates listOfThingsToDraw;
 
 
     Menu menu;
@@ -48,17 +48,21 @@ public class LiveGame {
             state.runGame(batch, mouseVars);
         }
         detectIfPieceSelected();
+
         detectIfMousePosChanged(mouseVars);
-        detectAndDisplayMovePreviews(mouseVars);
 
-        //if user has done something and the projected move has changed, set loopnumber back to 0
-
+        detectAndCalculateMovePreviews(mouseVars);
+        if (stepCounterForMoveDisplayPreviews == 6) {
+            drawMovePreviews(batch);
+        }
     }
+
     void detectIfPieceSelected(){
         if (state.pieceSelected == true){
             indexOfSelectedPiece = state.selectedPiece;
         }
     }
+
     void detectIfMousePosChanged(MouseVars mouseVars){
         if (state.pieceSelected == true){
             int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx,mouseVars.mousePosy);
@@ -77,7 +81,8 @@ public class LiveGame {
             squareMouseIsHoveredOver[1] = -1;
         }
     }
-    void detectAndDisplayMovePreviews(MouseVars mouseVars){
+
+    void detectAndCalculateMovePreviews(MouseVars mouseVars){
         long startTime = System.currentTimeMillis();
         if(squareMouseIsHoveredOver[0] != -1 && squareMouseIsHoveredOver[1] != -1) {
             switch (stepCounterForMoveDisplayPreviews) {
@@ -91,6 +96,9 @@ public class LiveGame {
                     break;
                 case 2:
                     sim.setBoard();
+                    sim.turnJustStarted = true;
+                    sim.testAndExecuteAbilities();
+                    sim.turnJustStarted = false;
                     System.out.println("part 3 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
                     break;
                 case 3:
@@ -108,42 +116,22 @@ public class LiveGame {
             }
             if (stepCounterForMoveDisplayPreviews != 6) {
                 stepCounterForMoveDisplayPreviews++;
-            } else {
-                state.drawDifference(state,sim,listOfThingsToDraw);
             }
         }
 
     }
-    ArrayList<ArrayList<Integer>> findDifference(GameState main, GameState sim) {
-        //return thing
-        ArrayList<ArrayList<Integer>> toDraw = new ArrayList<ArrayList<Integer>>();
-        ArrayList<Integer> a = new ArrayList<Integer>();
-        //toDraw Morale Change from move
-        //index of array to enter
-        int color = main.colourOfUser;
-        int notColor;
-        if (color == 1) {
-            notColor = 0;
-        } else {
-            notColor = 1;
-        }
-        int mDiff = main.moraleTotals[color] - sim.moraleTotals[color];
-        //changetype
-        a.add(0);
-        a.add(main.moraleTotals[color]);
-        a.add(sim.moraleTotals[color]);
-        a.add(mDiff);
-        a.clear();
 
-        //check if loss
-        if (sim.moraleTotals[color] <= 0 && sim.moraleTotals[notColor] <= 0) {
-            a.add(2);
-        } else if (sim.moraleTotals[color] <= 0) {
-            a.add(1);
-        } else {
-            a.add(0);
-        }
-        toDraw.add(a);
+    void drawMovePreviews(SpriteBatch batch){
+        state.drawDifference(batch,state,sim,listOfThingsToDraw);
+    }
+
+    DiffBetweenGameStates findDifference(GameState main, GameState sim) {
+        //object to return
+        DiffBetweenGameStates differencesToDraw = new DiffBetweenGameStates(main.allPiecesOnBoard.size(),sim.allPiecesOnBoard.size());
+        //set the morale differences
+        differencesToDraw.setMoraleTotals(main.moraleTotals[0],main.moraleTotals[1],sim.moraleTotals[0],sim.moraleTotals[1]);
+        //calculate if a player has won/lost/drawn the game in the new GameState
+        differencesToDraw.calculateLossWinDraw();
         int pieceX, pieceY, simX, simY, xDiff, yDiff;
         //find piece location change
         for (int i = 0; i <= state.allPiecesOnBoard.size() - 1; i++) {
@@ -154,23 +142,16 @@ public class LiveGame {
             xDiff = simX - pieceX;
             yDiff = simY - pieceY;
             //draw movement
-            if (xDiff != 0 && yDiff != 0) {
-                a.add(1);
-                a.add(pieceX);
-                a.add(pieceY);
-                a.add(simX);
-                a.add(simY);
-                a.add(xDiff);
-                a.add(yDiff);
+            if (xDiff != 0 || yDiff != 0) {
+                differencesToDraw.setPieceHasMoved(i,pieceX,pieceY,simX,simY,xDiff,yDiff);
                 //movetypeofMove
-                a.add(state.allPiecesOnBoard.get(i).moveset[xDiff + 7][yDiff + 7]);
+                if(i == indexOfSelectedPiece){
+                    differencesToDraw.moveTypeUsed = main.allPiecesOnBoard.get(indexOfSelectedPiece).moveset[xDiff + 7][yDiff + 7];
+                }
             }
             //draw deaths
-            if (state.allPiecesOnBoard.get(i).captured) {
-                a.add(2);
-                a.add(simX);
-                a.add(simY);
-                toDraw.add(a);
+            if (main.allPiecesOnBoard.get(i).captured == false && sim.allPiecesOnBoard.get(i).captured == true) {
+                differencesToDraw.setPieceHasBeenCaptured(i);
             }
         }
         //get new pieces created, draw them
@@ -178,7 +159,7 @@ public class LiveGame {
         for (int i = main.allPiecesOnBoard.size(); i <= sim.allPiecesOnBoard.size(); i++) {
             //get created pieces
         }
-        return toDraw;
+        return differencesToDraw;
     }
 
     void unselectAll() {

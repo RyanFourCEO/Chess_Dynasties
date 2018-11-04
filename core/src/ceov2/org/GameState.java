@@ -7,7 +7,10 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import sun.security.provider.ConfigFile;
 
+import java.awt.*;
 import java.util.ArrayList;
 //temporary for clipboard pasting stuff
 
@@ -149,11 +152,52 @@ public class GameState {
     }
 
     //draw the difference
-    void drawDifference(GameState main, GameState sim,ArrayList<ArrayList<Integer>> listOfThingsToDraw) {
+    void drawDifference(SpriteBatch batch, GameState main, GameState sim, DiffBetweenGameStates diff) {
+        batch.begin();
+        Shaders.prepareDistanceFieldShader();
+        batch.setShader(Shaders.distanceFieldShader);
         //draw morale change
-        for (int i = 0; i > listOfThingsToDraw.size(); i++) {
+        if (diff.moraleDifferenceWhite != 0){
+            String moraleWhite = String.valueOf(diff.newMoraleWhite);
+            if(diff.moraleDifferenceWhite < 0){
+                font.setColor(Color.GREEN);
+            }else{
+                font.setColor(Color.RED);
+            }
+            font.draw(batch,moraleWhite,1050,50);
+        }
+        if (diff.moraleDifferenceBlack != 0){
+            String moraleBlack = String.valueOf(diff.newMoraleBlack);
+            if(diff.moraleDifferenceBlack < 0){
+                font.setColor(Color.GREEN);
+            }else{
+                font.setColor(Color.RED);
+            }
+            font.draw(batch,moraleBlack,1050,580);
+        }
+        font.setColor(Color.BLACK);
+        batch.end();
+        batch.setShader(Shaders.defaultShader);
+        if (diff.indexesOfPiecesWhichHaveMoved.size() != 0) {
+            for (int i = 0; i != diff.indexesOfPiecesWhichHaveMoved.size(); i++) {
+                 int currentPieceLocX = diff.currentPieceLocationsX[diff.indexesOfPiecesWhichHaveMoved.get(i)];
+                 int currentPieceLocY = diff.currentPieceLocationsY[diff.indexesOfPiecesWhichHaveMoved.get(i)];
+                 int newPieceLocX = diff.newPieceLocationsX[diff.indexesOfPiecesWhichHaveMoved.get(i)];
+                 int newPieceLocY = diff.newPieceLocationsY[diff.indexesOfPiecesWhichHaveMoved.get(i)];
+                 int[] currentBoardPixels = findScreenCoordinatesOfSquare(currentPieceLocX,currentPieceLocY);
+                 int[] newBoardPixels     = findScreenCoordinatesOfSquare(newPieceLocX,newPieceLocY);
+
+                ShapeRenderer shapeRenderer = new ShapeRenderer();
+                shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+                shapeRenderer.setColor(1, 0, 0, 1);
+                shapeRenderer.line(currentBoardPixels[0], currentBoardPixels[1], newBoardPixels[0], newBoardPixels[1]);
+                shapeRenderer.end();
+            }
+        }
+
+        /*for (int i = 0; i > listOfThingsToDraw.size(); i++) {
             //morale change: should only be one
-            if (listOfThingsToDraw.get(i).get(0) == 0) {
+            if (diff.get(i).get(0) == 0) {
                 int moraleChange = listOfThingsToDraw.get(i).get(3);
                 switch (listOfThingsToDraw.get(i).get(4)) {
                     case 1:
@@ -164,32 +208,32 @@ public class GameState {
                         break;
                     //default draw nothing
                 }
-            }
+            }*/
             //draw location changes
-            if (listOfThingsToDraw.get(i).get(0) == 1) {
+           // if (listOfThingsToDraw.get(i).get(0) == 1) {
                 //draw the arrow between start and end
                 //draw the moved piece at end
-            }
+            //}
             //draw deaths
-            if (listOfThingsToDraw.get(i).get(0) == 2) {
+            //if (listOfThingsToDraw.get(i).get(0) == 2) {
                 //draw death icon on death location
-            }
+           // }
             //draw creates
-            if (listOfThingsToDraw.get(i).get(0) == 3) {
+            //if (listOfThingsToDraw.get(i).get(0) == 3) {
                 //draw create icon on create location
-            }
+            //}
             //draw attacks
-            if (listOfThingsToDraw.get(i).get(0) == 4) {
+           // if (listOfThingsToDraw.get(i).get(0) == 4) {
                 //draw the attacks arrow
                 //based on movetype
-            }
+            //}
             //draw applied statuses
-            if (listOfThingsToDraw.get(i).get(0) == 5) {
+           // if (listOfThingsToDraw.get(i).get(0) == 5) {
                 //draw the status icon on statused piece
-            }
+            //}
         }
         //draw
-    }
+
 
     //this method executes every tick
     void runGame(SpriteBatch batch, MouseVars mouseVars) {
@@ -1082,6 +1126,7 @@ public class GameState {
        int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
 
        executeMove(targetX, targetY, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
+       updateBoard();
 
     }
     //add the information of a move(the location of the piece moving, and the targeted square) to the array of all moves that have been made in the game
@@ -1518,6 +1563,13 @@ public class GameState {
         return loc;
     }
 
+    //takes a location on the board (0-7),(0-7), and returns the screen coordinates in pixels for that square
+    public int[] findScreenCoordinatesOfSquare(int squareX, int squareY){
+        int[] pixelCoordinates = new int[2];
+        pixelCoordinates[0] = (int)((squareX * 77.25) + (77.25/2.0) + 331);
+        pixelCoordinates[1] = (int)((squareY * 77.25) + (77.25/2.0));
+        return pixelCoordinates;
+    }
     //loop through all pieces and set all their possible moves as invalid
     private void setAllMovesInvalid() {
         for (int a = 0; a != allPiecesOnBoard.size(); a++) {
@@ -1666,7 +1718,6 @@ public class GameState {
         //switch(moveType){ }
 
     }
-
     private void drawText(SpriteBatch batch) {
 //start a fresh batch
         batch.end();
@@ -1691,14 +1742,14 @@ public class GameState {
         //so the morale totals are always next to the proper army
         if (flipBoard == false) {
             draw = "Morale " + String.valueOf(moraleTotals[0]);
-            font.draw(batch, draw, 1000, 50);
+            font.draw(batch, draw, 950, 50);
             draw = "Morale " + String.valueOf(moraleTotals[1]);
-            font.draw(batch, draw, 1000, 580);
+            font.draw(batch, draw, 950, 580);
         } else {
             draw = "Morale " + String.valueOf(moraleTotals[0]);
-            font.draw(batch, draw, 1000, 580);
+            font.draw(batch, draw, 950, 580);
             draw = "Morale " + String.valueOf(moraleTotals[1]);
-            font.draw(batch, draw, 1000, 50);
+            font.draw(batch, draw, 950, 50);
         }
     }
 
