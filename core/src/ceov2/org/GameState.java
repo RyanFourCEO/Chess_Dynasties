@@ -111,33 +111,31 @@ public class GameState {
         findAllValidMoves();
     }
 
-    ArrayList<ArrayList<Integer>> moves = new ArrayList<ArrayList<Integer>>();
+    ArrayList<ArrayList<Integer>> allMovesMade = new ArrayList<ArrayList<Integer>>();
 
-    //creates a new gamestate with all previous moves and the projected move executed
-    GameState(ArrayList<ArrayList<Integer>> moves, MouseVars mouseVars) {
-        //note: does not check if those moves are valid
-        Piece.InitAllMoveTypes();
-        loadArmies();
-        setBoard();
-        if (!moves.isEmpty()) {
-            for (int i = 0; i < (moves.get(0) == null ? 0 : moves.get(0).size()); i++) {
-                executeMove(moves.get(i).get(0), moves.get(i).get(1), allPiecesOnBoard.get(moves.get(i).get(2)), moves.get(i).get(3));
-            }
-        }
-        projectHoveredMove(mouseVars);
+    //creates a new gamestate with all previous moves and the "projected" move executed
+    public GameState(boolean NeededForSomeReason) {
+
     }
 
-    void projectHoveredMove(MouseVars mouseVars) {
+    void executeArrayOfMoves(ArrayList<ArrayList<Integer>> moves){
+         for (int i = 0; i < ((moves.isEmpty()) ? 0 : moves.size()); i++) {
+        executeMoveUsingSquareLocations(moves.get(i).get(0), moves.get(i).get(1), moves.get(i).get(2), moves.get(i).get(3));
+            }
+    }
+
+    void projectHoveredMove(MouseVars mouseVars, int indexOfPieceMoving) {
+
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
         //if the input string was valid, continue on
         //if the input string was valid, but the move is illegal on the board, it won't occur
         boolean validMove = false;
-        //find the index of the piece moving
-        int indexOfPieceMoving = piecesOnBoard[selectedPieceLocx][selectedPieceLocy];
+
         //find the location of the move in the 15x15 moveset array
-        int moveLocXOnMoveset = loc[0] + 7 - selectedPieceLocx;
-        int moveLocYOnMoveset = loc[0] + 7 - selectedPieceLocy;
-        //see if the move is valid
+        int moveLocXOnMoveset = loc[0] + 7 - allPiecesOnBoard.get(indexOfPieceMoving).xLocation;
+        int moveLocYOnMoveset = loc[1] + 7 - allPiecesOnBoard.get(indexOfPieceMoving).yLocation;
+        //find all valid moves , then see if the move is valid
+        findAllValidMoves();
         if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset] == true) {
             validMove = true;
         }
@@ -150,82 +148,14 @@ public class GameState {
         }
     }
 
-    ArrayList<ArrayList<Integer>> findDifference(GameState main, GameState sim) {
-        //return thing
-        ArrayList<ArrayList<Integer>> toDraw = new ArrayList<ArrayList<Integer>>();
-        ArrayList<Integer> a = new ArrayList<Integer>();
-        //toDraw Morale Change from move
-        //index of array to enter
-        int color = main.colourOfUser;
-        int notColor;
-        if (color == 1) {
-            notColor = 0;
-        } else {
-            notColor = 1;
-        }
-        int mDiff = sim.moraleTotals[color] - main.moraleTotals[color];
-        //changetype
-        a.add(0);
-        a.add(main.moraleTotals[color]);
-        a.add(sim.moraleTotals[color]);
-        a.add(mDiff);
-        a.clear();
-
-        //check if loss
-        if (sim.moraleTotals[color] <= 0 && sim.moraleTotals[notColor] <= 0) {
-            a.add(2);
-        } else if (sim.moraleTotals[color] <= 0) {
-            a.add(1);
-        } else {
-            a.add(0);
-        }
-        toDraw.add(a);
-        int pieceX, pieceY, simX, simY, xDiff, yDiff;
-        //find piece location change
-        for (int i = 0; i <= allPiecesOnBoard.size() - 1; i++) {
-            simX = sim.allPiecesOnBoard.get(i).xLocation;
-            simY = sim.allPiecesOnBoard.get(i).yLocation;
-            pieceX = main.allPiecesOnBoard.get(i).xLocation;
-            pieceY = main.allPiecesOnBoard.get(i).yLocation;
-            xDiff = simX - pieceX;
-            yDiff = simY - pieceY;
-            //draw movement
-            if (xDiff != 0 && yDiff != 0) {
-                a.add(1);
-                a.add(pieceX);
-                a.add(pieceY);
-                a.add(simX);
-                a.add(simY);
-                a.add(xDiff);
-                a.add(yDiff);
-                //movetypeofMove
-                a.add(allPiecesOnBoard.get(i).moveset[xDiff + 7][yDiff + 7]);
-            }
-            //draw deaths
-            if (allPiecesOnBoard.get(i).captured) {
-                a.add(2);
-                a.add(simX);
-                a.add(simY);
-                toDraw.add(a);
-            }
-        }
-        //get new pieces created, draw them
-        //TODO make it so that pieces have indicators where they are summoned instead of where they end up
-        for (int i = main.allPiecesOnBoard.size(); i <= sim.allPiecesOnBoard.size(); i++) {
-            //get created pieces
-        }
-        return toDraw;
-    }
-
     //draw the difference
-    void drawDifference(GameState main, GameState sim) {
-        ArrayList<ArrayList<Integer>> d = findDifference(main, sim);
+    void drawDifference(GameState main, GameState sim,ArrayList<ArrayList<Integer>> listOfThingsToDraw) {
         //draw morale change
-        for (int i = 0; i > d.size(); i++) {
+        for (int i = 0; i > listOfThingsToDraw.size(); i++) {
             //morale change: should only be one
-            if (d.get(i).get(0) == 0) {
-                int moraleChange = d.get(i).get(3);
-                switch (d.get(i).get(4)) {
+            if (listOfThingsToDraw.get(i).get(0) == 0) {
+                int moraleChange = listOfThingsToDraw.get(i).get(3);
+                switch (listOfThingsToDraw.get(i).get(4)) {
                     case 1:
                         //draw loss
                         break;
@@ -236,25 +166,25 @@ public class GameState {
                 }
             }
             //draw location changes
-            if (d.get(i).get(0) == 1) {
+            if (listOfThingsToDraw.get(i).get(0) == 1) {
                 //draw the arrow between start and end
                 //draw the moved piece at end
             }
             //draw deaths
-            if (d.get(i).get(0) == 2) {
+            if (listOfThingsToDraw.get(i).get(0) == 2) {
                 //draw death icon on death location
             }
             //draw creates
-            if (d.get(i).get(0) == 3) {
+            if (listOfThingsToDraw.get(i).get(0) == 3) {
                 //draw create icon on create location
             }
             //draw attacks
-            if (d.get(i).get(0) == 4) {
+            if (listOfThingsToDraw.get(i).get(0) == 4) {
                 //draw the attacks arrow
                 //based on movetype
             }
             //draw applied statuses
-            if (d.get(i).get(0) == 5) {
+            if (listOfThingsToDraw.get(i).get(0) == 5) {
                 //draw the status icon on statused piece
             }
         }
@@ -295,7 +225,7 @@ public class GameState {
         batch.end();
     }
 
-    private void initFont() {
+    void initFont() {
         //load font texture
         Texture texture = new Texture(Gdx.files.internal("Fonts\\ArialDistanceField2.png"), true);
         texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
@@ -609,22 +539,44 @@ public class GameState {
     }
 
     //loads the current armies
-    private void loadArmies() {
+    void loadArmies() {
         //load the army1 file, this will contain the setup for the white army
         String army = Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
-        String[] separated = new String[16];
+        String[] separatedNames;
         //separate the loaded string from the file into it's 16 piece names
-        separated = army.split(",");
+        separatedNames = army.split(",");
         //load all the pieces corresponding to the piece names from the file
         //load all white pieces first, so they take up the first 16 places in the array
         for (int x = 0; x != 16; x++) {
-            allPiecesOnBoard.add(new Piece(separated[x], true));
+            allPiecesOnBoard.add(new Piece(separatedNames[x], true));
         }
 //repeat the above for the black pieces, which are loaded from army2
         army = Gdx.files.internal("UserFiles\\armies\\army2.txt").readString();
-        separated = army.split(",");
+        separatedNames = army.split(",");
         for (int x = 0; x != 16; x++) {
-            allPiecesOnBoard.add(new Piece(separated[x], false));
+            allPiecesOnBoard.add(new Piece(separatedNames[x], false));
+        }
+        //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
+        tempPieces.clear();
+    }
+
+//same as above method, but calls a piece constructor where graphics aren't loaded
+    void loadArmiesNoGraphics(){
+        //load the army1 file, this will contain the setup for the white army
+        String army = Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
+        String[] separatedNames;
+        //separate the loaded string from the file into it's 16 piece names
+        separatedNames = army.split(",");
+        //load all the pieces corresponding to the piece names from the file
+        //load all white pieces first, so they take up the first 16 places in the array
+        for (int x = 0; x != 16; x++) {
+            allPiecesOnBoard.add(new Piece(true,separatedNames[x]));
+        }
+//repeat the above for the black pieces, which are loaded from army2
+        army = Gdx.files.internal("UserFiles\\armies\\army2.txt").readString();
+        separatedNames = army.split(",");
+        for (int x = 0; x != 16; x++) {
+            allPiecesOnBoard.add(new Piece(false,separatedNames[x] ));
         }
         //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
         tempPieces.clear();
@@ -979,6 +931,9 @@ public class GameState {
     }
 
     private void executeMove(int xTarget, int yTarget, Piece pieceMoving, int movetype) {
+        //add the move being made to the array of moves made
+        addMoveToListOfMoves(pieceMoving.xLocation, pieceMoving.yLocation, xTarget, yTarget);
+
 
         //if the user is the one that made the move, the move is sent to the server
         if (playerTurn == colourOfUser) {
@@ -1050,6 +1005,7 @@ public class GameState {
 
         }
 
+
     }
 
     //make a move based on a String containing the location, and the destination of the move
@@ -1116,6 +1072,28 @@ public class GameState {
         //TODO
     }
 
+    //executes a move based on 4 integers which detail the location of the piece that is moving
+    //and the location the piece is targeting
+    void executeMoveUsingSquareLocations(int squareOfPieceMovingx, int squareOfPieceMovingy, int targetX, int targetY){
+
+       int indexOfPieceMoving = piecesOnBoard[squareOfPieceMovingx][squareOfPieceMovingy];
+       int moveLocXOnMoveset = targetX + 7 - squareOfPieceMovingx;
+       int moveLocYOnMoveset = targetY + 7 - squareOfPieceMovingy;
+       int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
+
+       executeMove(targetX, targetY, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
+
+    }
+    //add the information of a move(the location of the piece moving, and the targeted square) to the array of all moves that have been made in the game
+    //this method should execute every time a move is made
+    void addMoveToListOfMoves(int pieceX, int pieceY, int targetX, int targetY){
+        ArrayList<Integer> integers = new ArrayList<Integer>();
+        integers.add(pieceX);
+        integers.add(pieceY);
+        integers.add(targetX);
+        integers.add(targetY);
+        allMovesMade.add(integers);
+    }
     //the method that captures a piece using a movetype
     public void capturePieceWithMove(int x, int y, Piece pieceMoving, int movetypeUsed) {
         int attackTypeTargetedBy = Piece.allMoveTypes[0][movetypeUsed].moveType;
@@ -1496,7 +1474,7 @@ public class GameState {
     }
 
     //find which square on the board the cursor is on
-    private int[] findSquareMouseIsOn(int mousex, int mousey) {
+    public int[] findSquareMouseIsOn(int mousex, int mousey) {
         //reset these values, these will be the values of the mouse's location on screen
         int xLoc = -1;
         int yLoc = -1;
@@ -1525,13 +1503,18 @@ public class GameState {
         }
         //set the loc array to the locations found
         int[] loc = new int[2];
-        if (flipBoard == true) {
-            loc[0] = 7 - xLoc;
-            loc[1] = 7 - yLoc;
-        } else {
-            loc[0] = xLoc;
-            loc[1] = yLoc;
-        }
+         if (xLoc != -1 && yLoc != -1){
+            if (flipBoard == true) {
+                loc[0] = 7 - xLoc;
+                loc[1] = 7 - yLoc;
+            } else {
+                loc[0] = xLoc;
+                loc[1] = yLoc;
+            }
+        }else{
+             loc[0] = -1;
+             loc[1] = -1;
+         }
         return loc;
     }
 
