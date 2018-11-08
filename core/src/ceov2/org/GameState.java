@@ -8,10 +8,10 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import sun.security.provider.ConfigFile;
 
-import java.awt.*;
 import java.util.ArrayList;
+
+//import sun.security.provider.ConfigFile;
 //temporary for clipboard pasting stuff
 
 //this class deals with all the logic of a live game.
@@ -188,9 +188,9 @@ public class GameState {
                  int[] newBoardPixels     = findScreenCoordinatesOfSquare(newPieceLocX,newPieceLocY);
 
                 ShapeRenderer shapeRenderer = new ShapeRenderer();
-                shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+                shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
                 shapeRenderer.setColor(1, 0, 0, 1);
-                shapeRenderer.line(currentBoardPixels[0], currentBoardPixels[1], newBoardPixels[0], newBoardPixels[1]);
+                shapeRenderer.rectLine(currentBoardPixels[0], currentBoardPixels[1], newBoardPixels[0], newBoardPixels[1],4);
                 shapeRenderer.end();
             }
         }
