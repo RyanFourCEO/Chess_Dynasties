@@ -107,7 +107,7 @@ public class Piece {
     //the moveset of a piece that can change, changes based on abilities and maybe other things in the future
 //the changeableMoveSet trumps the moveset, if both moveset arrays contain a move on a square, the changeable moveset
 
-//movetype will be used over the moveset
+    //movetype will be used over the moveset
     int[][] changeableMoveset = new int[15][15];
     //the moveset array, this array combines the staticMoveset and the changeableMoveset array into one
 //at the start of each turn
@@ -199,8 +199,9 @@ public class Piece {
         }
 
     }
+
     //same as above constructor, but doesn't load graphics
-    public Piece(boolean isWhite, String name){
+    public Piece(boolean isWhite, String name) {
         //using the piece's name, load all it's variables in from a file
         loadPiecesVariablesFromFile(name);
         //set the piece's colour

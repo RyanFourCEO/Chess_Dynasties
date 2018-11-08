@@ -5,14 +5,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
-import java.util.ArrayList;
-
 //this class creates the gamestate object(which actually holds the state of the game)
 //and also creates the menu for the gamestate object
 public class LiveGame {
     GameState state;
     GameState sim;
-    int[] squareMouseIsHoveredOver = {-1,-1};
+    int[] squareMouseIsHoveredOver = {-1, -1};
     int indexOfSelectedPiece;
     DiffBetweenGameStates listOfThingsToDraw;
 
@@ -57,21 +55,21 @@ public class LiveGame {
         }
     }
 
-    void detectIfPieceSelected(){
-        if (state.pieceSelected == true){
+    void detectIfPieceSelected() {
+        if (state.pieceSelected == true) {
             indexOfSelectedPiece = state.selectedPiece;
         }
     }
 
-    void detectIfMousePosChanged(MouseVars mouseVars){
-        if (state.pieceSelected == true){
-            int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx,mouseVars.mousePosy);
-            if (mousePosOnBoard[0] != squareMouseIsHoveredOver[0] || mousePosOnBoard[1] != squareMouseIsHoveredOver[1]){
+    void detectIfMousePosChanged(MouseVars mouseVars) {
+        if (state.pieceSelected == true) {
+            int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+            if (mousePosOnBoard[0] != squareMouseIsHoveredOver[0] || mousePosOnBoard[1] != squareMouseIsHoveredOver[1]) {
                 stepCounterForMoveDisplayPreviews = 0;
                 squareMouseIsHoveredOver[0] = mousePosOnBoard[0];
                 squareMouseIsHoveredOver[1] = mousePosOnBoard[1];
             }
-        }else{
+        } else {
             //if a piece is not selected, return "stepCounterForMoveDisplayPreviews" to 0, and set the square the mouse
             //is on to -1. This prevents the "detectAndDisplayMovePreviews" method does not unnecessarily execute
             //and that once the next "detectAndDisplayMovePreviews" call occurs, the "stepCounterForMoveDisplayPreviews"
@@ -82,36 +80,36 @@ public class LiveGame {
         }
     }
 
-    void detectAndCalculateMovePreviews(MouseVars mouseVars){
+    void detectAndCalculateMovePreviews(MouseVars mouseVars) {
         long startTime = System.currentTimeMillis();
-        if(squareMouseIsHoveredOver[0] != -1 && squareMouseIsHoveredOver[1] != -1) {
+        if (squareMouseIsHoveredOver[0] != -1 && squareMouseIsHoveredOver[1] != -1) {
             switch (stepCounterForMoveDisplayPreviews) {
                 case 0:
                     sim = new GameState(true);
-                    System.out.println("part 1 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    System.out.println("part 1 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 1:
                     sim.loadArmiesNoGraphics();
-                    System.out.println("part 2 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    System.out.println("part 2 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 2:
                     sim.setBoard();
                     sim.turnJustStarted = true;
                     sim.testAndExecuteAbilities();
                     sim.turnJustStarted = false;
-                    System.out.println("part 3 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    System.out.println("part 3 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 3:
                     sim.executeArrayOfMoves(state.allMovesMade);
-                    System.out.println("part 4 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    System.out.println("part 4 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 4:
-                    sim.projectHoveredMove(mouseVars,indexOfSelectedPiece);
-                    System.out.println("part 5 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    sim.projectHoveredMove(mouseVars, indexOfSelectedPiece);
+                    System.out.println("part 5 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 5:
                     listOfThingsToDraw = findDifference(state, sim);
-                    System.out.println("part 6 Time  = " + ((System.currentTimeMillis() - startTime))+"ms");
+                    System.out.println("part 6 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
             }
             if (stepCounterForMoveDisplayPreviews != 6) {
@@ -121,15 +119,15 @@ public class LiveGame {
 
     }
 
-    void drawMovePreviews(SpriteBatch batch){
-        state.drawDifference(batch,state,sim,listOfThingsToDraw);
+    void drawMovePreviews(SpriteBatch batch) {
+        state.drawDifference(batch, state, sim, listOfThingsToDraw);
     }
 
     DiffBetweenGameStates findDifference(GameState main, GameState sim) {
         //object to return
-        DiffBetweenGameStates differencesToDraw = new DiffBetweenGameStates(main.allPiecesOnBoard.size(),sim.allPiecesOnBoard.size());
+        DiffBetweenGameStates differencesToDraw = new DiffBetweenGameStates(main.allPiecesOnBoard.size(), sim.allPiecesOnBoard.size());
         //set the morale differences
-        differencesToDraw.setMoraleTotals(main.moraleTotals[0],main.moraleTotals[1],sim.moraleTotals[0],sim.moraleTotals[1]);
+        differencesToDraw.setMoraleTotals(main.moraleTotals[0], main.moraleTotals[1], sim.moraleTotals[0], sim.moraleTotals[1]);
         //calculate if a player has won/lost/drawn the game in the new GameState
         differencesToDraw.calculateLossWinDraw();
         int pieceX, pieceY, simX, simY, xDiff, yDiff;
@@ -143,9 +141,9 @@ public class LiveGame {
             yDiff = simY - pieceY;
             //draw movement
             if (xDiff != 0 || yDiff != 0) {
-                differencesToDraw.setPieceHasMoved(i,pieceX,pieceY,simX,simY,xDiff,yDiff);
+                differencesToDraw.setPieceHasMoved(i, pieceX, pieceY, simX, simY, xDiff, yDiff);
                 //movetypeofMove
-                if(i == indexOfSelectedPiece){
+                if (i == indexOfSelectedPiece) {
                     differencesToDraw.moveTypeUsed = main.allPiecesOnBoard.get(indexOfSelectedPiece).moveset[xDiff + 7][yDiff + 7];
                 }
             }

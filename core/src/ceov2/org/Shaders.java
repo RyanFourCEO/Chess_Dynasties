@@ -6,22 +6,20 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 
 public class Shaders {
-    static final String vertexShader=Gdx.files.internal("Shaders\\VertShader.txt").readString();
-    static final String fragmentShader=Gdx.files.internal("Shaders\\FragmentShader.txt").readString();
-    static final String distanceFieldVertexShader=Gdx.files.internal("Shaders\\DistanceFieldVertexShader.txt").readString();
-    static final String distanceFieldFragShader=Gdx.files.internal("Shaders\\DistanceFieldFragShader.txt").readString();
+    static final String vertexShader = Gdx.files.internal("Shaders\\VertShader.txt").readString();
+    static final String fragmentShader = Gdx.files.internal("Shaders\\FragmentShader.txt").readString();
+    static final String distanceFieldVertexShader = Gdx.files.internal("Shaders\\DistanceFieldVertexShader.txt").readString();
+    static final String distanceFieldFragShader = Gdx.files.internal("Shaders\\DistanceFieldFragShader.txt").readString();
 
-    static final ShaderProgram inversionShader=new ShaderProgram(vertexShader,fragmentShader);
-    static final ShaderProgram defaultShader=SpriteBatch.createDefaultShader();
-    static final ShaderProgram distanceFieldShader=new ShaderProgram(distanceFieldVertexShader,distanceFieldFragShader);
+    static final ShaderProgram inversionShader = new ShaderProgram(vertexShader, fragmentShader);
+    static final ShaderProgram defaultShader = SpriteBatch.createDefaultShader();
+    static final ShaderProgram distanceFieldShader = new ShaderProgram(distanceFieldVertexShader, distanceFieldFragShader);
 
     static void prepareDistanceFieldShader() {
         distanceFieldShader.begin();
-        distanceFieldShader.setUniformf("smoothing",(0.17f*1100)/Gdx.app.getGraphics().getWidth());
+        distanceFieldShader.setUniformf("smoothing", (0.17f * 1100) / Gdx.app.getGraphics().getWidth());
         distanceFieldShader.end();
     }
-
-
 
 
 }

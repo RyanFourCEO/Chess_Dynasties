@@ -29,23 +29,26 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 
-/** A button with a child LabelWithShader to display text.
- * @author Nathan Sweet */
+/**
+ * A button with a child LabelWithShader to display text.
+ *
+ * @author Nathan Sweet
+ */
 public class TextButton2 extends Button {
     private final LabelWithShader label;
     private TextButtonStyle style;
 
-    public TextButton2 (String text, Skin skin) {
+    public TextButton2(String text, Skin skin) {
         this(text, skin.get(TextButtonStyle.class));
         setSkin(skin);
     }
 
-    public TextButton2 (String text, Skin skin, String styleName) {
+    public TextButton2(String text, Skin skin, String styleName) {
         this(text, skin.get(styleName, TextButtonStyle.class));
         setSkin(skin);
     }
 
-    public TextButton2 (String text, TextButtonStyle style) {
+    public TextButton2(String text, TextButtonStyle style) {
         super();
         setStyle(style);
         this.style = style;
@@ -55,13 +58,13 @@ public class TextButton2 extends Button {
         setSize(getPrefWidth(), getPrefHeight());
     }
 
-    public void setStyle (ButtonStyle style) {
+    public void setStyle(ButtonStyle style) {
         if (style == null) throw new NullPointerException("style cannot be null");
         if (!(style instanceof TextButtonStyle)) throw new IllegalArgumentException("style must be a TextButtonStyle.");
         super.setStyle(style);
-        this.style = (TextButtonStyle)style;
+        this.style = (TextButtonStyle) style;
         if (label != null) {
-            TextButtonStyle textButtonStyle = (TextButtonStyle)style;
+            TextButtonStyle textButtonStyle = (TextButtonStyle) style;
             LabelStyle labelStyle = label.getStyle();
             labelStyle.font = textButtonStyle.font;
             labelStyle.fontColor = textButtonStyle.fontColor;
@@ -69,11 +72,11 @@ public class TextButton2 extends Button {
         }
     }
 
-    public TextButtonStyle getStyle () {
+    public TextButtonStyle getStyle() {
         return style;
     }
 
-    public void draw (Batch batch, float parentAlpha) {
+    public void draw(Batch batch, float parentAlpha) {
         Color fontColor;
         if (isDisabled() && style.disabledFontColor != null)
             fontColor = style.disabledFontColor;
@@ -89,38 +92,43 @@ public class TextButton2 extends Button {
         super.draw(batch, parentAlpha);
     }
 
-    public Label getLabel () {
+    public Label getLabel() {
         return label;
     }
 
-    public Cell<LabelWithShader> getLabelCell () {
+    public Cell<LabelWithShader> getLabelCell() {
         return getCell(label);
     }
 
-    public void setText (String text) {
+    public void setText(String text) {
         label.setText(text);
     }
 
-    public CharSequence getText () {
+    public CharSequence getText() {
         return label.getText();
     }
 
-    /** The style for a text button,
-     * @author Nathan Sweet */
+    /**
+     * The style for a text button,
+     *
+     * @author Nathan Sweet
+     */
     static public class TextButtonStyle extends ButtonStyle {
         public BitmapFont font;
-        /** Optional. */
+        /**
+         * Optional.
+         */
         public Color fontColor, downFontColor, overFontColor, checkedFontColor, checkedOverFontColor, disabledFontColor;
 
-        public TextButtonStyle () {
+        public TextButtonStyle() {
         }
 
-        public TextButtonStyle (Drawable up, Drawable down, Drawable checked, BitmapFont font) {
+        public TextButtonStyle(Drawable up, Drawable down, Drawable checked, BitmapFont font) {
             super(up, down, checked);
             this.font = font;
         }
 
-        public TextButtonStyle (TextButtonStyle style) {
+        public TextButtonStyle(TextButtonStyle style) {
             super(style);
             this.font = style.font;
             if (style.fontColor != null) this.fontColor = new Color(style.fontColor);
