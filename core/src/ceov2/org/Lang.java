@@ -9,7 +9,7 @@ public class Lang {
     private Map<String, String> translation;
 
     private Lang(String lang) {
-        String langFile = "../../assets/Languages" + lang + ".csv";
+        String langFile = "../../assets/Languages/" + lang + ".csv";
         try {
             BufferedReader br = new BufferedReader(new FileReader(langFile));
             while (br.readLine() != null) {
