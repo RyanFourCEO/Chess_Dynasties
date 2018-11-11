@@ -23,13 +23,12 @@ public class Lang {
 
     String getTranslation(String r) {
         String ret;
-        if (translation.get(r).isEmpty()) {
-            try {
-                ret = translation.get(r);
-            } catch (Exception e) {
-                ret = r;
-            }
-        } else ret = r;
+        if (!translation.get(r).isEmpty()){
+            ret = translation.get(r);
+        }
+        else { 
+            ret = r; 
+        }
         return ret;
     }
 }
