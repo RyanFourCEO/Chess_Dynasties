@@ -189,7 +189,8 @@ public class GameState {
 
                 ShapeRenderer shapeRenderer = new ShapeRenderer();
                 shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-                shapeRenderer.setColor(1, 0, 0, 1);
+                //TODO: Replace this with move associated color
+                shapeRenderer.setColor(1, 0, 0, 1); //TODO: Add arrow to the end of line
                 shapeRenderer.rectLine(currentBoardPixels[0], currentBoardPixels[1], newBoardPixels[0], newBoardPixels[1], 4);
                 shapeRenderer.end();
             }

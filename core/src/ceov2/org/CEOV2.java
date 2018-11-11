@@ -73,6 +73,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     //when it is equal to 3, that means levels are being edited (leveleditor)
     int currentGameState = MAIN_MENU_STATE;
 
+    //game's language
+    String language;
+
     //initialization/loading of the games resources
     @Override
     public void create() {
@@ -201,6 +204,8 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             font.draw(batch, "Music Volume " + volume, 440, 320);
 
             font.draw(batch, "Fullscreen Mode:", 440, 420);
+
+            font.draw(batch, "Language", 440, 180);
 
             batch.end();
 
@@ -502,7 +507,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         unselectAll();
         currentlyInOptionsMenu = !currentlyInOptionsMenu;
 
-        if (currentlyInOptionsMenu == true) {
+        if (currentlyInOptionsMenu) {
             //create a buttonGroup to put all graphics quality options into
             optionsMenu.addGroup();
             //always have exactly one button checked
@@ -587,9 +592,48 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 case 3:
                     setButtonSelected(buttons, "best");
                     break;
-
-
             }
+
+            //create a buttonGroup to put all language options into
+            optionsMenu.addGroup();
+            //always have exactly one button checked
+            optionsMenu.allGroups.get(1).setMaxCheckCount(1);
+            optionsMenu.allGroups.get(1).setMinCheckCount(1);
+            optionsMenu.allGroups.get(1).setUncheckLast(true);
+
+            //use bad graphics settings button
+            clickListener = new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    language = "eng";
+                    reloadGraphics();
+                }
+            };
+
+            optionsMenu.addButtonToGroup(1, "ENG", 50, 50, 535, 140, clickListener);
+            //use bad graphics settings button
+            clickListener = new ClickListener() {
+                @Override
+                public void clicked(InputEvent event, float x, float y) {
+                    language = "ssp";
+                    reloadGraphics();
+                }
+            };
+
+            optionsMenu.addButtonToGroup(1, "SSP", 50, 50, 595, 140, clickListener);
+
+            Array<TextButton2> buttons2 = new Array();
+            buttons2 = optionsMenu.allGroups.get(1).getButtons();
+            //check the button which is currently selected
+            switch (GraphicsUtils.graphicsQuality) {
+                case 0:
+                    setButtonSelected(buttons2, "ENG");
+                    break;
+                case 1:
+                    setButtonSelected(buttons2, "SSP");
+                    break;
+            }
+
             //add volume sliders
             optionsMenu.addSlider(500, 340, 0, 100, 1);
             optionsMenu.addSlider(500, 290, 0, 100, 1);
@@ -597,7 +641,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
 
 //if the options menu is closed, remove most of the UI components
-        if (currentlyInOptionsMenu == false) {
+        if (!currentlyInOptionsMenu) {
             //loop through and remove all buttons on the options menu, but the very first one (which is the
             //button that allows you to bring up the other buttons)
             for (int x = optionsMenu.allButtons.size() - 1; x != 0; x--) {
@@ -625,7 +669,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             }
         }
     }
-
 
     //based on the state of the game, unselect everything in the current area of the game
     //this is so that when the user presses escape to look at the menu, they don't

@@ -121,7 +121,7 @@ public class ServerCommunications {
                 System.out.println("clientSocket object doesn't exist");
             }
         } catch (IOException e) {
-            System.out.println("failed to close streams,likely due to streams not existing");
+            System.out.println("failed to close streams, likely due to streams not existing");
         }
     }
 

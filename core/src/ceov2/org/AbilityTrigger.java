@@ -18,6 +18,4 @@ public class AbilityTrigger {
         this.triggerIndex = triggerIndex;
         this.requiredNumber = requiredNumber;
     }
-
-
 }

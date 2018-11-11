@@ -14,7 +14,6 @@ public class LiveGame {
     int indexOfSelectedPiece;
     DiffBetweenGameStates listOfThingsToDraw;
 
-
     Menu menu;
     boolean gameOver = false;
     boolean multiplayerGame = false;
