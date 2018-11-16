@@ -1,35 +1,47 @@
 package ceov2.org;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import com.badlogic.gdx.Gdx;
+
 import java.util.Map;
 
 public class Lang {
 
-    private Map<String, String> translation;
+    Map<String, String> translation;
 
-    private Lang(String lang) {
-        String langFile = "../../assets/Languages/" + lang + ".csv";
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(langFile));
-            while (br.readLine() != null) {
-                String s[] = br.readLine().split(",");
-                translation.put(s[0], s[1]);
+    Lang(String lang) {
+        String text = Gdx.files.internal("Languages/" + lang + ".csv").readString();
+        text = text.replace("\n",",");
+        text = text.replace("\",\"",",");
+        text = text.replace("\"\"",",");
+        text = text.replace("\"","");
+        String s[] = text.split(",");
+        if (!s[0].isEmpty()) {
+            for (int i = 0; i < s.length; i += 2) {
+                System.out.println(i + "/" + s.length);
+                translation.put(s[i], s[i + 1]);
             }
-        } catch (Exception e) {
-            System.out.println("no translation file");
         }
     }
 
     String getTranslation(String r) {
         String ret;
-        if (translation.get(r).isEmpty()) {
+        try {
+            ret = translation.get(r);
+        } catch (Exception e) {
+            ret = r;
+        }
+        return ret;
+    }
+
+    String[] getTranslation(String[] r) { // override array
+        String[] ret = new String[r.length];
+        for (int i = 0; i < r.length; i++) {
             try {
-                ret = translation.get(r);
+                ret[i] = translation.get(r[i]);
             } catch (Exception e) {
-                ret = r;
+                ret[i] = r[i];
             }
-        } else ret = r;
+        }
         return ret;
     }
 }
