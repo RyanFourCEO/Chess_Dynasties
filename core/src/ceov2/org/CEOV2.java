@@ -6,10 +6,7 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
@@ -194,17 +191,19 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             //draw the menu text
             batch.begin();
 
-            font.draw(batch, lang.getTranslation("Graphics Quality"), 440, 270);
+            font.draw(batch, lang.getTranslation("Fullscreen Mode") + "", 440, 270);
 
             volume = String.valueOf((int) optionsMenu.allContainers.get(0).getActor().getValue()) + "%";
-            font.draw(batch, lang.getTranslation("Effects Volume") + " " +  volume, 440, 370);
+
+            font.draw(batch, lang.getTranslation("Effects Volume") + " " + volume, 440, 370);
 
             volume = String.valueOf((int) optionsMenu.allContainers.get(1).getActor().getValue()) + "%";
-            font.draw(batch, lang.getTranslation("Music Volume ") + volume, 440, 320);
+
+            font.draw(batch, lang.getTranslation("Music Volume") + " " + volume, 440, 320);
 
             font.draw(batch, lang.getTranslation("Fullscreen Mode") + ":", 440, 420);
 
-            font.draw(batch, lang.getTranslation("Language"), 440, 180);
+            font.draw(batch, lang.getTranslation("Language") + "", 440, 180);
 
             batch.end();
 
