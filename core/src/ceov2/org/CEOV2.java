@@ -198,19 +198,19 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             //draw the menu text
             batch.begin();
 
-            font.draw(batch, lang.getTranslation("Graphics Quality") + "", 440, 270);
+            font.draw(batch, /*lang.getTranslation("Graphics Quality")*/"Graphics Quality" + " ", 440, 270);
 
             volume = String.valueOf((int) optionsMenu.allContainers.get(0).getActor().getValue()) + "%";
 
-            font.draw(batch, lang.getTranslation("Effects Volume") + " " + volume, 440, 370);
+            font.draw(batch, /*lang.getTranslation("Effects Volume")*/ "Effects Volume" + ": " + volume, 440, 370);
 
             volume = String.valueOf((int) optionsMenu.allContainers.get(1).getActor().getValue()) + "%";
 
-            font.draw(batch, lang.getTranslation("Music Volume") + " " + volume, 440, 320);
+            font.draw(batch, /*lang.getTranslation("Music Volume")*/ "Music Volume" + ": " + volume, 440, 320);
 
-            font.draw(batch, lang.getTranslation("Fullscreen Mode") + ":", 440, 420);
+            font.draw(batch, /*lang.getTranslation("Fullscreen Mode")*/"Fullscreen Mode" + ": ", 440, 420);
 
-            font.draw(batch, lang.getTranslation("Language") + "", 440, 180);
+            font.draw(batch, /*lang.getTranslation("Language")*/"Language" + " ", 440, 180);
 
             batch.end();
 
@@ -258,7 +258,8 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 break;
         }
     }
-    void reloadLanguage(){
+
+    void reloadLanguage() {
         lang = new Lang(language);
         switch (currentGameState) {
 //if in the main menu, ensure the main menu is enabled and draw the main menu components

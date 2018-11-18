@@ -1841,6 +1841,7 @@ public class GameState {
     private void drawMoveOnBoard(SpriteBatch batch, float xLoc, float yLoc, int state, int movetype) {
         float size = (float) 61.8;
         float offset = (float) 7.725;
+        String errorMessage; //TODO tutorialization error message thing
         if (state == 0) { // move is not valid
             batch.draw(reticleTextureBlocked, xLoc + offset, yLoc + offset, size, size);
         }
