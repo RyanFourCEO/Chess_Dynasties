@@ -33,4 +33,5 @@ public class Lang {
         catch (Exception e) {
             System.out.println(e);
         }
+        return ret;
     }
