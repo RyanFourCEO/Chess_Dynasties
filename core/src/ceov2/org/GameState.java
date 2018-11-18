@@ -1642,7 +1642,7 @@ public class GameState {
         sprite.draw(batch);
 
         if (pieceSelected)
-            drawMovesOnBoard(batch, mouseVars);
+            drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
 
         //drawReticle(batch, mouseVars);
 
@@ -1681,7 +1681,7 @@ public class GameState {
             isMove = allPiecesOnBoard.get(selectedPiece).moveset[msX][msY] != 0;
             valid = allPiecesOnBoard.get(selectedPiece).validMoves[msX][msY];
             blocked = checkIfPieceIsBlocked(loc[0], loc[1], x, y);
-            
+
             if (valid) {
                 retType = 1;
             } else if (blocked && isMove) {
@@ -1806,14 +1806,12 @@ public class GameState {
         }
     }
 
-    private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars) {
-        int[][] moves = allPiecesOnBoard.get(selectedPiece).moveset;
-        boolean[][] validMoves = allPiecesOnBoard.get(selectedPiece).validMoves;
+    private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
         int state = -1;
 
-        for (int x = 0; x < 7; x++) {
-            for (int y = 0; y < 7; y++) {
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
                 int msX = x - selectedPieceLocx + 7;
                 int msY = y - selectedPieceLocy + 7;
                 int type = moves[msX][msY];
@@ -1832,7 +1830,6 @@ public class GameState {
                             state = 0;
                         }
                     }
-                    String separator = ", ";
                     float xLoc = (float) (x * 77.25 + boardPosX);
                     float yLoc = (float) (y * 77.25 + boardPosY);
                     drawMoveOnBoard(batch, xLoc, yLoc, state, type);
@@ -1845,14 +1842,14 @@ public class GameState {
         float size = (float) 61.8;
         float offset = (float) 7.725;
         if (state == 0) { // move is not valid
-            batch.draw(reticleTextureBlocked,xLoc+offset,yLoc+offset,size,size);
+            batch.draw(reticleTextureBlocked, xLoc + offset, yLoc + offset, size, size);
         }
         if (state == 1) { // move is valid
             batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
             //batch.draw(symbol,samethingasabove);
         }
         if (state == 2) { //move is selected but invalid
-            batch.draw(reticleTextureSelected,xLoc+offset,yLoc+offset,size,size);
+            batch.draw(reticleTextureSelected, xLoc + offset, yLoc + offset, size, size);
         }
         if (state == 3) { // move is selected and valid
 
