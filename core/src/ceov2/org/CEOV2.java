@@ -16,6 +16,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.util.ArrayList;
+
 public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
     //declare constants
@@ -75,6 +77,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
     //game's language
     String language;
+    Lang lang;
+
+    ArrayList<String> translations = new ArrayList<String>(); //TODO FILL THIS AND STOP CALLING TRANSLATION 5 TIMES PER FRAME
 
     //initialization/loading of the games resources
     @Override
@@ -90,6 +95,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         sprite1.setCenter(550, 309);
         pixmap.dispose();
 
+        lang = new Lang("eng");
 
         camera = new PerspectiveCamera();
         viewport = new StretchViewport(1100, 618, camera);
@@ -120,8 +126,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
         font = new BitmapFont(Gdx.files.internal("Fonts\\ArialDistanceField2.fnt"), new TextureRegion(texture), false);
         font.setColor(Color.WHITE);
-
-
     }
 
     //The main loop of the game, all graphics will be drawn here, and game logic is executed here
@@ -141,7 +145,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
         //process Server input
         processServerInput();
-
 
 //based on the state of the game, execute certain code
         switch (currentGameState) {
@@ -195,22 +198,23 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             //draw the menu text
             batch.begin();
 
-            font.draw(batch, "Graphics Quality", 440, 270);
+            font.draw(batch, /*lang.getTranslation("Graphics Quality")*/"Graphics Quality" + " ", 440, 270);
 
             volume = String.valueOf((int) optionsMenu.allContainers.get(0).getActor().getValue()) + "%";
-            font.draw(batch, "Effects Volume " + volume, 440, 370);
+
+            font.draw(batch, /*lang.getTranslation("Effects Volume")*/ "Effects Volume" + ": " + volume, 440, 370);
 
             volume = String.valueOf((int) optionsMenu.allContainers.get(1).getActor().getValue()) + "%";
-            font.draw(batch, "Music Volume " + volume, 440, 320);
 
-            font.draw(batch, "Fullscreen Mode:", 440, 420);
+            font.draw(batch, /*lang.getTranslation("Music Volume")*/ "Music Volume" + ": " + volume, 440, 320);
 
-            font.draw(batch, "Language", 440, 180);
+            font.draw(batch, /*lang.getTranslation("Fullscreen Mode")*/"Fullscreen Mode" + ": ", 440, 420);
+
+            font.draw(batch, /*lang.getTranslation("Language")*/"Language" + " ", 440, 180);
 
             batch.end();
 
             batch.setShader(Shaders.defaultShader);
-
         }
         Shaders.prepareDistanceFieldShader();
         batch.setShader(Shaders.distanceFieldShader);
@@ -241,7 +245,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     void reloadGraphics() {
         switch (currentGameState) {
 //if in the main menu, ensure the main menu is enabled and draw the main menu components
-
             case GAME_IS_LIVE_STATE:
                 game.reloadGraphics();
                 break;
@@ -253,7 +256,24 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             case LEVEL_EDITOR_STATE:
                 levelEditor.reloadGraphics();
                 break;
+        }
+    }
 
+    void reloadLanguage() {
+        lang = new Lang(language);
+        switch (currentGameState) {
+//if in the main menu, ensure the main menu is enabled and draw the main menu components
+            case GAME_IS_LIVE_STATE:
+                game.reloadGraphics();
+                break;
+
+            case ARMY_BUILDING_STATE:
+                armyMaker.reloadGraphics();
+                break;
+
+            case LEVEL_EDITOR_STATE:
+                levelEditor.reloadGraphics();
+                break;
         }
     }
 
@@ -606,7 +626,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     language = "eng";
-                    reloadGraphics();
+                    reloadLanguage();
                 }
             };
 
@@ -616,7 +636,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     language = "ssp";
-                    reloadGraphics();
+                    reloadLanguage();
                 }
             };
 

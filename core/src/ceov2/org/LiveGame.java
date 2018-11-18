@@ -7,7 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 //this class creates the gamestate object(which actually holds the state of the game)
 //and also creates the menu for the gamestate object
-public class LiveGame {
+class LiveGame {
     GameState state;
     GameState sim;
     int[] squareMouseIsHoveredOver = {-1, -1};
