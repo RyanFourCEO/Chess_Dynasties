@@ -47,6 +47,8 @@ public class GameState {
     boolean moveTypeJustUsed = false;
     int moveTypeUsed = 0;
 
+    int timeSincePieceSelected = 2001; //TODO: Get this to update
+
     int turnCounter = 0;
 
     Texture boardImage;
@@ -181,8 +183,10 @@ public class GameState {
             for (int i = 0; i != diff.indexesOfPiecesWhichHaveMoved.size(); i++) {
                 int currentPieceLocX = diff.currentPieceLocationsX[diff.indexesOfPiecesWhichHaveMoved.get(i)];
                 int currentPieceLocY = diff.currentPieceLocationsY[diff.indexesOfPiecesWhichHaveMoved.get(i)];
+
                 int newPieceLocX = diff.newPieceLocationsX[diff.indexesOfPiecesWhichHaveMoved.get(i)];
                 int newPieceLocY = diff.newPieceLocationsY[diff.indexesOfPiecesWhichHaveMoved.get(i)];
+
                 int[] currentBoardPixels = findScreenCoordinatesOfSquare(currentPieceLocX, currentPieceLocY);
                 int[] newBoardPixels = findScreenCoordinatesOfSquare(newPieceLocX, newPieceLocY);
 
@@ -889,7 +893,7 @@ public class GameState {
     private void executeAbilityEffect(AbilityEffect effect, Piece thisPiece) {
 
 //this prevents infinite loops, if an ability's effect has not yet been completed it can't activate again
-        if (effect.inEffect == false) {
+        if (!effect.inEffect) {
             effect.inEffect = true;
             switch (effect.effectIndex) {
 //destroy self ability
@@ -1519,10 +1523,10 @@ public class GameState {
         int xLoc = -1;
         int yLoc = -1;
         //if the cursor is within the bounds of the board
-        if (mousex > boardPosX && mousex < boardPosX + 618) {
+        if (mousex > boardPosX && mousex < boardPosX + boardSize) {
             for (int x = 0; x != 8; x++) {
                 //if the mouse position on screen is greater than the square's leftmost point
-                if (mousex > boardPosX + (int) (77.25 * x)) {
+                if (mousex > boardPosX + (int) (boardSize / 8 * x)) {
                     xLoc++;
                 } else {
                     break;
@@ -1530,10 +1534,10 @@ public class GameState {
             }
         }
         //if the cursor is within the bounds of the board
-        if (mousey > boardPosY && mousey < boardPosY + 618) {
+        if (mousey > boardPosY && mousey < boardPosY + boardSize) {
             for (int x = 0; x != 8; x++) {
                 //if the mouse position on screen is greater than the square's bottommost point
-                if (mousey > boardPosY + (int) (77.25 * x)) {
+                if (mousey > boardPosY + (int) (boardSize / 8 * x)) {
                     yLoc++;
                 } else {
                     break;
@@ -1544,7 +1548,7 @@ public class GameState {
         //set the loc array to the locations found
         int[] loc = new int[2];
         if (xLoc != -1 && yLoc != -1) {
-            if (flipBoard == true) {
+            if (flipBoard) {
                 loc[0] = 7 - xLoc;
                 loc[1] = 7 - yLoc;
             } else {
@@ -1559,10 +1563,10 @@ public class GameState {
     }
 
     //takes a location on the board (0-7),(0-7), and returns the screen coordinates in pixels for that square
-    public int[] findScreenCoordinatesOfSquare(int squareX, int squareY) {
+    public int[] findScreenCoordinatesOfSquare(int squareX, int squareY) { //TODO FIX THIS SO IT WORKS WITH RESIZING
         int[] pixelCoordinates = new int[2];
-        pixelCoordinates[0] = (int) ((squareX * 77.25) + (77.25 / 2.0) + 331);
-        pixelCoordinates[1] = (int) ((squareY * 77.25) + (77.25 / 2.0));
+        pixelCoordinates[0] = (int) ((squareX * boardSize / 8) + (boardSize / 16) + boardPosX);
+        pixelCoordinates[1] = (int) ((squareY * boardSize / 8) + (boardSize / 16));
         return pixelCoordinates;
     }
 
@@ -1641,25 +1645,23 @@ public class GameState {
         //draw board Sprite
         sprite.draw(batch);
 
-        if (pieceSelected)
-            drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
+        if (pieceSelected || timeSincePieceSelected <= 2000)
+            drawMovesOnBoard(mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
 
         //drawReticle(batch, mouseVars);
 
         drawText(batch);
 
         drawPieces(batch, mouseVars);
-
-        //drawMoveEffects(batch, mouseVars); unfinished
     }
 
-    //indicate which piece is targeted
+    /*//indicate which piece is targeted
     //draw reticle, there has got to be a better word for this
     private void drawReticle(SpriteBatch batch, MouseVars mouseVars) {
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
 
-        float xPosOfTarget = (float) (loc[0] * 77.25 + boardPosX);
-        float yPosOfTarget = (float) (loc[1] * 77.25 + boardPosY);
+        float xPosOfTarget = (float) (loc[0] * boardSize / 8 + boardPosX);
+        float yPosOfTarget = (float) (loc[1] * boardSize / 8 + boardPosY);
 
         int x = selectedPieceLocx;
         int y = selectedPieceLocy;
@@ -1698,22 +1700,22 @@ public class GameState {
         }
         switch (retType) {
             case 1:
-                batch.draw(reticleTexture, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                batch.draw(reticleTexture, xPosOfTarget, yPosOfTarget, (float) boardSize / 8, (float) boardSize / 8);
                 break;
             case 2:
-                batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) boardSize / 8, (float) boardSize / 8);
                 break;
             case 3:
-                batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
+                batch.draw(reticleTextureBlocked, xPosOfTarget, yPosOfTarget, (float) boardSize / 8, (float) boardSize / 8);
                 break;
-            /*case 4:
-                batch.draw(reticleTextureSelected, xPosOfTarget, yPosOfTarget, (float) 77.25, (float) 77.25);
-                break;*/
+            *//*case 4:
+                batch.draw(reticleTextureSelected, xPosOfTarget, yPosOfTarget, (float) boardSize/8, (float) boardSize/8);
+                break;*//*
         }
         //TODO: draw icons with reticle for movetypes
         //switch(moveType){ }
 
-    }
+    }*/
 
     private void drawText(SpriteBatch batch) {
 //start a fresh batch
@@ -1764,7 +1766,7 @@ public class GameState {
         }
     }
 
-    private void drawMoveSet(SpriteBatch batch) {
+    private void drawMoveSet(SpriteBatch batch) { //TODO Replace the text with moveset rectangles
         //this draws the moveset of the piece to the screen
         String line = "";
         String spacing = "  ";
@@ -1806,10 +1808,11 @@ public class GameState {
         }
     }
 
-    private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
+    private void drawMovesOnBoard(MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
         int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
         int state = -1;
-
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+        shapeRenderer.setAutoShapeType(true);
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 int msX = x - selectedPieceLocx + 7;
@@ -1830,31 +1833,56 @@ public class GameState {
                             state = 0;
                         }
                     }
-                    float xLoc = (float) (x * 77.25 + boardPosX);
-                    float yLoc = (float) (y * 77.25 + boardPosY);
-                    drawMoveOnBoard(batch, xLoc, yLoc, state, type);
+                    float xLoc = (float) (x * boardSize / 8 + boardPosX);
+                    float yLoc = (float) (y * boardSize / 8 + boardPosY);
+                    drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, type, timeSincePieceSelected);
                 }
             }
         }
+        shapeRenderer.dispose();
     }
 
-    private void drawMoveOnBoard(SpriteBatch batch, float xLoc, float yLoc, int state, int movetype) {
-        float size = (float) 61.8;
-        float offset = (float) 7.725;
-        String errorMessage; //TODO tutorialization error message thing
+    private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype, int time) {
+        float size = (float) (boardSize / 12);
+        float offset = (float) (boardSize / 48);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        //String errorMessage; TODO tutorialization error message thing
         if (state == 0) { // move is not valid
-            batch.draw(reticleTextureBlocked, xLoc + offset, yLoc + offset, size, size);
-        }
-        if (state == 1) { // move is valid
-            batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
+            //TODO: Replace this with move associated color
+            shapeRenderer.setColor(1, 0, 0, 1 / 2);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
+            shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(1,0,0,1/3);
+            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            //batch.draw(reticleTextureBlocked, xLoc + offset, yLoc + offset, size, size);
+        } else if (state == 1) { // move is valid
+            shapeRenderer.setColor(0, 0, 0, 1 / 2);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
+            shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(0,0,0,1/3);
+            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
             //batch.draw(symbol,samethingasabove);
+        } else if (state == 2) { //move is selected but invalid
+            size = (float) boardSize / 16;
+            offset = (float) boardSize / 32;
+            shapeRenderer.setColor(1, 0, 0, 1);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
+            shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(1,0,0,2/3);
+            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            //batch.draw(reticleTextureSelected, xLoc + offset, yLoc + offset, size, size);
+        } else if (state == 3) { // move is selected and valid
+            size = (float) boardSize / 8;
+            offset = 0;
+            shapeRenderer.setColor(0, 0, 0, 1);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
+            shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(0,0,0,3/4);
+            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
         }
-        if (state == 2) { //move is selected but invalid
-            batch.draw(reticleTextureSelected, xLoc + offset, yLoc + offset, size, size);
-        }
-        if (state == 3) { // move is selected and valid
-
-        }
+        shapeRenderer.end();
     }
 
     private void drawPieces(SpriteBatch batch, MouseVars mouseVars) {
@@ -1864,11 +1892,11 @@ public class GameState {
                 int xPosOfPiece;
                 int yPosOfPiece;
                 if (flipBoard) {
-                    xPosOfPiece = (int) ((7 - allPiecesOnBoard.get(x).xLocation) * 77.25 + 38.625) + boardPosX;
-                    yPosOfPiece = (int) ((7 - allPiecesOnBoard.get(x).yLocation) * 77.25 + 38.625) + boardPosY;
+                    xPosOfPiece = (int) ((7 - allPiecesOnBoard.get(x).xLocation) * boardSize / 8 + boardSize / 16) + boardPosX;
+                    yPosOfPiece = (int) ((7 - allPiecesOnBoard.get(x).yLocation) * boardSize / 8 + boardSize / 16) + boardPosY;
                 } else {
-                    xPosOfPiece = (int) (allPiecesOnBoard.get(x).xLocation * 77.25 + 38.625) + boardPosX;
-                    yPosOfPiece = (int) (allPiecesOnBoard.get(x).yLocation * 77.25 + 38.625) + boardPosY;
+                    xPosOfPiece = (int) (allPiecesOnBoard.get(x).xLocation * boardSize / 8 + boardSize / 16) + boardPosX;
+                    yPosOfPiece = (int) (allPiecesOnBoard.get(x).yLocation * boardSize / 8 + boardSize / 16) + boardPosY;
                 }
                 if (!allPiecesOnBoard.get(x).selected) {
                     allPiecesOnBoard.get(x).draw(batch, xPosOfPiece, yPosOfPiece);
@@ -1885,7 +1913,7 @@ public class GameState {
         reticleTextureBlocked = GraphicsUtils.loadTexture("reticuleBlocked.png");
         reticleTextureSelected = GraphicsUtils.loadTexture("reticuleSelected.png");
         sprite = new Sprite(boardImage);
-        sprite.setSize(618, 618);
+        sprite.setSize(boardSize, boardSize);
         sprite.setCenter(640, 309);
     }
 

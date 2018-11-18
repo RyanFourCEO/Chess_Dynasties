@@ -55,13 +55,13 @@ class LiveGame {
     }
 
     void detectIfPieceSelected() {
-        if (state.pieceSelected == true) {
+        if (state.pieceSelected) {
             indexOfSelectedPiece = state.selectedPiece;
         }
     }
 
     void detectIfMousePosChanged(MouseVars mouseVars) {
-        if (state.pieceSelected == true) {
+        if (state.pieceSelected) {
             int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
             if (mousePosOnBoard[0] != squareMouseIsHoveredOver[0] || mousePosOnBoard[1] != squareMouseIsHoveredOver[1]) {
                 stepCounterForMoveDisplayPreviews = 0;
@@ -147,7 +147,7 @@ class LiveGame {
                 }
             }
             //draw deaths
-            if (main.allPiecesOnBoard.get(i).captured == false && sim.allPiecesOnBoard.get(i).captured == true) {
+            if (!main.allPiecesOnBoard.get(i).captured && sim.allPiecesOnBoard.get(i).captured) {
                 differencesToDraw.setPieceHasBeenCaptured(i);
             }
         }

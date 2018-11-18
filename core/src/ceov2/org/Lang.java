@@ -4,9 +4,9 @@ import com.badlogic.gdx.Gdx;
 
 import java.util.HashMap;
 
-public class Lang {
+class Lang {
 
-    HashMap<String, String> translation = new HashMap<String, String>();
+    private HashMap<String, String> translation = new HashMap<String, String>();
 
     Lang(String lang) {
         String text = Gdx.files.internal("Languages/" + lang + ".csv").readString();
@@ -33,4 +33,6 @@ public class Lang {
         catch (Exception e) {
             System.out.println(e);
         }
+        return ret;
     }
+}
