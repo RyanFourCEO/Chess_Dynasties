@@ -29,9 +29,8 @@ public class Lang {
             if (!translation.get(r).isEmpty()) {
                 ret = translation.get(r);
             }
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             System.out.println(e);
         }
-        return ret;
     }
-}
