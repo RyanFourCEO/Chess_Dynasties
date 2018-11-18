@@ -6,12 +6,17 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+
+import java.util.ArrayList;
 
 public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
@@ -73,6 +78,8 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     //game's language
     String language;
     Lang lang;
+
+    ArrayList<String> translations = new ArrayList<String>(); //TODO FILL THIS AND STOP CALLING TRANSLATION 5 TIMES PER FRAME
 
     //initialization/loading of the games resources
     @Override
@@ -191,7 +198,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             //draw the menu text
             batch.begin();
 
-            font.draw(batch, lang.getTranslation("Fullscreen Mode") + "", 440, 270);
+            font.draw(batch, lang.getTranslation("Graphics Quality") + "", 440, 270);
 
             volume = String.valueOf((int) optionsMenu.allContainers.get(0).getActor().getValue()) + "%";
 
@@ -236,9 +243,23 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     }
 
     void reloadGraphics() {
+        switch (currentGameState) {
+//if in the main menu, ensure the main menu is enabled and draw the main menu components
+            case GAME_IS_LIVE_STATE:
+                game.reloadGraphics();
+                break;
+
+            case ARMY_BUILDING_STATE:
+                armyMaker.reloadGraphics();
+                break;
+
+            case LEVEL_EDITOR_STATE:
+                levelEditor.reloadGraphics();
+                break;
+        }
+    }
+    void reloadLanguage(){
         lang = new Lang(language);
-        System.out.println(lang.getTranslation("Language"));
-        System.out.println(lang.translation);
         switch (currentGameState) {
 //if in the main menu, ensure the main menu is enabled and draw the main menu components
             case GAME_IS_LIVE_STATE:
@@ -604,7 +625,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     language = "eng";
-                    reloadGraphics();
+                    reloadLanguage();
                 }
             };
 
@@ -614,7 +635,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     language = "ssp";
-                    reloadGraphics();
+                    reloadLanguage();
                 }
             };
 

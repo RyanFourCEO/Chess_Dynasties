@@ -78,6 +78,7 @@ public class GameState {
     //contains the information about what specific piece is on each square of the board
     //i.e. it is equal to the index of the piece in the array of Pieces,-1 means unoccupied
     int[][] piecesOnBoard = new int[8][8];
+    ArrayList<ArrayList<Integer>> allMovesMade = new ArrayList<ArrayList<Integer>>();
 
     //single player practice game constructor
     public GameState() {
@@ -113,8 +114,6 @@ public class GameState {
         turnJustStarted = false;
         findAllValidMoves();
     }
-
-    ArrayList<ArrayList<Integer>> allMovesMade = new ArrayList<ArrayList<Integer>>();
 
     //creates a new gamestate with all previous moves and the "projected" move executed
     public GameState(boolean NeededForSomeReason) {
@@ -1649,7 +1648,9 @@ public class GameState {
         //draw board Sprite
         sprite.draw(batch);
 
-        drawReticle(batch, mouseVars);
+        drawMovesOnBoard(batch, mouseVars);
+
+        //drawReticle(batch, mouseVars);
 
         drawText(batch);
 
@@ -1814,20 +1815,79 @@ public class GameState {
         }
     }
 
+    private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars) {
+        int[][] moves = allPiecesOnBoard.get(selectedPiece).moveset;
+        boolean[][] validMoves = allPiecesOnBoard.get(selectedPiece).validMoves;
+        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+        int state = -1;
+
+        for (int x = 0; x < 7; x++) {
+            for (int y = 0; y < 7; y++) {
+                int msX = loc[0] - selectedPieceLocx + 7;
+                int msY = loc[0] - selectedPieceLocy + 7;
+                boolean safe = (x >= 0 && x <= 7 && y >= 0 && y <= 7 && loc[0] >= 0 && loc[0] <= 7 && loc[1] >= 0 && loc[1] <= 7);
+                if(safe) {
+                    int type = moves[msX][msY];
+                    if (moves[msX][msY] != 0) {
+                        if (validMoves[msX][msY] == (moves[msX][msY] != 0)) { // if the move is a valid one and is a move
+                            if (loc[0] == msX && loc[1] == msY) { // if the move is a selected one
+                                state = 3;
+                            } else {
+                                state = 1;
+                            }
+                        }
+                        if (validMoves[msX][msY] == (moves[msX][msY] == 0)) {
+                            if (loc[0] == msX && loc[1] == msY) { // if the move is a selected one
+                                state = 2;
+                            } else {
+                                state = 0;
+                            }
+                        }
+                        drawMoveOnBoard(batch, msX, msY, state, type);
+                    }
+                }
+            }
+        }
+    }
+
+    private void drawMoveOnBoard(SpriteBatch batch, int x, int y, int state, int movetype) {
+
+        float xLoc = (float)(x * 77.25 + boardPosX);
+        float yLoc = (float)(y * 77.25 + boardPosY);
+        float size;
+        float offset;
+
+        if (state == 0) { // move is not valid
+
+        }
+        if (state == 1) { // move is valid
+            size = (float)(77.25*.8);
+            offset = (float)(77.25-size)/2;
+            batch.draw(reticleTexture,xLoc+offset,yLoc+offset,size,size);
+            //batch.draw(symbol,samethingasabove);
+        }
+        if (state == 2) { //move is selected but invalid
+
+        }
+        if (state == 3) { // move is selected and valid
+
+        }
+    }
+
     private void drawPieces(SpriteBatch batch, MouseVars mouseVars) {
         //loop through all pieces that have not been captured and draw them
         for (int x = 0; x != allPiecesOnBoard.size(); x++) {
-            if (allPiecesOnBoard.get(x).captured == false) {
+            if (!allPiecesOnBoard.get(x).captured) {
                 int xPosOfPiece;
                 int yPosOfPiece;
-                if (flipBoard == true) {
+                if (flipBoard) {
                     xPosOfPiece = (int) ((7 - allPiecesOnBoard.get(x).xLocation) * 77.25 + 38.625) + boardPosX;
                     yPosOfPiece = (int) ((7 - allPiecesOnBoard.get(x).yLocation) * 77.25 + 38.625) + boardPosY;
                 } else {
                     xPosOfPiece = (int) (allPiecesOnBoard.get(x).xLocation * 77.25 + 38.625) + boardPosX;
                     yPosOfPiece = (int) (allPiecesOnBoard.get(x).yLocation * 77.25 + 38.625) + boardPosY;
                 }
-                if (allPiecesOnBoard.get(x).selected == false) {
+                if (!allPiecesOnBoard.get(x).selected) {
                     allPiecesOnBoard.get(x).draw(batch, xPosOfPiece, yPosOfPiece);
                 } else {
                     allPiecesOnBoard.get(x).drawSpecificLoc(batch, (int) (72 * 1.1), mouseVars.mousePosx, mouseVars.mousePosy);
