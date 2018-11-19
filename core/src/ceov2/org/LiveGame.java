@@ -48,6 +48,9 @@ class LiveGame {
 
         detectIfMousePosChanged(mouseVars);
 
+        state.loc[0] = squareMouseIsHoveredOver[0];
+        state.loc[1] = squareMouseIsHoveredOver[1];
+
         detectAndCalculateMovePreviews(mouseVars);
         if (stepCounterForMoveDisplayPreviews == 6) {
             drawMovePreviews(batch);
@@ -61,27 +64,22 @@ class LiveGame {
     }
 
     void detectIfMousePosChanged(MouseVars mouseVars) {
-        if (state.pieceSelected) {
-            int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
-            if (mousePosOnBoard[0] != squareMouseIsHoveredOver[0] || mousePosOnBoard[1] != squareMouseIsHoveredOver[1]) {
-                stepCounterForMoveDisplayPreviews = 0;
-                squareMouseIsHoveredOver[0] = mousePosOnBoard[0];
-                squareMouseIsHoveredOver[1] = mousePosOnBoard[1];
-            }
-        } else {
-            //if a piece is not selected, return "stepCounterForMoveDisplayPreviews" to 0, and set the square the mouse
-            //is on to -1. This prevents the "detectAndDisplayMovePreviews" method does not unnecessarily execute
-            //and that once the next "detectAndDisplayMovePreviews" call occurs, the "stepCounterForMoveDisplayPreviews"
-            //will be at 0
+        int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+        if (mousePosOnBoard[0] != squareMouseIsHoveredOver[0] || mousePosOnBoard[1] != squareMouseIsHoveredOver[1]) {
+            squareMouseIsHoveredOver[0] = mousePosOnBoard[0];
+            squareMouseIsHoveredOver[1] = mousePosOnBoard[1];
             stepCounterForMoveDisplayPreviews = 0;
-            squareMouseIsHoveredOver[0] = -1;
-            squareMouseIsHoveredOver[1] = -1;
         }
+        //if a piece is not selected, return "stepCounterForMoveDisplayPreviews" to 0, and set the square the mouse
+        //is on to -1. This prevents the "detectAndDisplayMovePreviews" method does not unnecessarily execute
+        //and that once the next "detectAndDisplayMovePreviews" call occurs, the "stepCounterForMoveDisplayPreviews"
+        //will be at 0
+        //how do i comment someone elses' comment
     }
 
     void detectAndCalculateMovePreviews(MouseVars mouseVars) {
         long startTime = System.currentTimeMillis();
-        if (squareMouseIsHoveredOver[0] != -1 && squareMouseIsHoveredOver[1] != -1) {
+        if (squareMouseIsHoveredOver[0] != -1 && squareMouseIsHoveredOver[1] != -1 && state.pieceSelected) {
             switch (stepCounterForMoveDisplayPreviews) {
                 case 0:
                     sim = new GameState(true);

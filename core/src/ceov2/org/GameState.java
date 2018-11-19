@@ -49,6 +49,8 @@ public class GameState {
 
     int timeSincePieceSelected = 2001; //TODO: Get this to update
 
+    int[] loc = new int[2];
+
     int turnCounter = 0;
 
     Texture boardImage;
@@ -130,7 +132,6 @@ public class GameState {
 
     void projectHoveredMove(MouseVars mouseVars, int indexOfPieceMoving) {
 
-        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
         //if the input string was valid, continue on
         //if the input string was valid, but the move is illegal on the board, it won't occur
         boolean validMove = false;
@@ -504,9 +505,8 @@ public class GameState {
     //use mouse input to see if the user is clicking on or has selected a piece
     public void processMouseInputClick(MouseVars mouseVars) {
         //loc is set to the squares on the board that the mouse cursor is located at
-        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
 
-        if (mouseVars.mouseClicked == true) {
+        if (mouseVars.mouseClicked) {
             //if loc is actually on the board, we have to test to see if the square is occupied
             if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= 7 && loc[1] <= 7) {
 
@@ -538,7 +538,6 @@ public class GameState {
     //use mouse input to see if the player is trying to make a move by releasing the mouse
     public void processMouseInputRelease(MouseVars mouseVars) {
         //loc is set to the squares on the board that the mouse cursor is located at
-        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
         if (mouseVars.mouseReleased == true) {
 
             boolean validMove = false;
@@ -801,7 +800,7 @@ public class GameState {
             case 4:
                 if (thisPiece.moveTypeTargetedBy == 1) {
                     if (thisPiece.timesTargeted % trigger.requiredNumber == 0) {
-                        if (thisPiece.justTargeted == true) {
+                        if (thisPiece.justTargeted) {
                             triggered = true;
                         }
                     }
@@ -811,7 +810,7 @@ public class GameState {
 //index 5, x turns after this piece comes into play
             case 5:
                 if (thisPiece.turnsSurvived == trigger.requiredNumber) {
-                    if (turnJustStarted == true) {
+                    if (turnJustStarted) {
                         triggered = true;
                     }
                 }
@@ -826,7 +825,7 @@ public class GameState {
                 break;
 //index 7, if this piece has made x moves
             case 7:
-                if (thisPiece.justMoved == true) {
+                if (thisPiece.justMoved) {
                     if (thisPiece.numberOfMovesMade == trigger.requiredNumber) {
                         triggered = true;
                     }
@@ -834,7 +833,7 @@ public class GameState {
                 break;
 //index 8, if movetype x is used by the piece that has the ability
             case 8:
-                if (thisPiece.justUsedMovetype == true) {
+                if (thisPiece.justUsedMovetype) {
                     if (Piece.moveTypeIndexes[thisPiece.movetypeUsed] == trigger.requiredNumber) {
                         triggered = true;
                     }
@@ -843,7 +842,7 @@ public class GameState {
 //index 10, start of own turn
             case 10:
                 if (playerTurn == thisPiece.playerWhoOwnsPiece) {
-                    if (turnJustStarted == true) {
+                    if (turnJustStarted) {
                         triggered = true;
                     }
                 }
@@ -851,21 +850,21 @@ public class GameState {
 //index 11 start of opponent's turn
             case 11:
                 if (playerTurn != thisPiece.playerWhoOwnsPiece) {
-                    if (turnJustStarted == true) {
+                    if (turnJustStarted) {
                         triggered = true;
                     }
                 }
                 break;
 //index 12 start of either player's turns
             case 12:
-                if (turnJustStarted == true) {
+                if (turnJustStarted) {
                     triggered = true;
                 }
                 break;
 //index 13 end of player's turn
             case 13:
                 if (playerTurn == thisPiece.playerWhoOwnsPiece) {
-                    if (turnJustEnded == true) {
+                    if (turnJustEnded) {
                         triggered = true;
                     }
                 }
@@ -873,14 +872,14 @@ public class GameState {
 //index 14 end of opponent's turn
             case 14:
                 if (playerTurn != thisPiece.playerWhoOwnsPiece) {
-                    if (turnJustEnded == true) {
+                    if (turnJustEnded) {
                         triggered = true;
                     }
                 }
                 break;
 //index 15, end of either player's turn
             case 15:
-                if (turnJustEnded == true) {
+                if (turnJustEnded) {
                     triggered = true;
                 }
                 break;
@@ -925,7 +924,7 @@ public class GameState {
                     break;
 //lose x morale on death effect
                 case 5:
-                    if (thisPiece.isWhite == true) {
+                    if (thisPiece.isWhite) {
                         moraleTotals[0] -= Integer.valueOf(effect.effectVar1);
                     } else {
                         moraleTotals[1] -= Integer.valueOf(effect.effectVar1);
@@ -1546,20 +1545,20 @@ public class GameState {
 
         }
         //set the loc array to the locations found
-        int[] loc = new int[2];
+        int[] luc = new int[2];
         if (xLoc != -1 && yLoc != -1) {
             if (flipBoard) {
-                loc[0] = 7 - xLoc;
-                loc[1] = 7 - yLoc;
+                luc[0] = 7 - xLoc;
+                luc[1] = 7 - yLoc;
             } else {
-                loc[0] = xLoc;
-                loc[1] = yLoc;
+                luc[0] = xLoc;
+                luc[1] = yLoc;
             }
         } else {
-            loc[0] = -1;
-            loc[1] = -1;
+            luc[0] = -1;
+            luc[1] = -1;
         }
-        return loc;
+        return luc;
     }
 
     //takes a location on the board (0-7),(0-7), and returns the screen coordinates in pixels for that square
@@ -1587,13 +1586,13 @@ public class GameState {
             //if the piece is named "king"
             if (allPiecesOnBoard.get(x).name.equalsIgnoreCase("king")) {
                 //if the king is captured
-                if (allPiecesOnBoard.get(x).captured == true) {
+                if (allPiecesOnBoard.get(x).captured) {
                     //if the king is of the colour of the player whos turn just started
-                    if (playerTurn == 1 && allPiecesOnBoard.get(x).isWhite == true) {
+                    if (playerTurn == 1 && allPiecesOnBoard.get(x).isWhite) {
                         //reduce that players morale total
                         //   moraleTotals[0]-=15;
                     }
-                    if (playerTurn == 2 && allPiecesOnBoard.get(x).isWhite == false) {
+                    if (playerTurn == 2 && !allPiecesOnBoard.get(x).isWhite) {
                         //  moraleTotals[1]-=15;
                     }
                 }
@@ -1645,9 +1644,15 @@ public class GameState {
         //draw board Sprite
         sprite.draw(batch);
 
-        if (pieceSelected || timeSincePieceSelected <= 2000)
-            drawMovesOnBoard(mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
-
+        batch.end();
+        if (timeSincePieceSelected <= 2000) {
+            if (pieceSelected)
+                drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
+            else if (loc[0]>=0&&loc[0]<=7&&loc[1]>=0&&loc[1]<=7) {
+                drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).moveset, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).validMoves);
+            }
+        }
+        batch.begin();
         //drawReticle(batch, mouseVars);
 
         drawText(batch);
@@ -1808,8 +1813,7 @@ public class GameState {
         }
     }
 
-    private void drawMovesOnBoard(MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
-        int[] loc = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
+    private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
         int state = -1;
         ShapeRenderer shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
@@ -1840,6 +1844,7 @@ public class GameState {
             }
         }
         shapeRenderer.dispose();
+
     }
 
     private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype, int time) {
@@ -1849,18 +1854,18 @@ public class GameState {
         //String errorMessage; TODO tutorialization error message thing
         if (state == 0) { // move is not valid
             //TODO: Replace this with move associated color
-            shapeRenderer.setColor(1, 0, 0, 1 / 2);
+            shapeRenderer.setColor(1, 0, 0, (float) 0.5);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1,0,0,1/3);
-            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            shapeRenderer.setColor(1, 0, 0, (float) 0.25);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTextureBlocked, xLoc + offset, yLoc + offset, size, size);
         } else if (state == 1) { // move is valid
-            shapeRenderer.setColor(0, 0, 0, 1 / 2);
+            shapeRenderer.setColor(0, 0, 0, (float) 0.5);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0,0,0,1/3);
-            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            shapeRenderer.setColor(0, 0, 0, (float) 0.25);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
             //batch.draw(symbol,samethingasabove);
         } else if (state == 2) { //move is selected but invalid
@@ -1869,8 +1874,8 @@ public class GameState {
             shapeRenderer.setColor(1, 0, 0, 1);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1,0,0,2/3);
-            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            shapeRenderer.setColor(1, 0, 0, (float) 0.75);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTextureSelected, xLoc + offset, yLoc + offset, size, size);
         } else if (state == 3) { // move is selected and valid
             size = (float) boardSize / 8;
@@ -1878,8 +1883,8 @@ public class GameState {
             shapeRenderer.setColor(0, 0, 0, 1);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0,0,0,3/4);
-            shapeRenderer.rect(xLoc+offset,yLoc+offset,size,size);
+            shapeRenderer.setColor(0, 0, 0, (float) 0.75);
+            shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
         }
         shapeRenderer.end();
