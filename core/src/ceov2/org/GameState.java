@@ -121,7 +121,7 @@ public class GameState {
 
     //creates a new gamestate with all previous moves and the "projected" move executed
     public GameState(boolean NeededForSomeReason) {
-
+        System.out.println("OMEGALUL");
     }
 
     void executeArrayOfMoves(ArrayList<ArrayList<Integer>> moves) {
@@ -141,13 +141,13 @@ public class GameState {
         int moveLocYOnMoveset = loc[1] + 7 - allPiecesOnBoard.get(indexOfPieceMoving).yLocation;
         //find all valid moves , then see if the move is valid
         findAllValidMoves();
-        if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset] == true) {
+        if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset]) {
             validMove = true;
         }
         //find the movetype the piece is using
         int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
         //if the move is valid, execute the move
-        if (validMove == true) {
+        if (validMove) {
             executeMove(loc[0], loc[1], allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
             updateBoard();
         }
@@ -262,7 +262,7 @@ public class GameState {
             processMouseInputRelease(mouseVars);
         } else {
             //make sure no pieces are currently selected
-            if (mouseVars.mouseReleased == true) {
+            if (mouseVars.mouseReleased) {
                 allPiecesOnBoard.get(piecesOnBoard[selectedPieceLocx][selectedPieceLocy]).unselect();
                 pieceSelected = false;
             }
@@ -365,7 +365,7 @@ public class GameState {
                     validTarget = Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y] % 1000].checkIsValidTarget(boardState[xOnBoard][yOnBoard], playerTurn, allPiecesOnBoard.get(a).immovable);
 
                     //if the target is not valid, the piece can't move there
-                    if (validTarget == true && targetProtected == false) {
+                    if (validTarget && targetProtected == false) {
                         //check if the piece is blocked, (bishops can't move through other pieces)
                         boolean blocked = false;
                         //if the piece can jump over pieces, a different method is run to check the validity of the move
@@ -427,7 +427,7 @@ public class GameState {
 
 
                     //if the target is not valid, the piece can't move there
-                    if (validTarget == true && targetProtected == false) {
+                    if (validTarget && targetProtected == false) {
                         //check if the piece is blocked, (bishops can't move through other pieces)
                         boolean blocked = false;
                         //if the piece can jump over pieces, a different method is run to check the validity of the move
@@ -478,24 +478,24 @@ public class GameState {
         //if the boardstate is equal to playerturn, that means the target is an ally
         if (boardState == playerTurn) {
             //if the ally piece is protected from attacks
-            if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).protectedFromAttacks == true) {
+            if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).protectedFromAttacks) {
                 //and the movetype would capture an ally piece
-                if (Piece.allMoveTypes[0][moveTypeUsed].movetypeCapturesAllies == true) {
+                if (Piece.allMoveTypes[0][moveTypeUsed].movetypeCapturesAllies) {
                     //the piece is set to protected, which means the movetype can't be used on the piece
                     pieceIsProtected = true;
                 }
             }
         } else {
             //same as above, but with enemy pieces
-            if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).protectedFromAttacks == true) {
-                if (Piece.allMoveTypes[0][moveTypeUsed].movetypeCapturesEnemies == true) {
+            if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).protectedFromAttacks) {
+                if (Piece.allMoveTypes[0][moveTypeUsed].movetypeCapturesEnemies) {
                     pieceIsProtected = true;
                 }
             }
         }
         //their is a status effect that prevents a piece from capturing king, if a piece has it, the target is set to protected
         if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgnoreCase(("king"))) {
-            if (pieceMoving.cantTargetKing == true) {
+            if (pieceMoving.cantTargetKing) {
                 pieceIsProtected = true;
             }
         }
@@ -519,7 +519,7 @@ public class GameState {
                 //if the square is a piece the player owns, they might be able to pick it up
                 if (boardState[loc[0]][loc[1]] == playerTurn) {
                     //if they haven't already selected a piece, the player can pick up a new piece
-                    if (pieceSelected == false) {
+                    if (!pieceSelected) {
                         //the piece is selected
                         allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).select();
                         //the selected piece's location and index are stored
@@ -538,32 +538,32 @@ public class GameState {
     //use mouse input to see if the player is trying to make a move by releasing the mouse
     public void processMouseInputRelease(MouseVars mouseVars) {
         //loc is set to the squares on the board that the mouse cursor is located at
-        if (mouseVars.mouseReleased == true) {
+        if (mouseVars.mouseReleased) {
 
             boolean validMove = false;
             //find the index for the moveset array to use
             int xOffset = 7 + loc[0] - allPiecesOnBoard.get(selectedPiece).xLocation;
             int yOffset = 7 + loc[1] - allPiecesOnBoard.get(selectedPiece).yLocation;
             //if a piece is selected, we know the player has attempted to make a move
-            if (pieceSelected == true) {
+            if (pieceSelected) {
                 //if the mouse is outside the board, then no move can be made
                 if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= 7 && loc[1] <= 7) {
                     //check the validMoves array to see if the square targeted is valid
-                    if (allPiecesOnBoard.get(selectedPiece).validMoves[xOffset][yOffset] == true) {
+                    if (allPiecesOnBoard.get(selectedPiece).validMoves[xOffset][yOffset]) {
                         validMove = true;
                     }
                 }
             }
 
             //if the move was found to be valid
-            if (validMove == true) {
+            if (validMove) {
                 //execute the move
                 executeMove(loc[0], loc[1], allPiecesOnBoard.get(selectedPiece), allPiecesOnBoard.get(selectedPiece).moveset[xOffset][yOffset]);
                 //set up for the next turn
                 updateBoard();
 
             } else {
-                if (pieceSelected == true) {
+                if (pieceSelected) {
                     //if the move was invalid, the piece is unselected
                     allPiecesOnBoard.get(piecesOnBoard[selectedPieceLocx][selectedPieceLocy]).unselect();
                 }
@@ -715,7 +715,7 @@ public class GameState {
         //loops through all pieces and removes them if they are set to be removed
         for (int x = 0; x != allPiecesOnBoard.size(); x++) {
             //if a piece is set to be removed from the board(captured), and has not already been captured, it is captured
-            if (allPiecesOnBoard.get(x).setToBeRemovedFromBoard == true && allPiecesOnBoard.get(x).captured == false) {
+            if (allPiecesOnBoard.get(x).setToBeRemovedFromBoard && allPiecesOnBoard.get(x).captured == false) {
                 capturePieceWithStatus(allPiecesOnBoard.get(x));
             }
         }
@@ -729,7 +729,7 @@ public class GameState {
 
             //if the piece has been captured, it's abilities can't execute
             //if a piece has it's abilities disabled, it's abilities don't execute
-            if (allPiecesOnBoard.get(x).captured != true && allPiecesOnBoard.get(x).abilitiesDisabled == false) {
+            if (!allPiecesOnBoard.get(x).captured && !allPiecesOnBoard.get(x).abilitiesDisabled) {
                 //loop through all a piece's abilities
                 for (int y = 0; y != allPiecesOnBoard.get(x).allAbilities.size(); y++) {
                     //triggersMet: all a piece's trigger must be met for the ability to execute
@@ -739,7 +739,7 @@ public class GameState {
                     //loop through all a piece's triggers
                     for (int z = 0; z != allPiecesOnBoard.get(x).allAbilities.get(y).allTriggers.size(); z++) {
                         //test to see if the trigger's condition is met
-                        if (checkAbilityTrigger(allPiecesOnBoard.get(x).allAbilities.get(y).allTriggers.get(z), allPiecesOnBoard.get(x)) == true) {
+                        if (checkAbilityTrigger(allPiecesOnBoard.get(x).allAbilities.get(y).allTriggers.get(z), allPiecesOnBoard.get(x))) {
                             triggersMet++;
                         }
                     }
@@ -760,7 +760,7 @@ public class GameState {
         switch (trigger.triggerIndex) {
 //index 0, if the piece reaches the opposite side of the board
             case 0:
-                if (thisPiece.isWhite == true) {
+                if (thisPiece.isWhite) {
 
                     if (thisPiece.yLocation == 7) {
                         triggered = true;
@@ -776,14 +776,14 @@ public class GameState {
 
             //index 1 if the piece gets captured (on death effect)
             case 1:
-                if (thisPiece.justCaptured == true) {
+                if (thisPiece.justCaptured) {
                     triggered = true;
                 }
                 break;
 //index 2, if this piece kills x pieces
             case 2:
                 if (thisPiece.piecesCaptured % trigger.requiredNumber == 0) {
-                    if (thisPiece.justGotCapture == true) {
+                    if (thisPiece.justGotCapture) {
                         triggered = true;
                     }
                 }
@@ -1083,7 +1083,7 @@ public class GameState {
             moveLocx = integers[2];
             moveLocy = integers[3];
             //if the input string was valid, continue on
-            if (validInputString == true) {
+            if (validInputString) {
                 //if the input string was valid, but the move is illegal on the board, it won't occur
                 boolean validMove = false;
                 //find the index of the piece moving
@@ -1092,13 +1092,13 @@ public class GameState {
                 int moveLocXOnMoveset = moveLocx + 7 - currentPiecex;
                 int moveLocYOnMoveset = moveLocy + 7 - currentPiecey;
                 //see if the move is valid
-                if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset] == true) {
+                if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset]) {
                     validMove = true;
                 }
                 //find the movetype the piece is using
                 int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
                 //if the move is valid, execute the move
-                if (validMove == true) {
+                if (validMove) {
                     executeMove(moveLocx, moveLocy, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
                     updateBoard();
                 }
@@ -1106,7 +1106,7 @@ public class GameState {
         }
 
 
-        // if (allPiecesOnBoard.get(piecesOnBoard).validMoves[xOffset][yOffset] == true) {
+        // if (allPiecesOnBoard.get(piecesOnBoard).validMoves[xOffset][yOffset] ) {
         //    validMove = true;
         // }
         //TODO
@@ -1613,7 +1613,7 @@ public class GameState {
             whiteWins = true;
         }
 
-        if (gameOver == true) {
+        if (gameOver) {
             if (serverComms != null) {
                 serverComms.sendMessageToServer("RANKED_MATCH_OVER\n");
             }
@@ -1648,7 +1648,7 @@ public class GameState {
         if (timeSincePieceSelected <= 2000) {
             if (pieceSelected)
                 drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
-            else if (loc[0]>=0&&loc[0]<=7&&loc[1]>=0&&loc[1]<=7) {
+            else if (loc[0] >= 0 && loc[0] <= 7 && loc[1] >= 0 && loc[1] <= 7) {
                 drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).moveset, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).validMoves);
             }
         }
@@ -1760,11 +1760,11 @@ public class GameState {
     private void drawGameResult(SpriteBatch batch) {
         String draw = "";
         //if the game is over, draw a message saying who won
-        if (gameOver == true) {
-            if (blackWins == true) {
+        if (gameOver) {
+            if (blackWins) {
                 draw = "Black Wins!";
             }
-            if (whiteWins == true) {
+            if (whiteWins) {
                 draw = "White Wins!";
             }
             font.draw(batch, draw, 1000, 200);
