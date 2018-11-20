@@ -47,9 +47,11 @@ public class GameState {
     boolean moveTypeJustUsed = false;
     int moveTypeUsed = 0;
 
-    int timeSincePieceSelected = 2001; //TODO: Get this to update
+    int timeSincePieceSelected = 750; //TODO: Get this to update
 
     int[] loc = new int[2];
+
+    boolean hasMouseChangedLocationsYet = false;
 
     int turnCounter = 0;
 
@@ -121,7 +123,7 @@ public class GameState {
 
     //creates a new gamestate with all previous moves and the "projected" move executed
     public GameState(boolean NeededForSomeReason) {
-        System.out.println("OMEGALUL");
+
     }
 
     void executeArrayOfMoves(ArrayList<ArrayList<Integer>> moves) {
@@ -130,24 +132,17 @@ public class GameState {
         }
     }
 
-    void projectHoveredMove(MouseVars mouseVars, int indexOfPieceMoving) {
-
+    void projectHoveredMove(int indexOfPieceMoving) {
         //if the input string was valid, continue on
-        //if the input string was valid, but the move is illegal on the board, it won't occur
-        boolean validMove = false;
-
         //find the location of the move in the 15x15 moveset array
         int moveLocXOnMoveset = loc[0] + 7 - allPiecesOnBoard.get(indexOfPieceMoving).xLocation;
         int moveLocYOnMoveset = loc[1] + 7 - allPiecesOnBoard.get(indexOfPieceMoving).yLocation;
         //find all valid moves , then see if the move is valid
         findAllValidMoves();
-        if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset]) {
-            validMove = true;
-        }
         //find the movetype the piece is using
         int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
         //if the move is valid, execute the move
-        if (validMove) {
+        if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset]) {
             executeMove(loc[0], loc[1], allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
             updateBoard();
         }
@@ -555,6 +550,7 @@ public class GameState {
                 }
             }
 
+            hasMouseChangedLocationsYet = false;
             //if the move was found to be valid
             if (validMove) {
                 //execute the move
@@ -1646,9 +1642,9 @@ public class GameState {
 
         batch.end();
         if (timeSincePieceSelected <= 2000) {
-            if (pieceSelected)
+            if (pieceSelected) {
                 drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
-            else if (loc[0] >= 0 && loc[0] <= 7 && loc[1] >= 0 && loc[1] <= 7) {
+            } else if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= 7 && loc[1] <= 7 && piecesOnBoard[loc[0]][loc[1]] != -1 && hasMouseChangedLocationsYet) {
                 drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).moveset, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).validMoves);
             }
         }
@@ -1819,8 +1815,15 @@ public class GameState {
         shapeRenderer.setAutoShapeType(true);
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
-                int msX = x - selectedPieceLocx + 7;
-                int msY = y - selectedPieceLocy + 7;
+                int msX, msY;
+                if(pieceSelected) {
+                    msX = x - selectedPieceLocx + 7;
+                    msY = y - selectedPieceLocy + 7;
+                }
+                else{
+                    msX = x - loc[0] + 7;
+                    msY = y - loc[1] + 7;
+                }
                 int type = moves[msX][msY];
 
                 if (type != 0) {
@@ -1850,40 +1853,41 @@ public class GameState {
     private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype, int time) {
         float size = (float) (boardSize / 12);
         float offset = (float) (boardSize / 48);
+        float alpha = 2000 / timeSincePieceSelected;
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         //String errorMessage; TODO tutorialization error message thing
         if (state == 0) { // move is not valid
             //TODO: Replace this with move associated color
-            shapeRenderer.setColor(1, 0, 0, (float) 0.5);
+            shapeRenderer.setColor(1, 0, 0, alpha/2);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1, 0, 0, (float) 0.25);
+            shapeRenderer.setColor(1, 0, 0, alpha/4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTextureBlocked, xLoc + offset, yLoc + offset, size, size);
         } else if (state == 1) { // move is valid
-            shapeRenderer.setColor(0, 0, 0, (float) 0.5);
+            shapeRenderer.setColor(0, 0, 0, alpha/2);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0, 0, 0, (float) 0.25);
+            shapeRenderer.setColor(0, 0, 0, alpha/4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
             //batch.draw(symbol,samethingasabove);
         } else if (state == 2) { //move is selected but invalid
             size = (float) boardSize / 16;
             offset = (float) boardSize / 32;
-            shapeRenderer.setColor(1, 0, 0, 1);
+            shapeRenderer.setColor(1, 0, 0, alpha);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1, 0, 0, (float) 0.75);
+            shapeRenderer.setColor(1, 0, 0, 3*alpha/4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTextureSelected, xLoc + offset, yLoc + offset, size, size);
         } else if (state == 3) { // move is selected and valid
             size = (float) boardSize / 8;
             offset = 0;
-            shapeRenderer.setColor(0, 0, 0, 1);
+            shapeRenderer.setColor(0, 0, 0, alpha);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0, 0, 0, (float) 0.75);
+            shapeRenderer.setColor(0, 0, 0, 3*alpha/4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
         }

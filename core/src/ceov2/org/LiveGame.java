@@ -67,6 +67,7 @@ class LiveGame {
         if (mousePosOnBoard[0] != state.loc[0] || mousePosOnBoard[1] != state.loc[1]) {
             state.loc[0] = mousePosOnBoard[0];
             state.loc[1] = mousePosOnBoard[1];
+            state.hasMouseChangedLocationsYet = true;
             stepCounterForMoveDisplayPreviews = 0;
         } else if (!state.pieceSelected) {
             stepCounterForMoveDisplayPreviews = 0;
@@ -103,7 +104,9 @@ class LiveGame {
                     System.out.println("part 4 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 4:
-                    sim.projectHoveredMove(mouseVars, indexOfSelectedPiece);
+                    sim.loc[0] = state.loc[0];
+                    sim.loc[1] = state.loc[1];
+                    sim.projectHoveredMove(indexOfSelectedPiece);
                     System.out.println("part 5 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 5:
