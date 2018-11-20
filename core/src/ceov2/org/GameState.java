@@ -2,6 +2,7 @@ package ceov2.org;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -47,10 +48,13 @@ public class GameState {
     boolean moveTypeJustUsed = false;
     int moveTypeUsed = 0;
 
-    int timeSincePieceSelected = 750; //TODO: Get this to update
+    //variable used for alpha of drawing moves on the board
+    int timeSincePieceSelected = 0; //TODO: Get this to update
 
+    //location of the mouse {x,y}
     int[] loc = new int[2];
 
+    //self explanatory, used for drawing moves on the board
     boolean hasMouseChangedLocationsYet = false;
 
     int turnCounter = 0;
@@ -1813,14 +1817,14 @@ public class GameState {
         int state = -1;
         ShapeRenderer shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 int msX, msY;
-                if(pieceSelected) {
+                if (pieceSelected) {
                     msX = x - selectedPieceLocx + 7;
                     msY = y - selectedPieceLocy + 7;
-                }
-                else{
+                } else {
                     msX = x - loc[0] + 7;
                     msY = y - loc[1] + 7;
                 }
@@ -1853,22 +1857,22 @@ public class GameState {
     private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype, int time) {
         float size = (float) (boardSize / 12);
         float offset = (float) (boardSize / 48);
-        float alpha = 2000 / timeSincePieceSelected;
+        float alpha = (2000 - timeSincePieceSelected) / 2000;
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         //String errorMessage; TODO tutorialization error message thing
         if (state == 0) { // move is not valid
             //TODO: Replace this with move associated color
-            shapeRenderer.setColor(1, 0, 0, alpha/2);
+            shapeRenderer.setColor(1, 0, 0, alpha / 2);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1, 0, 0, alpha/4);
+            shapeRenderer.setColor(1, 0, 0, alpha / 4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTextureBlocked, xLoc + offset, yLoc + offset, size, size);
         } else if (state == 1) { // move is valid
-            shapeRenderer.setColor(0, 0, 0, alpha/2);
+            shapeRenderer.setColor(0, 0, 0, alpha / 2);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0, 0, 0, alpha/4);
+            shapeRenderer.setColor(0, 0, 0, alpha / 4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
             //batch.draw(symbol,samethingasabove);
@@ -1878,7 +1882,7 @@ public class GameState {
             shapeRenderer.setColor(1, 0, 0, alpha);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(1, 0, 0, 3*alpha/4);
+            shapeRenderer.setColor(1, 0, 0, 3 * alpha / 4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTextureSelected, xLoc + offset, yLoc + offset, size, size);
         } else if (state == 3) { // move is selected and valid
@@ -1887,7 +1891,7 @@ public class GameState {
             shapeRenderer.setColor(0, 0, 0, alpha);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             shapeRenderer.set(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0, 0, 0, 3*alpha/4);
+            shapeRenderer.setColor(0, 0, 0, 3 * alpha / 4);
             shapeRenderer.rect(xLoc + offset, yLoc + offset, size, size);
             //batch.draw(reticleTexture, xLoc + offset, yLoc + offset, size, size);
         }
