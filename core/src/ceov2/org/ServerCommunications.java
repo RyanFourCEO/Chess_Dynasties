@@ -129,7 +129,7 @@ public class ServerCommunications {
     boolean getState() {
         boolean connected = false;
         try {
-            if (clientSocket.isConnected() == true) {
+            if (clientSocket.isConnected()) {
                 connected = true;
             }
         } catch (NullPointerException e) {

@@ -49,7 +49,7 @@ public class GameState {
     int moveTypeUsed = 0;
 
     //variable used for alpha of drawing moves on the board
-    int timeSincePieceSelected = 0; //TODO: Get this to update
+    long timePieceLastSelected;
 
     //location of the mouse {x,y}
     int[] loc = new int[2];
@@ -1645,7 +1645,7 @@ public class GameState {
         sprite.draw(batch);
 
         batch.end();
-        if (timeSincePieceSelected <= 2000) {
+        if (System.currentTimeMillis() - timePieceLastSelected <= 1500) {
             if (pieceSelected) {
                 drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
             } else if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= 7 && loc[1] <= 7 && piecesOnBoard[loc[0]][loc[1]] != -1 && hasMouseChangedLocationsYet) {
@@ -1846,7 +1846,7 @@ public class GameState {
                     }
                     float xLoc = (float) (x * boardSize / 8 + boardPosX);
                     float yLoc = (float) (y * boardSize / 8 + boardPosY);
-                    drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, type, timeSincePieceSelected);
+                    drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, type);
                 }
             }
         }
@@ -1854,10 +1854,15 @@ public class GameState {
 
     }
 
-    private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype, int time) {
+    private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype) {
         float size = (float) (boardSize / 12);
         float offset = (float) (boardSize / 48);
-        float alpha = (2000 - timeSincePieceSelected) / 2000;
+        float alpha = 0;
+        if(System.currentTimeMillis() - timePieceLastSelected <= 500)
+            alpha = 1;
+        else{
+            alpha = (float) (1500 - System.currentTimeMillis() + timePieceLastSelected) / (float) 1000;
+        }
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         //String errorMessage; TODO tutorialization error message thing
         if (state == 0) { // move is not valid

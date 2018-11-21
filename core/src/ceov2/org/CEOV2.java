@@ -137,7 +137,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 //clear the screen
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        if (currentlyInOptionsMenu == true) {
+        if (currentlyInOptionsMenu) {
             //if the user is in the options menu, we unset the mouse variables so the user can't accidentalluy
             //make a move while doing options menu things
             mouseVars.unSetMouseVariables();
@@ -150,7 +150,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         switch (currentGameState) {
 //if in the main menu, ensure the main menu is enabled and draw the main menu components
             case MAIN_MENU_STATE:
-                if (mainMenuDisabled == true) {
+                if (mainMenuDisabled) {
                     mainMenuDisabled = false;
                     mainMenu.enable();
                 }
@@ -161,7 +161,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             case GAME_IS_LIVE_STATE:
 
                 game.performGameLogic(batch, mouseVars);
-                if (game.gameOver == true) {
+                if (game.gameOver) {
                     setAllObjectsNull();
                     currentGameState = MAIN_MENU_STATE;
                 }
@@ -169,7 +169,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
             case ARMY_BUILDING_STATE:
                 armyMaker.run(batch, mouseVars);
-                if (armyMaker.exitToMainMenu == true) {
+                if (armyMaker.exitToMainMenu) {
                     setAllObjectsNull();
                     currentGameState = MAIN_MENU_STATE;
                 }
@@ -177,7 +177,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
             case LEVEL_EDITOR_STATE:
                 levelEditor.run(batch, mouseVars);
-                if (levelEditor.exitToMainMenu == true) {
+                if (levelEditor.exitToMainMenu) {
                     setAllObjectsNull();
                     currentGameState = MAIN_MENU_STATE;
                 }
@@ -185,7 +185,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
         }
 
-        if (currentlyInOptionsMenu == true) {
+        if (currentlyInOptionsMenu) {
             //draw the black rectangle the optionsMenu is contained within
             batch.begin();
             sprite1.draw(batch);
@@ -540,7 +540,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
                     fullScreenMode = !fullScreenMode;
-                    if (fullScreenMode == true) {
+                    if (fullScreenMode) {
                         Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
                     } else {
                         Gdx.graphics.setWindowedMode(1100, 618);

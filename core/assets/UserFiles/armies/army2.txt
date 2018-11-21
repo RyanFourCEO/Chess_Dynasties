@@ -1,1 +1,1 @@
-Rook,Knight,Bishop,Bait,King,Bishop,Knight,Rook,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn
+Bishop,Rook,Queen,Queen,Bishop,Knight,Slime,King,Pawn,Conscript,Pawn,Pawn,Pawn,Conscript,Pawn,Pawn
