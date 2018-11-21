@@ -316,7 +316,7 @@ public class ArmyMaker {
                 int yCenter;
                 int size = 56;
 //if the piece is selected it will be drawn where the cursor is
-                if (pieceInArmySelected == true && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
+                if (pieceInArmySelected && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
                     xCenter = mouseVars.mousePosx;
                     yCenter = mouseVars.mousePosy;
                     size = (int) (56 * 1.2);
@@ -389,7 +389,7 @@ public class ArmyMaker {
             }
         }
 
-        if (pieceInCollectionSelected == true) {
+        if (pieceInCollectionSelected) {
             for (int x = 0; x != allPieces.size(); x++) {
                 if (allPieces.get(x).name.equals(selectedCollectionPiece)) {
                     allPieces.get(x).drawSpecificLoc2(batch, (int) (60 * 1.2), mouseVars.mousePosx, mouseVars.mousePosy);
@@ -467,7 +467,7 @@ public class ArmyMaker {
     //and their is a piece selected, change the location of the selected piece
     void processMouseInputArmy(MouseVars mouseVars, int loc[], int gridx, int gridy) {
 
-        if (mouseVars.mouseClicked == true) {
+        if (mouseVars.mouseClicked) {
             //if loc is actually on the board
             if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= gridx && loc[1] <= gridy) {
                 //if they haven't already selected a piece, the player can pick up a new piece
@@ -492,9 +492,9 @@ public class ArmyMaker {
             }
         }
 //if the mouse is released
-        if (mouseVars.mouseReleased == true) {
+        if (mouseVars.mouseReleased) {
             //if there is a piece selected
-            if (pieceInArmySelected == true) {
+            if (pieceInArmySelected) {
                 //see if the selected piece is being released on the army
                 if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= gridx && loc[1] <= gridy) {
                     //swap the piece's location with the location the mouse was released on
@@ -516,7 +516,7 @@ public class ArmyMaker {
     void processMouseInputCollection(MouseVars mouseVars, int[] collectionGridLoc, int[] armyGridLoc, int gridx, int gridy) {
 
 //if the mouse is clicked
-        if (mouseVars.mouseClicked == true) {
+        if (mouseVars.mouseClicked) {
             //if a piece isn't already selected
             if (pieceInCollectionSelected == false && pieceInArmySelected == false) {
                 //if collectionGridLoc is in the collection grid
@@ -538,9 +538,9 @@ public class ArmyMaker {
         }
 
         //if the mouse is released
-        if (mouseVars.mouseReleased == true) {
+        if (mouseVars.mouseReleased) {
             //if their was a piece selected
-            if (pieceInCollectionSelected == true) {
+            if (pieceInCollectionSelected) {
                 //if the selected piece is located over the army
                 if (armyGridLoc[0] >= 0 && armyGridLoc[1] >= 0 && armyGridLoc[0] <= gridx && armyGridLoc[1] <= gridy) {
                     //place the piece in the army location the mouse was released on

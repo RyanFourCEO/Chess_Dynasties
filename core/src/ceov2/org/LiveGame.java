@@ -69,8 +69,11 @@ class LiveGame {
             state.loc[1] = mousePosOnBoard[1];
             state.hasMouseChangedLocationsYet = true;
             stepCounterForMoveDisplayPreviews = 0;
+            state.timePieceLastSelected = System.currentTimeMillis();
         } else if (!state.pieceSelected) {
             stepCounterForMoveDisplayPreviews = 0;
+        } else {
+            state.timePieceLastSelected = System.currentTimeMillis();
         }
         /*
         if a piece is not selected, return "stepCounterForMoveDisplayPreviews" to 0, and set the square the mouse

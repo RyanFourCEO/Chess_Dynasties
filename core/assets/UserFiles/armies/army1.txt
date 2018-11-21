@@ -1,1 +1,1 @@
-Rook,Knight,Bishop,Cannon,King,Bishop,Knight,Rook,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn
+Bishop,King,Bait,Ceasefire Armaments,Ceasefire Armaments,Advisor,Knight,Bishop,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn,Pawn

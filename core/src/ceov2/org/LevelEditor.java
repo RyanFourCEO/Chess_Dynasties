@@ -80,7 +80,7 @@ public class LevelEditor extends ArmyMaker {
             }
         }
 
-        if (pieceInCollectionSelected == true) {
+        if (pieceInCollectionSelected) {
             for (int x = 0; x != allPieces.size(); x++) {
                 if (allPieces.get(x).name.equals(selectedCollectionPiece)) {
                     allPieces.get(x).drawSpecificLoc(batch, (int) (60 * 1.2), mouseVars.mousePosx, mouseVars.mousePosy);
@@ -177,12 +177,12 @@ public class LevelEditor extends ArmyMaker {
         for (int y = 0; y != 8; y++) {
             for (int x = 0; x != 8; x++) {
                 //only draw white pieces, another loop will be used to draw all the black pieces
-                if (colourOfPieceOnBoard[y][x] == true) {
+                if (colourOfPieceOnBoard[y][x]) {
                     int xCenter;
                     int yCenter;
                     int size = 56;
 //if the piece is selected it will be drawn where the cursor is
-                    if (pieceInArmySelected == true && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
+                    if (pieceInArmySelected && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
                         xCenter = mouseVars.mousePosx;
                         yCenter = mouseVars.mousePosy;
                         size = (int) (56 * 1.2);
@@ -205,7 +205,7 @@ public class LevelEditor extends ArmyMaker {
                     int yCenter;
                     int size = 56;
 //if the piece is selected it will be drawn where the cursor is
-                    if (pieceInArmySelected == true && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
+                    if (pieceInArmySelected && selectedPieceLocation[0] == x && selectedPieceLocation[1] == y) {
                         xCenter = mouseVars.mousePosx;
                         yCenter = mouseVars.mousePosy;
                         size = (int) (56 * 1.2);

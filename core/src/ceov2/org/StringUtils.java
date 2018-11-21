@@ -15,7 +15,7 @@ public class StringUtils {
     static String removeNonNumberCharacters(String string) {
         String newString = "";
         for (int x = 0; x != string.length(); x++) {
-            if (isNumber(string.charAt(x)) == true) {
+            if (isNumber(string.charAt(x))) {
                 newString += String.valueOf(string.charAt(x));
             }
         }
