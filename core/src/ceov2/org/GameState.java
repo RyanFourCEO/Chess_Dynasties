@@ -561,9 +561,9 @@ public class GameState {
                 }
             }
 
-            hasMouseChangedLocationsYet = false;
             //if the move was found to be valid
             if (validMove) {
+                hasMouseChangedLocationsYet = false;
                 //execute the move
                 executeMove(loc[0], loc[1], allPiecesOnBoard.get(selectedPiece), allPiecesOnBoard.get(selectedPiece).moveset[xOffset][yOffset]);
                 //set up for the next turn
