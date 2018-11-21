@@ -18,8 +18,8 @@ public class Piece {
     static int moveTypeCounter = 0;
     //stores the index number of any movetype. A movetype may be the 5th index in the allMoveTypes array, but
     //it may be the 17th movetype on the "movetypes" file. This array is used to connect those two numbers
-    //i.e moveTypeIndexes[5]=17 This is only used when loading in pieces from files, a file may say to use movetype
-    //17 from the file, when the game currently only has 9 movetypes implemented
+    //i.e moveTypeIndexes[5]=17 This is only used when loading in pieces from files, (a file may say to use movetype
+    //17 from the file, when the game currently only has 9 movetypes implemented)
     static final int[] moveTypeIndexes = new int[12];
 
     //initialize all the movetypes

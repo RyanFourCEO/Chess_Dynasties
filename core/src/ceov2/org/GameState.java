@@ -100,6 +100,7 @@ public class GameState {
         turnJustStarted = true;
         testAndExecuteAbilities();
         turnJustStarted = false;
+        updatePieceMoveSets();
         findAllValidMoves();
     }
 
@@ -122,6 +123,7 @@ public class GameState {
         turnJustStarted = true;
         testAndExecuteAbilities();
         turnJustStarted = false;
+        updatePieceMoveSets();
         findAllValidMoves();
     }
 
@@ -458,15 +460,20 @@ public class GameState {
 //loop through the arrayList of pieces
         for (int a = 0; a < allPiecesOnBoard.size(); a++) {
 
-            //update the moveset of a piece, abilities may have changed it
-            allPiecesOnBoard.get(a).setMoveset();
-
 //loop through the movesets of each piece
             for (int x = 0; x != 15; x++) {
                 for (int y = 0; y != 15; y++) {
                     findIfValidMove(x, y, a);
                 }
             }
+        }
+    }
+
+    //call every time a move is made to refresh piece movesets to potentially new values
+    public void updatePieceMoveSets(){
+        for (int a = 0; a < allPiecesOnBoard.size(); a++) {
+            //update the moveset of a piece, abilities may have changed it
+            allPiecesOnBoard.get(a).setMoveset();
         }
     }
 
@@ -701,8 +708,38 @@ public class GameState {
         turnJustStarted = false;
 
         setAllMovesInvalid();
+        updatePieceMoveSets();
         findAllValidMoves();
     }
+
+    //same as above method, but doesn't do unnecessary things that are necessary in ordinary games
+    private void updateBoardSim(){
+        turnCounter++;
+        updatePieceCounters();
+        turnJustEnded = true;
+        testAndExecuteAbilities();
+        turnJustEnded = false;
+
+        //change whose turn it is
+        if (playerTurn == 1) {
+            playerTurn = 2;
+        } else {
+            playerTurn = 1;
+        }
+
+        //see if each player's king is still alive, if not the player suffers a morale penalty on the start
+        //of their turn
+        checkIfKingLives();
+        ///check if any morale values have reached 0, if so end the game
+        checkIfGameOver();
+
+        turnJustStarted = true;
+        testAndExecuteAbilities();
+        turnJustStarted = false;
+
+        updatePieceMoveSets();
+    }
+
 
     //loop through all pieces and increase their counters, this will reduce the time of their status effects and increase the
 //number of turns they have survived
@@ -944,7 +981,7 @@ public class GameState {
                     thisPiece.setChangeableMovesetEmpty();
 
                     for (int x = 0; x != allPiecesOnBoard.size(); x++) {
-                        if (allPiecesOnBoard.get(x).name.equalsIgnoreCase("king")) {
+                        if (allPiecesOnBoard.get(x).name.equalsIgnoreCase("king") && !allPiecesOnBoard.get(x).captured) {
                             if (allPiecesOnBoard.get(x).isWhite == thisPiece.isWhite) {
                                 int xOnMovesetArray = allPiecesOnBoard.get(x).xLocation - thisPiece.xLocation + 7;
                                 int yOnMovesetArray = allPiecesOnBoard.get(x).yLocation - thisPiece.yLocation + 7;
@@ -1120,9 +1157,8 @@ public class GameState {
         int moveLocXOnMoveset = targetX + 7 - squareOfPieceMovingx;
         int moveLocYOnMoveset = targetY + 7 - squareOfPieceMovingy;
         int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
-
         executeMove(targetX, targetY, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
-        updateBoard();
+        updateBoardSim();
 
     }
 

@@ -55,7 +55,7 @@ public class ServerCommunications {
         }
     }
 
-    //read all data in the inputStream of the client into a String and return it
+    //read all data in the inputStream of the client into a String and returns it
     String readClientsMessage() {
         byte[] messageByte = new byte[1000];
         try {
@@ -84,9 +84,9 @@ public class ServerCommunications {
 
     //send any String message to the server
     void sendMessageToServer(String message) {
-        System.out.println("sent to server: " + message);
         try {
             try {
+                System.out.println("sent to server: " + message);
                 clientSocket.getOutputStream().write(message.getBytes());
                 clientSocket.getOutputStream().flush();
             } catch (NullPointerException e) {
@@ -115,15 +115,19 @@ public class ServerCommunications {
     void closeStreams() {
         try {
             try {
-                clientSocket.getInputStream().close();
-                clientSocket.getOutputStream().close();
-            } catch (NullPointerException e) {
-                System.out.println("clientSocket object doesn't exist");
+                try {
+                    clientSocket.getInputStream().close();
+                    clientSocket.getOutputStream().close();
+                } catch (NullPointerException e) {
+                    System.out.println("clientSocket object doesn't exist");
+                }
+            } catch (IOException e) {
+                System.out.println("failed to close streams, likely due to streams not existing");
             }
-        } catch (IOException e) {
-            System.out.println("failed to close streams, likely due to streams not existing");
-        }
-    }
+        }catch(GdxRuntimeException e){
+            System.out.println("unimportant error occurred");
+        } }
+
 
     //get the state of the connection
     boolean getState() {

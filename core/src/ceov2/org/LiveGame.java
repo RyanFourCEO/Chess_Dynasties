@@ -88,6 +88,7 @@ class LiveGame {
         if (state.loc[0] != -1 && state.loc[1] != -1 && state.pieceSelected) {
             switch (stepCounterForMoveDisplayPreviews) {
                 case 0:
+                    sim = null;
                     sim = new GameState(true);
                     System.out.println("part 1 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
@@ -100,6 +101,7 @@ class LiveGame {
                     sim.turnJustStarted = true;
                     sim.testAndExecuteAbilities();
                     sim.turnJustStarted = false;
+                    sim.updatePieceMoveSets();
                     System.out.println("part 3 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 3:
@@ -129,8 +131,10 @@ class LiveGame {
     }
 
     DiffBetweenGameStates findDifference(GameState main, GameState sim) {
+
         //object to return
         DiffBetweenGameStates differencesToDraw = new DiffBetweenGameStates(main.allPiecesOnBoard.size(), sim.allPiecesOnBoard.size());
+
         //set the morale differences
         differencesToDraw.setMoraleTotals(main.moraleTotals[0], main.moraleTotals[1], sim.moraleTotals[0], sim.moraleTotals[1]);
         //calculate if a player has won/lost/drawn the game in the new GameState

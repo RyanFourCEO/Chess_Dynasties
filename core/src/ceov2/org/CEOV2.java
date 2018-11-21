@@ -84,7 +84,8 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     //initialization/loading of the games resources
     @Override
     public void create() {
-        serverComms = new ServerCommunications("127.0.0.1", 9021);
+
+        serverComms = new ServerCommunications("23.233.5.44", 5000);
 
         //create semi-transparent black box texture
         pixmap = new Pixmap(290, 300, Pixmap.Format.RGBA8888);
@@ -143,6 +144,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             mouseVars.unSetMouseVariables();
         }
 
+        //this is a useful comment
         //process Server input
         processServerInput();
 
@@ -239,6 +241,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         mainMenu.dispose();
         optionsMenu.dispose();
         texture.dispose();
+        serverComms.sendMessageToServer("end");
         serverComms.closeStreams();
     }
 
@@ -353,7 +356,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         //if their is a message in the queue to process
         if (serverComms.getFirstClientMessageInQueue() != null) {
             //process it, then remove it from the queue
-            dealWithServerMessage(serverComms.getFirstClientMessageInQueue());
+            //dealWithServerMessage(serverComms.getFirstClientMessageInQueue());
             serverComms.removeFirstClientMessageInQueue();
         }
     }
@@ -361,10 +364,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     //process a single server message
     void dealWithServerMessage(String message) {
         //split the message into it's two parts, the command, and the arguments
-        String[] commandThenArgs = message.split(" ");
+       String[] commandThenArgs = message.split(" ");
         String command = commandThenArgs[0];
         String args = commandThenArgs[1];
-        System.out.println(command + " is executed");
 
         //deal with the heartBeat command
         if (command.equals("HEARTBEAT")) {
@@ -441,7 +443,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String army = Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
-                String message = "ENTER_RANKED_QUEUE ";
+                String message = "";//"ENTER_RANKED_QUEUE ";
                 String[] pieces = army.split(",");
                 for (int w = 0; w != 16; w++) {
                     pieces[w] = StringUtils.convertToHex(pieces[w]);

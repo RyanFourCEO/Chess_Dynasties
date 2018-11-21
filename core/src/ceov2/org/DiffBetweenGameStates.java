@@ -66,10 +66,13 @@ public class DiffBetweenGameStates {
 
     void setPieceHasMoved(int indexOfPieceThatMoved, int currentXLoc, int currentYLoc, int newXLoc, int newYLoc, int xDiff, int yDiff) {
         indexesOfPiecesWhichHaveMoved.add(indexOfPieceThatMoved);
+
         currentPieceLocationsX[indexOfPieceThatMoved] = currentXLoc;
         currentPieceLocationsY[indexOfPieceThatMoved] = currentYLoc;
+
         newPieceLocationsX[indexOfPieceThatMoved] = newXLoc;
         newPieceLocationsY[indexOfPieceThatMoved] = newYLoc;
+
         diffBetweenPieceLocationsX[indexOfPieceThatMoved] = xDiff;
         diffBetweenPieceLocationsY[indexOfPieceThatMoved] = yDiff;
     }
