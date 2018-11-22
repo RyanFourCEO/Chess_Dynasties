@@ -99,7 +99,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         //loopback ip address: "127.0.0.1"
         //actual server ip address: "23.233.5.44"
         //port: 5000
-        serverComms = new ServerCommunications("127.0.0.1", 5000);
+        serverComms = new ServerCommunications("23.233.5.44", 5000);
 
         //create semi-transparent black box texture
         pixmap = new Pixmap(290, 300, Pixmap.Format.RGBA8888);

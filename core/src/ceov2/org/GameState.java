@@ -17,6 +17,11 @@ import java.util.ArrayList;
 
 //this class deals with all the logic of a live game.
 public class GameState {
+
+
+    String yourArmy;
+    String oppArmy;
+
     //holds morale of both players,index 0=player 1(white)index 1=player 2(black)
     int[] moraleTotals = new int[2];
     //tells the game when the board should be flipped, this changes the functionality
@@ -107,6 +112,9 @@ public class GameState {
     //multiplayer game constructor
     //colour=1 means user is white, colour=2 means user is black
     public GameState(int colour, String army, String oppArmy, ServerCommunications serverComms) {
+        yourArmy = army;
+        this.oppArmy = oppArmy;
+
         this.serverComms = serverComms;
         //set the colour of the user
         colourOfUser = colour;
@@ -134,6 +142,7 @@ public class GameState {
 
     void executeArrayOfMoves(ArrayList<ArrayList<Integer>> moves) {
         for (int i = 0; i < ((moves.isEmpty()) ? 0 : moves.size()); i++) {
+            System.out.println(i + " hello");
             executeMoveUsingSquareLocations(moves.get(i).get(0), moves.get(i).get(1), moves.get(i).get(2), moves.get(i).get(3));
         }
     }
@@ -255,6 +264,14 @@ public class GameState {
 
     //version of above method for multiplayer games, minor differences
     void runMultiplayerGame(SpriteBatch batch, MouseVars mouseVars) {
+        for(int x=0;x!=allMovesMade.size();x++) {
+            System.out.println("move numbre " + x);
+        System.out.println(allMovesMade.get(x).get(0));
+            System.out.println(allMovesMade.get(x).get(1));
+            System.out.println(allMovesMade.get(x).get(2));
+            System.out.println(allMovesMade.get(x).get(3));
+        }
+
         //see if the player has clicked on/selected a piece
         processMouseInputClick(mouseVars);
         //If it is the user's turn, see if the player has released the mouse while selecting a piece
@@ -639,12 +656,47 @@ public class GameState {
         tempPieces.clear();
     }
 
+    //overload of above method, mimics below method but doesn't load graphics
+    void loadArmiesNoGraphics(int colour, String army, String oppArmy){
+        //this if statement exists only to ensure the first 16 pieces added to the array allPiecesOnBoard
+        //are white.If the user is player one, aka white, load their pieces first,otherwise load their opponent's
+        //pieces
+        if (colour == 1) {
+            //separate the loaded string from the file into it's 16 piece names
+            String[] separated = army.split(",");
+            //load all the pieces corresponding to the piece names from the String
+            //load all of player 1's pieces first, so they take up the first 16 places in the array
+            for (int x = 0; x != 16; x++) {
+                allPiecesOnBoard.add(new Piece(true,separated[x]));
+            }
+//repeat the above for the black pieces, which are loaded from army2
+            separated = oppArmy.split(",");
+            for (int x = 0; x != 16; x++) {
+                allPiecesOnBoard.add(new Piece(false,separated[x]));
+            }
+        } else {
+            //separate the loaded string from the file into it's 16 piece names
+            String[] separated = oppArmy.split(",");
+            //load all the pieces corresponding to the piece names from the String
+            //load all of player 1's pieces first, so they take up the first 16 places in the array
+            for (int x = 0; x != 16; x++) {
+                allPiecesOnBoard.add(new Piece(true,separated[x]));
+            }
+//repeat the above for the black pieces, which are loaded from army2
+            separated = army.split(",");
+            for (int x = 0; x != 16; x++) {
+                allPiecesOnBoard.add(new Piece(false,separated[x]));
+            }
+        }
+        //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
+        tempPieces.clear();
+    }
+
+
     //loads the two armies from "army" and "oppArmy"
     //strings are in the following format "pawn,pawn,pawn,....knight,rook"
     //if the user is white, colour=1, if the user is black colour=2
     private void loadArmies(int colour, String army, String oppArmy) {
-
-
         //this if statement exists only to ensure the first 16 pieces added to the array allPiecesOnBoard
         //are white.If the user is player one, aka white, load their pieces first,otherwise load their opponent's
         //pieces
@@ -1018,6 +1070,7 @@ public class GameState {
     }
 
     private void executeMove(int xTarget, int yTarget, Piece pieceMoving, int movetype) {
+        System.out.println(movetype +" this is the move being madE!");
         //add the move being made to the array of moves made
         addMoveToListOfMoves(pieceMoving.xLocation, pieceMoving.yLocation, xTarget, yTarget);
         //if the user is the one that made the move, the move is sent to the server
@@ -1138,7 +1191,7 @@ public class GameState {
                 //find the movetype the piece is using
                 int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
                 //if the move is valid, execute the move
-                if (validMove) {
+                if (validMove){
                     executeMove(moveLocx, moveLocy, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
                     updateBoard();
                 }
@@ -1156,10 +1209,12 @@ public class GameState {
     //and the location the piece is targeting
     void executeMoveUsingSquareLocations(int squareOfPieceMovingx, int squareOfPieceMovingy, int targetX, int targetY) {
 
+
         int indexOfPieceMoving = piecesOnBoard[squareOfPieceMovingx][squareOfPieceMovingy];
         int moveLocXOnMoveset = targetX + 7 - squareOfPieceMovingx;
         int moveLocYOnMoveset = targetY + 7 - squareOfPieceMovingy;
         int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
+        System.out.println(movetypePieceUsing + " this movetype");
         executeMove(targetX, targetY, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
         updateBoardSim();
 
