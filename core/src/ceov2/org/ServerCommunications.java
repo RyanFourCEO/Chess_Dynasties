@@ -11,18 +11,18 @@ import java.util.ArrayList;
 
 public class ServerCommunications {
     //server variables
-
+    long timeSinceLastHeartBeatReceived = 0;
+    long timeLastHeartBeatReceived;
     Socket clientSocket;
     ArrayList<String> messagesToDealWith = new ArrayList<String>();
 
     public ServerCommunications(String ipAddress, int port) {
         try {
-
             SocketHints socketHints = new SocketHints();
             //attempt to connect to the server for 2 seconds
-            socketHints.connectTimeout = 2000;
+            socketHints.connectTimeout = 5000;
             clientSocket = Gdx.net.newClientSocket(Net.Protocol.TCP, ipAddress, port, socketHints);
-
+            timeLastHeartBeatReceived = System.currentTimeMillis();
         } catch (GdxRuntimeException e) {
             System.out.println("failed to connect to server");
         }
@@ -128,12 +128,15 @@ public class ServerCommunications {
             System.out.println("unimportant error occurred");
         } }
 
+    void updateTimeSinceLastHeartBeatReceivedFromServer(){
+        timeSinceLastHeartBeatReceived = System.currentTimeMillis() - timeLastHeartBeatReceived;
+    }
 
     //get the state of the connection
-    boolean getState() {
+    boolean getStateOfConnection() {
         boolean connected = false;
         try {
-            if (clientSocket.isConnected()) {
+            if (clientSocket.isConnected() && timeSinceLastHeartBeatReceived < 60000) {
                 connected = true;
             }
         } catch (NullPointerException e) {

@@ -75,4 +75,13 @@ public class StringUtils {
         return occurrences;
     }
 
+    static boolean isAlphaNumeric(String test){
+        boolean isAlphanumeric = true;
+        for (int i = 0; i != test.length();i++){
+            if (!Character.isLetterOrDigit(test.charAt(i))){
+                isAlphanumeric = false;
+            }
+        }
+        return isAlphanumeric;
+    }
 }

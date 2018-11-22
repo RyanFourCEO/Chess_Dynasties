@@ -249,6 +249,7 @@ public class ArmyMaker {
         //load the string from the file, the String will look something like this
         //rook,knight,pawn,pawn, (etc for all 16 pieces in an army)
         army = Gdx.files.internal("UserFiles\\armies\\army" + String.valueOf(armyBeingEdited) + ".txt").readString();
+
         String[] separated = new String[16];
         //separate the names of pieces into an array, get rid of the commas
         for (int x = 0; x != 16; x++) {
