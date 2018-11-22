@@ -45,12 +45,10 @@ class LiveGame {
             state.runGame(batch, mouseVars);
         }
 
+
         detectIfPieceSelected();
-
         detectIfMousePosChanged(mouseVars);
-
         detectAndCalculateMovePreviews(mouseVars);
-
         if (stepCounterForMoveDisplayPreviews == 6) {
             drawMovePreviews(batch);
         }
@@ -93,7 +91,14 @@ class LiveGame {
                     System.out.println("part 1 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 1:
-                    sim.loadArmiesNoGraphics();
+                    //if in a multiplayer game, the simulation must load pieces from
+                    //the army the server sent, not from the files on the user's computer
+                    //as is normally does with sim.loadArmiesNoGraphics();
+                    if (!multiplayerGame) {
+                        sim.loadArmiesNoGraphics();
+                    }else{
+                        sim.loadArmiesNoGraphics(state.colourOfUser,state.yourArmy,state.oppArmy);
+                    }
                     System.out.println("part 2 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 2:
