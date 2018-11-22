@@ -264,8 +264,10 @@ public class GameState {
         } else {
             //make sure no pieces are currently selected
             if (mouseVars.mouseReleased) {
-                allPiecesOnBoard.get(piecesOnBoard[selectedPieceLocx][selectedPieceLocy]).unselect();
-                pieceSelected = false;
+                if (piecesOnBoard[selectedPieceLocx][selectedPieceLocy] != -1) {
+                    allPiecesOnBoard.get(piecesOnBoard[selectedPieceLocx][selectedPieceLocy]).unselect();
+                    pieceSelected = false;
+                }
             }
         }
 
@@ -459,11 +461,12 @@ public class GameState {
     public void findAllValidMoves() {
 //loop through the arrayList of pieces
         for (int a = 0; a < allPiecesOnBoard.size(); a++) {
-
+            if ((allPiecesOnBoard.get(a).isWhite && playerTurn == 1) || (!allPiecesOnBoard.get(a).isWhite && playerTurn == 2)){
 //loop through the movesets of each piece
-            for (int x = 0; x != 15; x++) {
-                for (int y = 0; y != 15; y++) {
-                    findIfValidMove(x, y, a);
+                for (int x = 0; x != 15; x++) {
+                    for (int y = 0; y != 15; y++) {
+                        findIfValidMove(x, y, a);
+                    }
                 }
             }
         }

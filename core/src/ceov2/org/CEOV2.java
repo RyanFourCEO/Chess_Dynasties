@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -28,10 +29,20 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     public static final int GAME_IS_LIVE_STATE = 1;
     public static final int ARMY_BUILDING_STATE = 2;
     public static final int LEVEL_EDITOR_STATE = 3;
+
+    //is the user logged in
+    boolean loggedIn = false;
+    String username = "";
+
     //The main menu is the menu the user starts at
     public Menu mainMenu;
     //the options menu will always be available to the user
     public Menu optionsMenu;
+    //this menu is used for all UI components related to client/server communications
+    //for now, all it contains are a few text areas for entering a user name and a button
+    //to log in with an entered username
+    public Menu serverMenu;
+    boolean displayServerMenu = false;
     //ServerCommunications object, used to send and receive messages from the server
     //automatically decodes all messages to hex, encodes sent messages to hex
     ServerCommunications serverComms;
@@ -85,7 +96,10 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     @Override
     public void create() {
 
-        serverComms = new ServerCommunications("23.233.5.44", 5000);
+        //loopback ip address: "127.0.0.1"
+        //actual server ip address: "23.233.5.44"
+        //port: 5000
+        serverComms = new ServerCommunications("127.0.0.1", 5000);
 
         //create semi-transparent black box texture
         pixmap = new Pixmap(290, 300, Pixmap.Format.RGBA8888);
@@ -107,6 +121,8 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         optionsMenu = new Menu(inputMultiplexer);
         //load the mainMenu, this menu is the first menu the user sees
         mainMenu = new Menu(inputMultiplexer);
+        //load the serverMenu, used to provide user with UI to log in
+        serverMenu = new Menu(inputMultiplexer);
 
         Gdx.input.setInputProcessor(inputMultiplexer);
         inputMultiplexer.addProcessor(this);
@@ -127,12 +143,18 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
         font = new BitmapFont(Gdx.files.internal("Fonts\\ArialDistanceField2.fnt"), new TextureRegion(texture), false);
         font.setColor(Color.WHITE);
+
+        //attempt to log user in, if it failed, provide user with text areas to enter login info
+        attemptToLogUserIn();
+        System.out.println(loggedIn);
+        if (!loggedIn){
+            loadServerMenuUIComponents();
+        }
     }
 
     //The main loop of the game, all graphics will be drawn here, and game logic is executed here
     @Override
     public void render() {
-
         //collect the mouse variable for this frame
         mouseVars.setMouseVariables(DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH, viewport.getScreenHeight(), viewport.getScreenWidth());
 //clear the screen
@@ -187,49 +209,19 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
         }
 
+
         if (currentlyInOptionsMenu) {
-            //draw the black rectangle the optionsMenu is contained within
-            batch.begin();
-            sprite1.draw(batch);
-            batch.end();
-            //prepare font shader
-            Shaders.prepareDistanceFieldShader();
-            batch.setShader(Shaders.distanceFieldShader);
-            String volume;
-
-            //draw the menu text
-            batch.begin();
-
-            font.draw(batch, /*lang.getTranslation("Graphics Quality")*/"Graphics Quality" + " ", 440, 270);
-
-            volume = String.valueOf((int) optionsMenu.allContainers.get(0).getActor().getValue()) + "%";
-
-            font.draw(batch, /*lang.getTranslation("Effects Volume")*/ "Effects Volume" + ": " + volume, 440, 370);
-
-            volume = String.valueOf((int) optionsMenu.allContainers.get(1).getActor().getValue()) + "%";
-
-            font.draw(batch, /*lang.getTranslation("Music Volume")*/ "Music Volume" + ": " + volume, 440, 320);
-
-            font.draw(batch, /*lang.getTranslation("Fullscreen Mode")*/"Fullscreen Mode" + ": ", 440, 420);
-
-            font.draw(batch, /*lang.getTranslation("Language")*/"Language" + " ", 440, 180);
-
-            batch.end();
-
-            batch.setShader(Shaders.defaultShader);
+            drawOptionsMenuNonUIComponents();
         }
-        Shaders.prepareDistanceFieldShader();
-        batch.setShader(Shaders.distanceFieldShader);
-        batch.begin();
-        font.setColor(Color.BLACK);
-        font.draw(batch, connectionMessage, 900, 600);
-        font.setColor(Color.WHITE);
-        batch.end();
-        batch.setShader(Shaders.defaultShader);
+        drawImportantTextToUser();
         //draw the optionsMenu UI components
         optionsMenu.stage.getViewport().apply();
         optionsMenu.stage.draw();
 
+        if (displayServerMenu) {
+            serverMenu.stage.getViewport().apply();
+            serverMenu.stage.draw();
+        }
     }
 
     //delete graphics objects
@@ -240,6 +232,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         font.dispose();
         mainMenu.dispose();
         optionsMenu.dispose();
+        serverMenu.dispose();
         texture.dispose();
         serverComms.sendMessageToServer("end");
         serverComms.closeStreams();
@@ -343,22 +336,49 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         return false;
     }
 
+    void drawImportantTextToUser(){
+        Shaders.prepareDistanceFieldShader();
+        batch.setShader(Shaders.distanceFieldShader);
+        batch.begin();
+        font.setColor(Color.BLACK);
+        font.draw(batch, connectionMessage, 900, 600);
+        if (username.length() > 0){
+            font.draw(batch,"logged in as " +username,900,570);
+        }
+        font.setColor(Color.WHITE);
+        batch.end();
+        batch.setShader(Shaders.defaultShader);
+    }
+
     void processServerInput() {
         //check the state of the server
-        if (serverComms.getState() == false) {
+        serverComms.updateTimeSinceLastHeartBeatReceivedFromServer();
+        if (serverComms.getStateOfConnection() == false) {
             connectionMessage = "Not Connected to Server";
         } else {
             connectionMessage = "Connected to Server";
-
         }
+
         //attempt to read any new messages the server may have sent
         serverComms.readMessages();
         //if their is a message in the queue to process
         if (serverComms.getFirstClientMessageInQueue() != null) {
             //process it, then remove it from the queue
-            //dealWithServerMessage(serverComms.getFirstClientMessageInQueue());
+            dealWithServerMessage(serverComms.getFirstClientMessageInQueue());
             serverComms.removeFirstClientMessageInQueue();
         }
+    }
+
+    void attemptToLogUserIn(){
+        String name = Gdx.files.internal("UserFiles\\LoginInfo\\" +"Username"+".txt").readString();
+       if (name != null){
+           if (name.length() > 0) {
+               String hexName = StringUtils.convertToHex(name);
+               serverComms.sendMessageToServer("LOGIN " + hexName + "\n");
+               loggedIn = true;
+               username = name;
+           }
+       }
     }
 
     //process a single server message
@@ -366,7 +386,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         //split the message into it's two parts, the command, and the arguments
        String[] commandThenArgs = message.split(" ");
         String command = commandThenArgs[0];
-        String args = commandThenArgs[1];
 
         //deal with the heartBeat command
         if (command.equals("HEARTBEAT")) {
@@ -375,9 +394,11 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         } else {
             //deal with RANKED_MATCH_FOUND command
             if (command.equals("RANKED_MATCH_FOUND")) {
+                String args = commandThenArgs[1];
                 dealWithRankedMatchFoundCommand(args);
             } else {
                 if (command.equals("MOVE")) {
+                    String args = commandThenArgs[1];
                     String move = StringUtils.convertFromHex(args);
                     System.out.println(move);
                     game.state.executeMoveFromServer(move);
@@ -395,12 +416,16 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         for (int x = 0; x != commaNumber + 1; x++) {
             splitArgs[x] = StringUtils.convertFromHex(splitArgs[x]);
         }
-        //the first arg in the RANKEDMATCHFOUND command is the colour
-        int colour = Integer.valueOf(splitArgs[0]);
+        //the first arg in the RANKEDMATCHFOUND command is the opponent's username
+        String opponentUserName = splitArgs[0];
+        System.out.println(opponentUserName);
+        //the 2nd arg is the colour
+        int colour = Integer.valueOf(splitArgs[1]);
+        System.out.println(colour);
         //the other args are pieces
         String army = "";
         //loop through all other args and put them in a String
-        for (int x = 1; x != commaNumber + 1; x++) {
+        for (int x = 2; x != commaNumber + 1; x++) {
             if (x != commaNumber) {
                 army += splitArgs[x] + ",";
             } else {
@@ -448,7 +473,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 for (int w = 0; w != 16; w++) {
                     pieces[w] = StringUtils.convertToHex(pieces[w]);
                 }
-                String hexArmy = "";
+                String hexArmy = "ENTER_RANKED_QUEUE ";
                 for (int w = 0; w != 16; w++) {
                     if (w != 15) {
                         hexArmy += pieces[w] + ",";
@@ -490,6 +515,51 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         mainMenu.addButton("Level Editor", 200, 30, 100, 150, clickListener);
     }
 
+    void loadServerMenuUIComponents() {
+        displayServerMenu = true;
+
+
+        serverMenu.addTextArea("Enter desired username \nbelow To create account\nand log in", 190, 75, 900, 500);
+        serverMenu.addTextArea("", 190, 40, 900, 450);
+        ClickListener clickListener = new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String name = serverMenu.allTextAreas.get(1).getText();
+                if (name.length() > 0) {
+                    if(StringUtils.isAlphaNumeric(name)){
+                        String hexName = StringUtils.convertToHex(name);
+                        serverComms.sendMessageToServer("LOGIN "+ hexName + "\n");
+                        loggedIn = true;
+                        FileHandle file = Gdx.files.local("UserFiles\\LoginInfo\\" +"Username"+".txt");
+                        file.writeString(name,false);
+                        removeServerMenu();
+                        username = name;
+                    }
+                }
+
+            }
+        };
+        serverMenu.addButton("Log In", 100, 50, 900, 390, clickListener);
+
+    }
+
+    void removeServerMenu(){
+        displayServerMenu = false;
+        for (int x = serverMenu.allButtons.size() - 1; x != 0; x--) {
+            serverMenu.allButtons.get(x).remove();
+            optionsMenu.allButtons.remove(x);
+        }
+        for (int x = serverMenu.allGroups.size() - 1; x != -1; x--) {
+            serverMenu.allGroups.clear();
+        }
+
+        for (int x = serverMenu.allContainers.size() - 1; x != -1; x--) {
+            serverMenu.allContainers.get(x).getActor().remove();
+            serverMenu.allContainers.get(x).remove();
+            serverMenu.allContainers.remove(x);
+        }
+        serverMenu.disable();
+    }
     //hides the main menu, this should be called whenever the player moves to a new part of the game
     //so that they don't see the main menu for no reason
     void hideMainMenu() {
@@ -680,6 +750,38 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 optionsMenu.allContainers.remove(x);
             }
         }
+    }
+
+    void drawOptionsMenuNonUIComponents(){
+        //draw the black rectangle the optionsMenu is contained within
+        batch.begin();
+        sprite1.draw(batch);
+        batch.end();
+        //prepare font shader
+        Shaders.prepareDistanceFieldShader();
+        batch.setShader(Shaders.distanceFieldShader);
+        String volume;
+
+        //draw the menu text
+        batch.begin();
+
+        font.draw(batch, /*lang.getTranslation("Graphics Quality")*/"Graphics Quality" + " ", 440, 270);
+
+        volume = String.valueOf((int) optionsMenu.allContainers.get(0).getActor().getValue()) + "%";
+
+        font.draw(batch, /*lang.getTranslation("Effects Volume")*/ "Effects Volume" + ": " + volume, 440, 370);
+
+        volume = String.valueOf((int) optionsMenu.allContainers.get(1).getActor().getValue()) + "%";
+
+        font.draw(batch, /*lang.getTranslation("Music Volume")*/ "Music Volume" + ": " + volume, 440, 320);
+
+        font.draw(batch, /*lang.getTranslation("Fullscreen Mode")*/"Fullscreen Mode" + ": ", 440, 420);
+
+        font.draw(batch, /*lang.getTranslation("Language")*/"Language" + " ", 440, 180);
+
+        batch.end();
+
+        batch.setShader(Shaders.defaultShader);
     }
 
     //set a textbutton that has text "buttontext" in an array of buttons to be selected
