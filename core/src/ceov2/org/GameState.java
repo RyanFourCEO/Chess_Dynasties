@@ -1910,6 +1910,8 @@ public class GameState {
     private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
         int state = -1;
         float alpha;
+        float[] sizesPossible = {(float)(boardSize/8)-4,(float)(boardSize/16),(float)(boardSize/9),(float)(boardSize/12)};
+        float[] offsets = {(float)2,(float)(boardSize/32),(float)(boardSize/144),(float)(boardSize/48)};
         float size = 0;
         float offset = 0;
         if (System.currentTimeMillis() - timePieceLastSelected <= 500)
@@ -1950,19 +1952,19 @@ public class GameState {
                     float yLoc = (float) (y * boardSize / 8 + boardPosY);
                     if (pieceSelected) {
                         if (state % 2 == 1) {
-                            size = (float) (boardSize / 8) - 4;
-                            offset = 2;
+                            size = sizesPossible[0];
+                            offset = offsets[0];
                         } else if (state % 2 == 0) {
-                            size = (float) (boardSize / 16);
-                            offset = (float) (boardSize / 32);
+                            size = sizesPossible[1];
+                            offset = offsets[1];
                         }
                     } else {
                         if (state % 2 == 1) {
-                            size = (float) (boardSize / 9);
-                            offset = (float) (boardSize / 144);
+                            size = sizesPossible[2];
+                            offset = offsets[2];
                         } else if (state % 2 == 0) {
-                            size = (float) (boardSize / 12);
-                            offset = (float) (boardSize / 48);
+                            size = sizesPossible[3];
+                            offset = offsets[3];
                         }
                     }
                     drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, type, alpha, size, offset);
