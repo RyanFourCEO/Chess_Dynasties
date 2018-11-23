@@ -264,9 +264,9 @@ public class GameState {
 
     //version of above method for multiplayer games, minor differences
     void runMultiplayerGame(SpriteBatch batch, MouseVars mouseVars) {
-        for(int x=0;x!=allMovesMade.size();x++) {
+        for (int x = 0; x != allMovesMade.size(); x++) {
             System.out.println("move numbre " + x);
-        System.out.println(allMovesMade.get(x).get(0));
+            System.out.println(allMovesMade.get(x).get(0));
             System.out.println(allMovesMade.get(x).get(1));
             System.out.println(allMovesMade.get(x).get(2));
             System.out.println(allMovesMade.get(x).get(3));
@@ -478,7 +478,7 @@ public class GameState {
     public void findAllValidMoves() {
 //loop through the arrayList of pieces
         for (int a = 0; a < allPiecesOnBoard.size(); a++) {
-            if ((allPiecesOnBoard.get(a).isWhite && playerTurn == 1) || (!allPiecesOnBoard.get(a).isWhite && playerTurn == 2)){
+            if ((allPiecesOnBoard.get(a).isWhite && playerTurn == 1) || (!allPiecesOnBoard.get(a).isWhite && playerTurn == 2)) {
 //loop through the movesets of each piece
                 for (int x = 0; x != 15; x++) {
                     for (int y = 0; y != 15; y++) {
@@ -490,7 +490,7 @@ public class GameState {
     }
 
     //call every time a move is made to refresh piece movesets to potentially new values
-    public void updatePieceMoveSets(){
+    public void updatePieceMoveSets() {
         for (int a = 0; a < allPiecesOnBoard.size(); a++) {
             //update the moveset of a piece, abilities may have changed it
             allPiecesOnBoard.get(a).setMoveset();
@@ -657,7 +657,7 @@ public class GameState {
     }
 
     //overload of above method, mimics below method but doesn't load graphics
-    void loadArmiesNoGraphics(int colour, String army, String oppArmy){
+    void loadArmiesNoGraphics(int colour, String army, String oppArmy) {
         //this if statement exists only to ensure the first 16 pieces added to the array allPiecesOnBoard
         //are white.If the user is player one, aka white, load their pieces first,otherwise load their opponent's
         //pieces
@@ -667,12 +667,12 @@ public class GameState {
             //load all the pieces corresponding to the piece names from the String
             //load all of player 1's pieces first, so they take up the first 16 places in the array
             for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(true,separated[x]));
+                allPiecesOnBoard.add(new Piece(true, separated[x]));
             }
 //repeat the above for the black pieces, which are loaded from army2
             separated = oppArmy.split(",");
             for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(false,separated[x]));
+                allPiecesOnBoard.add(new Piece(false, separated[x]));
             }
         } else {
             //separate the loaded string from the file into it's 16 piece names
@@ -680,12 +680,12 @@ public class GameState {
             //load all the pieces corresponding to the piece names from the String
             //load all of player 1's pieces first, so they take up the first 16 places in the array
             for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(true,separated[x]));
+                allPiecesOnBoard.add(new Piece(true, separated[x]));
             }
 //repeat the above for the black pieces, which are loaded from army2
             separated = army.split(",");
             for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(false,separated[x]));
+                allPiecesOnBoard.add(new Piece(false, separated[x]));
             }
         }
         //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
@@ -768,7 +768,7 @@ public class GameState {
     }
 
     //same as above method, but doesn't do unnecessary things that are necessary in ordinary games
-    private void updateBoardSim(){
+    private void updateBoardSim() {
         turnCounter++;
         updatePieceCounters();
         turnJustEnded = true;
@@ -1070,7 +1070,7 @@ public class GameState {
     }
 
     private void executeMove(int xTarget, int yTarget, Piece pieceMoving, int movetype) {
-        System.out.println(movetype +" this is the move being madE!");
+        System.out.println(movetype + " this is the move being madE!");
         //add the move being made to the array of moves made
         addMoveToListOfMoves(pieceMoving.xLocation, pieceMoving.yLocation, xTarget, yTarget);
         //if the user is the one that made the move, the move is sent to the server
@@ -1191,7 +1191,7 @@ public class GameState {
                 //find the movetype the piece is using
                 int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
                 //if the move is valid, execute the move
-                if (validMove){
+                if (validMove) {
                     executeMove(moveLocx, moveLocy, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
                     updateBoard();
                 }
@@ -1909,6 +1909,14 @@ public class GameState {
 
     private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
         int state = -1;
+        float alpha;
+        float size = 0;
+        float offset = 0;
+        if (System.currentTimeMillis() - timePieceLastSelected <= 500)
+            alpha = 1;
+        else {
+            alpha = (float) Math.sin(3.142 * (1500.0 - System.currentTimeMillis() + timePieceLastSelected) / 2000.0);
+        }
         ShapeRenderer shapeRenderer = new ShapeRenderer();
         shapeRenderer.setAutoShapeType(true);
         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -1940,23 +1948,31 @@ public class GameState {
                     }
                     float xLoc = (float) (x * boardSize / 8 + boardPosX);
                     float yLoc = (float) (y * boardSize / 8 + boardPosY);
-                    drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, type);
+                    if (pieceSelected) {
+                        if (state % 2 == 1) {
+                            size = (float) (boardSize / 8) - 4;
+                            offset = 2;
+                        } else if (state % 2 == 0) {
+                            size = (float) (boardSize / 16);
+                            offset = (float) (boardSize / 32);
+                        }
+                    } else {
+                        if (state % 2 == 1) {
+                            size = (float) (boardSize / 9);
+                            offset = (float) (boardSize / 144);
+                        } else if (state % 2 == 0) {
+                            size = (float) (boardSize / 12);
+                            offset = (float) (boardSize / 48);
+                        }
+                    }
+                    drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, type, alpha, size, offset);
                 }
             }
         }
         shapeRenderer.dispose();
-
     }
 
-    private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype) {
-        float size = (float) (boardSize / 12);
-        float offset = (float) (boardSize / 48);
-        float alpha = 0;
-        if(System.currentTimeMillis() - timePieceLastSelected <= 500)
-            alpha = 1;
-        else{
-            alpha = (float) (1500 - System.currentTimeMillis() + timePieceLastSelected) / (float) 1000;
-        }
+    private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype, float alpha, float size, float offset) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         //String errorMessage; TODO tutorialization error message thing
         if (state == 0) { // move is not valid
