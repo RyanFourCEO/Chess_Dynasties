@@ -519,7 +519,7 @@ public class ArmyMaker {
 //if the mouse is clicked
         if (mouseVars.mouseClicked) {
             //if a piece isn't already selected
-            if (pieceInCollectionSelected == false && pieceInArmySelected == false) {
+            if (!pieceInCollectionSelected && !pieceInArmySelected) {
                 //if collectionGridLoc is in the collection grid
                 if (collectionGridLoc[0] >= 0 && collectionGridLoc[1] >= 0 && collectionGridLoc[0] < pageX && collectionGridLoc[1] < pageY) {
                     //calculate which piece in the allPieces array is being selected (if any)

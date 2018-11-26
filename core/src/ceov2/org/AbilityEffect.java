@@ -38,19 +38,16 @@ public class AbilityEffect {
 
     void setEffectVariables(int numOfEffects, String[] effects) {
         if (numOfEffects == 1) {
-
             effectVar1 = effects[0];
         }
         if (numOfEffects == 2) {
             effectVar1 = effects[0];
             effectVar2 = effects[1];
         }
-
         if (numOfEffects == 3) {
             effectVar1 = effects[0];
             effectVar2 = effects[1];
             effectVar3 = effects[2];
         }
-
     }
 }

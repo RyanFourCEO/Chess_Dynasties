@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
-
 public class Shaders {
     static final String vertexShader = Gdx.files.internal("Shaders\\VertShader.txt").readString();
     static final String fragmentShader = Gdx.files.internal("Shaders\\FragmentShader.txt").readString();
@@ -20,6 +19,4 @@ public class Shaders {
         distanceFieldShader.setUniformf("smoothing", (0.17f * 1100) / Gdx.app.getGraphics().getWidth());
         distanceFieldShader.end();
     }
-
-
 }

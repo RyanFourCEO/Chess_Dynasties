@@ -357,7 +357,7 @@ public class GameState {
 
         //if the piece has been captured, obviously it can't move
         //if movesDisabled is true, then the piece's moves have been disabled by a status effect
-        if (allPiecesOnBoard.get(a).captured == false && allPiecesOnBoard.get(a).movesDisabled == false) {
+        if (!allPiecesOnBoard.get(a).captured && !allPiecesOnBoard.get(a).movesDisabled) {
             //if the piece has no movement on the square, obviously it can't move there
             if (allPiecesOnBoard.get(a).moveset[x][y] != 0) {
                 //using the location of the move in the 15*15 array moveset, and the location of the piece being moved
@@ -385,11 +385,11 @@ public class GameState {
                     validTarget = Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y] % 1000].checkIsValidTarget(boardState[xOnBoard][yOnBoard], playerTurn, allPiecesOnBoard.get(a).immovable);
 
                     //if the target is not valid, the piece can't move there
-                    if (validTarget && targetProtected == false) {
+                    if (validTarget && !targetProtected) {
                         //check if the piece is blocked, (bishops can't move through other pieces)
                         boolean blocked = false;
                         //if the piece can jump over pieces, a different method is run to check the validity of the move
-                        if (Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y] % 1000].canJumpOverOnePiece == false) {
+                        if (!Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y] % 1000].canJumpOverOnePiece) {
                             //some movetypes can't be blocked, so if that isn't an issue, blocked remains false
                             //a piece with moveset value greater than 1000 is unblockable
                             if (allPiecesOnBoard.get(a).moveset[x][y] < 1000) {
@@ -403,7 +403,7 @@ public class GameState {
 
                         //if the move is not blocked, the piece object's array of valid moves
                         //has that index marked true, meaning it can make that move
-                        if (blocked == false) {
+                        if (!blocked) {
                             allPiecesOnBoard.get(a).validMoves[x][y] = true;
                         }
                     }
@@ -1706,7 +1706,6 @@ public class GameState {
             gameOver = true;
             whiteWins = true;
         }
-
         if (gameOver) {
             if (serverComms != null) {
                 serverComms.sendMessageToServer("RANKED_MATCH_OVER\n");
@@ -1910,8 +1909,8 @@ public class GameState {
     private void drawMovesOnBoard(SpriteBatch batch, MouseVars mouseVars, int[][] moves, boolean[][] validMoves) {
         int state = -1;
         float alpha;
-        float[] sizesPossible = {(float)(boardSize/8)-4,(float)(boardSize/16),(float)(boardSize/9),(float)(boardSize/12)};
-        float[] offsets = {(float)2,(float)(boardSize/32),(float)(boardSize/144),(float)(boardSize/48)};
+        float[] sizesPossible = {(float) (boardSize / 8) - 4, (float) (boardSize / 16), (float) (boardSize / 9), (float) (boardSize / 12)};
+        float[] offsets = {(float) 2, (float) (boardSize / 32), (float) (boardSize / 144), (float) (boardSize / 48)};
         float size = 0;
         float offset = 0;
         if (System.currentTimeMillis() - timePieceLastSelected <= 500)
@@ -1920,6 +1919,7 @@ public class GameState {
             alpha = (float) Math.sin(3.142 * (1500.0 - System.currentTimeMillis() + timePieceLastSelected) / 2000.0);
         }
         ShapeRenderer shapeRenderer = new ShapeRenderer();
+        Gdx.gl.glLineWidth(boardSize / 60);
         shapeRenderer.setAutoShapeType(true);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         for (int x = 0; x < 8; x++) {
@@ -1967,14 +1967,15 @@ public class GameState {
                             offset = offsets[3];
                         }
                     }
-                    drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, type, alpha, size, offset);
+                    int[] color = {1, 0, 0};
+                    drawMoveOnBoard(shapeRenderer, xLoc, yLoc, state, color, alpha, size, offset);
                 }
             }
         }
         shapeRenderer.dispose();
     }
 
-    private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int movetype, float alpha, float size, float offset) {
+    private void drawMoveOnBoard(ShapeRenderer shapeRenderer, float xLoc, float yLoc, int state, int[] color, float alpha, float size, float offset) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         //String errorMessage; TODO tutorialization error message thing
         if (state == 0) { // move is not valid

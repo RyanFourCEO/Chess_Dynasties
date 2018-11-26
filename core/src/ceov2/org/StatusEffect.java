@@ -31,7 +31,6 @@ public class StatusEffect {
             case 13:
                 timeBased = true;
                 break;
-
         }
     }
 

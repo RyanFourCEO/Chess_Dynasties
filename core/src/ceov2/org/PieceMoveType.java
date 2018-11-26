@@ -17,8 +17,8 @@ public class PieceMoveType {
     boolean oneTimeUse = false;
 
     //for move type squares on board
-    int[] color = new int[3];
-
+    float[] color = new float[4];
+    float[] innerColor = new float[4];
 
     //does the movetype cause the piece to change it's position on the board?
     boolean movetypeMovesPieceWhenTargetingAlly = true;
@@ -71,6 +71,12 @@ public class PieceMoveType {
 
     }
 
+    float[][] getColor(){
+        float[][] ret = new float[2][4];
+        ret[0] = color;
+        ret[1] = innerColor;
+        return ret;
+    }
 
     void setIsOneTimeUse() {
         oneTimeUse = true;
