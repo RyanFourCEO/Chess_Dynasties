@@ -10,6 +10,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 class LiveGame {
     GameState state;
     GameState sim;
+    MoveSquares squares;
     int indexOfSelectedPiece;
     DiffBetweenGameStates listOfThingsToDraw;
 

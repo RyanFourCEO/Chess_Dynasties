@@ -18,7 +18,6 @@ import java.util.ArrayList;
 //this class deals with all the logic of a live game.
 public class GameState {
 
-
     String yourArmy;
     String oppArmy;
 
@@ -419,7 +418,7 @@ public class GameState {
 
         //if the piece has been captured, obviously it can't move
         //if movesDisabled is true, then the piece's moves have been disabled by a status effect
-        if (allPiecesOnBoard.get(a).captured == false && allPiecesOnBoard.get(a).movesDisabled == false && a != 0) {
+        if (!allPiecesOnBoard.get(a).captured && !allPiecesOnBoard.get(a).movesDisabled && a != 0) {
             //if the piece has no movement on the square, obviously it can't move there
             if (allPiecesOnBoard.get(a).moveset[x][y] != 0) {
                 //using the location of the move in the 15*15 array moveset, and the location of the piece being moved
@@ -447,11 +446,11 @@ public class GameState {
 
 
                     //if the target is not valid, the piece can't move there
-                    if (validTarget && targetProtected == false) {
+                    if (validTarget && !targetProtected) {
                         //check if the piece is blocked, (bishops can't move through other pieces)
                         boolean blocked = false;
                         //if the piece can jump over pieces, a different method is run to check the validity of the move
-                        if (Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y] % 1000].canJumpOverOnePiece == false) {
+                        if (!Piece.allMoveTypes[0][allPiecesOnBoard.get(a).moveset[x][y] % 1000].canJumpOverOnePiece) {
                             //some movetypes can't be blocked, so if that isn't an issue, blocked remains false
                             //a piece with moveset value greater than 1000 is unblockable
                             if (allPiecesOnBoard.get(a).moveset[x][y] < 1000) {
@@ -465,7 +464,7 @@ public class GameState {
 
                         //if the move is not blocked, the piece object's array of valid moves
                         //has that index marked true, meaning it can make that move
-                        if (blocked == false) {
+                        if (!blocked) {
                             allPiecesOnBoard.get(a).validMoves[x][y] = true;
                         }
                     }
