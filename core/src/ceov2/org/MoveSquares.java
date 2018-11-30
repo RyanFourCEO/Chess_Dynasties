@@ -1,5 +1,6 @@
 package ceov2.org;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -8,23 +9,22 @@ public class MoveSquares {
     int[][][] allMoveSquares;
     long timeSincePieceSelected;
     int boardSize;
+    Texture glow;
+    Texture moveTextures;
+    Texture[] highlights = new Texture[2];
+    Texture[] reticle = new Texture[2];
 
-    MoveSquares(int bs, int time, int size) {
+    MoveSquares(int bs, int time, int size) { // takes in board size, the time variable, and the amount of movetypes there are
         timeSincePieceSelected = System.currentTimeMillis() - time;
         boardSize = bs;
         allMoveSquares = new int[size][8][8];
+        glow = new Texture(Gdx.files.internal("Fonts\\ArialDistanceField2.png"), true); // placeholder
     }
 
     void findMovesToDraw(GameState main) {
         // given gamestate
-        // find the movesquares of EVERY PIECE in the gamestate
+        // find the movesquares that could be drawn of EVERY PIECE in the gamestate
         // but not their specific aesthetic
-
-        //            ShapeRenderer shapeRenderer = new ShapeRenderer();
-        //            Gdx.gl.glLineWidth(boardSize / (float) 60);
-        //            shapeRenderer.setAutoShapeType(true);
-        //            Gdx.gl.glEnable(GL20.GL_BLEND);
-
         // since only one piece has a movesquare drawn at each time
         // we find that piece's movesquares in a different method
         int msX, msY;
@@ -44,26 +44,15 @@ public class MoveSquares {
         }
     }
 
-    int[][][] findHowToDrawMoves(GameState main) {
+    private int[][][] findHowToDrawMoves(GameState main) {
         // returns a state for each move using mouse vars
         // compares valid moves
         // finds which move you are hovering over
         int[][][] ret = new int[8][8][];
-        float alpha;
-        float size = 0;
-        float offset = 0;
-        if (timeSincePieceSelected <= 500)
-            alpha = 1;
-        else {
-            alpha = (float) Math.sin(3.142 * (1500.0 - timeSincePieceSelected) / 2000.0);
-        }
         int msX, msY;
         int mouseX = main.loc[0];
         int mouseY = main.loc[1];
-        int valid;
-        int type;
-        int index;
-        int hovered;
+        int valid, type, index, hovered;
         for (int x = 0; x <= 7; x++) {
             for (int y = 0; y <= 7; y++) {
                 if (main.pieceSelected) {
@@ -99,50 +88,54 @@ public class MoveSquares {
         }
         return ret;
     }
-    
+
     void drawAllMoves(int index, GameState main, ShapeRenderer shapeRenderer, SpriteBatch spriteBatch) {
         int[][][] mtd = findHowToDrawMoves(main);
-        float alpha = 1;
-        if (!main.pieceSelected) {
-            alpha /= 2.0;
+        float alpha;
+        if (timeSincePieceSelected <= 500)
+            alpha = 1;
+        else {
+            alpha = (float) Math.sin(3.142 * (1500 - timeSincePieceSelected) / 2000);
         }
+
+        float glowAlpha = (float) Math.sin(3.142 * (1500 - timeSincePieceSelected) / 2000);
+
+        float[][][] boardCoord = new float[2][8][8];
+
+        //Texture[] squares = new Texture[99]; TODO finish this method
+        //TODO modify the move square texture with alpha variable
+
+        float size = main.boardSize / (float) 8;
+
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
                 if (mtd[x][y][0] != 0) {
+                    boardCoord[0][x][y] = (size * x) + main.boardPosX;
+                    boardCoord[1][x][y] = (size * y) + main.boardPosX;
+                    //draw glow
+                    // TODO Modify the texture (that doesn't exist) with glowAlpha
+                    //batch.draw(glow, xLoc, yLoc, size, size);
+
                     if (mtd[x][y][1] == 1) {
-                        drawSelectedHighlight(shapeRenderer, x, y, mtd[x][y][2]);
+                        if (mtd[x][y][2] == 1) {
+                            // valid
+                            // batch.draw(highlights[1],boardCoord[0][x][y],boardCoord[1][x][y], size, size);
+                            // batch.draw(reticle[1],boardCoord[0][x][y],boardCoord[1][x][y], size, size);
+                        }
+                        // draw either using the "valid" or the "invalid" move hover square highlight
+                        else if (mtd[x][y][2] == 0) {
+                            // invalid
+                            // batch.draw(highlights[0],boardCoord[0][x][y],boardCoord[1][x][y], size, size);
+                            // batch.draw(reticle[0],boardCoord[0][x][y],boardCoord[1][x][y], size, size);
+                        }
                     }
-                    //draw move square
+
+                    if (!main.pieceSelected) {
+                        //draw move square
+                        //batch.draw(moveSquares[ret[x][y][0]], boardCoord[0][x][y], boardCoord[1][x][y], size, size);
+                    }
                 }
             }
         }
-    }
-
-    private void drawMoveSquare(SpriteBatch batch, Texture texture, float xLoc, float yLoc, float alpha, float size) {
-        batch.draw(texture, xLoc, yLoc, size, size);
-        //TODO needs way to use ALPHA, probably IN THE SUPERMETHOD TO THIS
-    }
-
-    private void drawSelectedHighlight(ShapeRenderer shapeRenderer, int x, int y, int valid) {
-        float size = boardSize / (float) 9;
-        float[] color = {0, 0, 0};
-        if (valid == 0) {
-            size = boardSize / (float) 18;
-            color[0] = 1;
-        } else if (valid == 1) {
-            size = boardSize / (float) 11.25;
-            color[2] = 1;
-        }
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(color[0], color[1], color[2], (float) 0.5);
-        shapeRenderer.rect(x, y, size, size);
-        shapeRenderer.end();
-    }
-
-    private void drawGlow(SpriteBatch batch, Texture texture, float xLoc, float yLoc, float size) { // takes a sprite and
-        float alpha = 1;
-        alpha = (float) Math.sin(3.142 * (1500.0 - timeSincePieceSelected) / 2000.0);
-        batch.draw(texture, xLoc, yLoc, size, size);
-        //TODO needs way to use ALPHA, probably IN THE SUPERMETHOD TO THIS
     }
 }
