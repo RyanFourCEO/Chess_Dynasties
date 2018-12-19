@@ -27,16 +27,18 @@ public class ArmyMaker {
     //controls what pieces you currently have access to, the first 10 pieces are on page 1, the
     //next 10 are one page 2 etc.
     //how many columns of pieces are shown in one page
-    int pageX = 5;
+    int columnsOfPiecesShown = 5;
     //how many rows of pieces are shown in one page
-    int pageY = 2;
-    //when we have many pieces, not all pieces can be shown on one screen
-    //this allows the user to switch pages to view more pieces
+    int rowsOfPiecesShown = 2;
+    //not all pieces can be shown on one screen
+    //this controls what pieces are displayed
     int page = 1;
+    //the user may have 10 or so army slots, this is changed when they select a new slot
     int armyBeingEdited = 1;
     //the morale of the current army, can never go above 500
     int moraleTotal;
     final int moraleAllowed = 500;
+
     String army;
     //this is written to the screen, if the player tries to save an invalid army it tells them why
     //if they saved a valid army it tells them it was saved
@@ -45,14 +47,14 @@ public class ArmyMaker {
     //String containing all the names of pieces in the army
     String[][] armyPiece;
     //arraylist containing all pieces in the game, in the future this will only contain
-    //pieces in the player's collection, pieces in this array can be freely added to the army
+    //pieces in the player's collection, used to place piece names into the armyPiece array
     ArrayList<Piece> allPieces = new ArrayList<Piece>();
-    //unimportant
+    //unimportant, unused
     int[][] moveset = new int[15][15];
 
     //the location of the mouse on the grid of the army (2x8 grid)
     int[] mouseLocOnArmy = new int[2];
-    //location of the mouse on the grid of the collection (pageX x pageY grid)
+    //location of the mouse on the grid of the collection (columnsOfPiecesShown by rowsOfPiecesShown)
     int[] mouseLocOnCollection = new int[2];
     //if a piece in the army is selected
     boolean pieceInArmySelected = false;
@@ -60,12 +62,13 @@ public class ArmyMaker {
     int selectedPieceLocation[] = new int[2];
     //if a piece in the collection is selected
     boolean pieceInCollectionSelected = false;
-
-    //the last piece selected by the user, show stuff based on what this piece is
-    int lastPieceUserSelected = 0;
-
     //the name of the piece in the collection that is selected
     String selectedCollectionPiece = "";
+
+    //the last piece selected by the user, show the moveset, lore, name of the piece to the user
+    int lastPieceUserSelected = 0;
+
+
 
     //constructor, called once when the player enters the armyMaker
     public ArmyMaker(InputMultiplexer inputMultiplexer) {
@@ -109,7 +112,7 @@ public class ArmyMaker {
         //perform logic based on the mouse location on the army grid and the mouse variables
         processMouseInputArmy(mouseVars, mouseLocOnArmy, 8, 2);
         //find the mouse's location on the collection grid
-        mouseLocOnCollection = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy, 60, 470, 360, pageX, pageY);
+        mouseLocOnCollection = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy, 60, 470, 360, columnsOfPiecesShown, rowsOfPiecesShown);
         //perform logic based on the mouse's locations on both grids and the mouse variables
         processMouseInputCollection(mouseVars, mouseLocOnCollection, mouseLocOnArmy, 8, 2);
         //draw everything
@@ -121,7 +124,6 @@ public class ArmyMaker {
     void loadArmyMakingMenu(InputMultiplexer inputMultiplexer) {
         menu = new Menu(inputMultiplexer);
         ClickListener clickListener;
-
 
         //return to main menu button
         clickListener = new ClickListener() {
@@ -158,7 +160,6 @@ public class ArmyMaker {
 
 
         //save army button
-
         clickListener = new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -199,6 +200,7 @@ public class ArmyMaker {
         updateTextAreas();
     }
 
+    //show the user the description/name/lore of their selected piece
     void updateTextAreas() {
         menu.allTextAreas.get(0).setText(allPieces.get(lastPieceUserSelected).name + "\n" + allPieces.get(lastPieceUserSelected).abilityDescription);
         menu.allTextAreas.get(1).setText(allPieces.get(lastPieceUserSelected).loreWriting);
@@ -229,6 +231,7 @@ public class ArmyMaker {
 
         //create board texture
         boardImage = GraphicsUtils.loadTexture("Board.png");
+        //only use the bottom two rows of the texture
         TextureRegion boardRegion = new TextureRegion(boardImage, 0, (int) (boardImage.getHeight() * 0.25), boardImage.getWidth(), (int) (boardImage.getHeight() * 0.25));
         boardSprite = new Sprite(boardRegion);
         boardSprite.setSize(480, 120);
@@ -250,11 +253,9 @@ public class ArmyMaker {
         //rook,knight,pawn,pawn, (etc for all 16 pieces in an army)
         army = Gdx.files.internal("UserFiles\\armies\\army" + String.valueOf(armyBeingEdited) + ".txt").readString();
 
-        String[] separated = new String[16];
+
         //separate the names of pieces into an array, get rid of the commas
-        for (int x = 0; x != 16; x++) {
-            separated = army.split(",");
-        }
+        String[] separated = army.split(",");
         //load the piece names into a 2x8 array
         int counter = 0;
         for (int y = 0; y != 2; y++) {
@@ -367,29 +368,36 @@ public class ArmyMaker {
         int yLocation = 0;
         //depending on the page, certain pieces should be drawn
         //indexToDrawFrom controls which pieces get drawn
-        int indexToDrawFrom = page * pageX * pageY - pageX * pageY;
+        int indexToDrawFrom = (page - 1) * columnsOfPiecesShown * rowsOfPiecesShown;
 //if indexToDrawFrom is greater than the size of the pieces array, then we are on a page with no pieces to display
-        if (indexToDrawFrom > allPieces.size()) {
-            //draw nothing
-        } else {
+        if (indexToDrawFrom <= allPieces.size()) {
             //loop through pieces and draw them
             int numberOfPiecesToDraw;
-            if ((allPieces.size() - indexToDrawFrom) > (pageX * pageY)) {
+            //this checks to ensure we aren't on the last page of pieces, if we are not
+            //10 pieces will be drawn. Otherwise, we draw the remainder when the total number of pieces
+            //(allPieces.size()) is divided by the number of pieces on each page (columnsOfPiecesShown * rowsOfPiecesShown)
+            if ((allPieces.size() - indexToDrawFrom) > (columnsOfPiecesShown * rowsOfPiecesShown)) {
                 numberOfPiecesToDraw = 10;
             } else {
-                numberOfPiecesToDraw = allPieces.size() % (pageX * pageY);
+                numberOfPiecesToDraw = allPieces.size() % (columnsOfPiecesShown * rowsOfPiecesShown);
             }
+            //draw pieces in the following order:
+            // 1 2 3 4 5
+            // 6 7 8 9 10
             for (int x = indexToDrawFrom; x != indexToDrawFrom + numberOfPiecesToDraw; x++) {
                 allPieces.get(x).drawSpecificLoc2(batch, 60, 500 + 60 * xLocation, 450 - 60 * yLocation);
-                if (xLocation == pageX - 1) {
+                //if drawing the piece on the final column, then we should move to the next row
+                if (xLocation == columnsOfPiecesShown - 1) {
+                    //begin at first point on next row
                     xLocation = 0;
                     yLocation++;
                 } else {
+                    //move along the current row
                     xLocation++;
                 }
             }
         }
-
+        //if the user has selected a piece, draw it on the location of the user's mouse
         if (pieceInCollectionSelected) {
             for (int x = 0; x != allPieces.size(); x++) {
                 if (allPieces.get(x).name.equals(selectedCollectionPiece)) {
@@ -399,7 +407,7 @@ public class ArmyMaker {
         }
     }
 
-    //draw a single piece
+    //draw a single piece unused
     void drawPiece(SpriteBatch batch, String name, int xCenter, int yCenter) {
         //loop through all pieces until we find the name of the piece that should be drawn, and draw it
         for (int x = 0; x != allPieces.size(); x++) {
@@ -409,7 +417,7 @@ public class ArmyMaker {
             }
         }
     }
-
+    //draw a single piece
     void drawPiece(SpriteBatch batch, String name, int xCenter, int yCenter, int size) {
         //loop through all pieces until we find the name of the piece that should be drawn, and draw it
         for (int x = 0; x != allPieces.size(); x++) {
@@ -467,15 +475,14 @@ public class ArmyMaker {
     //if the mouse is clicked and is on a piece in the army, select that piece, if the mouse is released
     //and their is a piece selected, change the location of the selected piece
     void processMouseInputArmy(MouseVars mouseVars, int loc[], int gridx, int gridy) {
-
+//if the mouse is clicked
         if (mouseVars.mouseClicked) {
             //if loc is actually on the board
             if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= gridx && loc[1] <= gridy) {
                 //if they haven't already selected a piece, the player can pick up a new piece
                 if (pieceInArmySelected == false && pieceInCollectionSelected == false) {
-                    //find the index of the piece the user selected and store it is lastPieceUserSelected, this
-                    //has no importance to the actual code going on here, the variable "lastPieceUserSelected"
-                    //is only used to show the user information about the piece they selected
+                    //find the index of the piece the user selected and store it is lastPieceUserSelected
+                    //this variable only used to display info about that piece to the user
                     if (armyPiece[loc[1]][loc[0]].length() > 0) {
                         for (int x = 0; x != allPieces.size(); x++) {
                             if (allPieces.get(x).name.equals(armyPiece[loc[1]][loc[0]])) {
@@ -486,7 +493,6 @@ public class ArmyMaker {
                     //set the location of the selected piece
                     selectedPieceLocation[0] = loc[0];
                     selectedPieceLocation[1] = loc[1];
-                    //and set this true
                     pieceInArmySelected = true;
                 }
 
@@ -498,21 +504,21 @@ public class ArmyMaker {
             if (pieceInArmySelected) {
                 //see if the selected piece is being released on the army
                 if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= gridx && loc[1] <= gridy) {
-                    //swap the piece's location with the location the mouse was released on
+                    //if released on the army, we place it/swap the piece's location
+                    //with the location the mouse was released on
                     swapPieces(loc);
                 } else {
                     //if the mouse is released off of the board, the piece is removed from the board
                     removePiece();
                 }
             }
-//set that a piece is no longer selected
             pieceInArmySelected = false;
         }
 
     }
 
     //if the mouse is clicked and is on a piece in the collection, select that piece, if the mouse is released
-    //and their is a piece selected, and the location the mouse is released is on the army, put that piece into
+    //and a piece is selected, and the mouse is released over the army, put that piece into
     //the army
     void processMouseInputCollection(MouseVars mouseVars, int[] collectionGridLoc, int[] armyGridLoc, int gridx, int gridy) {
 
@@ -521,12 +527,12 @@ public class ArmyMaker {
             //if a piece isn't already selected
             if (!pieceInCollectionSelected && !pieceInArmySelected) {
                 //if collectionGridLoc is in the collection grid
-                if (collectionGridLoc[0] >= 0 && collectionGridLoc[1] >= 0 && collectionGridLoc[0] < pageX && collectionGridLoc[1] < pageY) {
+                if (collectionGridLoc[0] >= 0 && collectionGridLoc[1] >= 0 && collectionGridLoc[0] < columnsOfPiecesShown && collectionGridLoc[1] < rowsOfPiecesShown) {
                     //calculate which piece in the allPieces array is being selected (if any)
-                    //index holds the value of the index of the piece in the allPieces array
-                    int newY = pageY - 1 - collectionGridLoc[1];
-                    int index = newY * pageX + collectionGridLoc[0];
-                    index += page * pageX * pageY - pageX * pageY;
+                    //index holds the value of the index of the piece in the "allPieces" array
+                    int newY = rowsOfPiecesShown - 1 - collectionGridLoc[1];
+                    int index = newY * columnsOfPiecesShown + collectionGridLoc[0];
+                    index += page * columnsOfPiecesShown * rowsOfPiecesShown - columnsOfPiecesShown * rowsOfPiecesShown;
                     //if the index actually falls within the array
                     if (index < allPieces.size()) {
                         //set that a piece in the collection has been selected, and set it's name
@@ -554,8 +560,8 @@ public class ArmyMaker {
 
     }
 
-    //swap the locations of two pieces, 1 location being the location of the selected piece (selectedPieceLocation)
-//and the other being the location the selected piece is being moved to
+    //swap the locations of two pieces, the piece located at newLocations
+    //and the piece at selectedPieceLocation
     void swapPieces(int[] newLocations) {
         resetMessages();
         String temp = armyPiece[newLocations[1]][newLocations[0]];

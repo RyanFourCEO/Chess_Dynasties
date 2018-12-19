@@ -17,6 +17,23 @@ public class AbilityEffect {
         this.effectIndex = effectIndex;
     }
 
+    void setEffectVariables(int numOfEffects, String[] effects) {
+        if (numOfEffects == 1) {
+            effectVar1 = effects[0];
+        }
+        if (numOfEffects == 2) {
+            effectVar1 = effects[0];
+            effectVar2 = effects[1];
+        }
+        if (numOfEffects == 3) {
+            effectVar1 = effects[0];
+            effectVar2 = effects[1];
+            effectVar3 = effects[2];
+        }
+    }
+
+
+// Unused Methods
     public AbilityEffect(int effectIndex, String var1, String var2, String var3) {
         this.effectIndex = effectIndex;
         effectVar1 = var1;
@@ -36,18 +53,5 @@ public class AbilityEffect {
         effectVar1 = var1;
     }
 
-    void setEffectVariables(int numOfEffects, String[] effects) {
-        if (numOfEffects == 1) {
-            effectVar1 = effects[0];
-        }
-        if (numOfEffects == 2) {
-            effectVar1 = effects[0];
-            effectVar2 = effects[1];
-        }
-        if (numOfEffects == 3) {
-            effectVar1 = effects[0];
-            effectVar2 = effects[1];
-            effectVar3 = effects[2];
-        }
-    }
+
 }

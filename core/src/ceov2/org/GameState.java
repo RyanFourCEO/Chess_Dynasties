@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 //this class deals with all the logic of a live game.
 public class GameState {
-
+    ServerCommunications serverComms;
     String yourArmy;
     String oppArmy;
 
@@ -56,7 +56,7 @@ public class GameState {
     long timePieceLastSelected;
 
     //location of the mouse {x,y}
-    int[] loc = new int[2];
+    int[] mouseLoc = new int[2];
 
     //self explanatory, used for drawing moves on the board
     boolean hasMouseChangedLocationsYet = false;
@@ -82,8 +82,6 @@ public class GameState {
     //the array of all Pieces that are on the board
     ArrayList<Piece> allPiecesOnBoard = new ArrayList<Piece>();
 
-    //allows messages to be sent to server
-    ServerCommunications serverComms;
 
     //contains the information about what occupies each square of the board
     //0=empty square, 1=square occupied by white piece, 2=square occupied by black piece
@@ -92,14 +90,18 @@ public class GameState {
     //contains the information about what specific piece is on each square of the board
     //i.e. it is equal to the index of the piece in the array of Pieces,-1 means unoccupied
     int[][] piecesOnBoard = new int[8][8];
+
+    //store all moves made over the course of a game
     ArrayList<ArrayList<Integer>> allMovesMade = new ArrayList<ArrayList<Integer>>();
 
     //single player practice game constructor
     public GameState() {
+
         initFont();
         Piece.InitAllMoveTypes();
-        loadArmies();
         loadGraphics();
+
+        loadArmies();
         setBoard();
         turnJustStarted = true;
         testAndExecuteAbilities();
@@ -107,13 +109,14 @@ public class GameState {
         updatePieceMoveSets();
         findAllValidMoves();
     }
+    //This is used for creating the gameState that will be used for checking what a users hovered move will do
+    public GameState(boolean NeededForSomeReason) {
 
-    //multiplayer game constructor
-    //colour=1 means user is white, colour=2 means user is black
-    public GameState(int colour, String army, String oppArmy, ServerCommunications serverComms) {
+    }
+
+    public GameState(int colour,String army, String oppArmy, ServerCommunications serverComms){
         yourArmy = army;
         this.oppArmy = oppArmy;
-
         this.serverComms = serverComms;
         //set the colour of the user
         colourOfUser = colour;
@@ -133,15 +136,8 @@ public class GameState {
         updatePieceMoveSets();
         findAllValidMoves();
     }
-
-    //creates a new gamestate with all previous moves and the "projected" move executed
-    public GameState(boolean NeededForSomeReason) {
-
-    }
-
     void executeArrayOfMoves(ArrayList<ArrayList<Integer>> moves) {
         for (int i = 0; i < ((moves.isEmpty()) ? 0 : moves.size()); i++) {
-            System.out.println(i + " hello");
             executeMoveUsingSquareLocations(moves.get(i).get(0), moves.get(i).get(1), moves.get(i).get(2), moves.get(i).get(3));
         }
     }
@@ -149,15 +145,17 @@ public class GameState {
     void projectHoveredMove(int indexOfPieceMoving) {
         //if the input string was valid, continue on
         //find the location of the move in the 15x15 moveset array
-        int moveLocXOnMoveset = loc[0] + 7 - allPiecesOnBoard.get(indexOfPieceMoving).xLocation;
-        int moveLocYOnMoveset = loc[1] + 7 - allPiecesOnBoard.get(indexOfPieceMoving).yLocation;
+        int moveLocXOnMoveset = convertBoardLocToMovesetArray(allPiecesOnBoard.get(indexOfPieceMoving).xLocation,mouseLoc[0]);
+
+        int moveLocYOnMoveset = convertBoardLocToMovesetArray(allPiecesOnBoard.get(indexOfPieceMoving).yLocation, mouseLoc[1]);
+
         //find all valid moves , then see if the move is valid
         findAllValidMoves();
         //find the movetype the piece is using
         int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
         //if the move is valid, execute the move
         if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset]) {
-            executeMove(loc[0], loc[1], allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
+            executeMove(mouseLoc[0], mouseLoc[1], allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
             updateBoard();
         }
     }
@@ -246,8 +244,6 @@ public class GameState {
         //draw the status icon on statused piece
         //}
     }
-    //draw
-
 
     //this method executes every tick
     void runGame(SpriteBatch batch, MouseVars mouseVars) {
@@ -263,13 +259,6 @@ public class GameState {
 
     //version of above method for multiplayer games, minor differences
     void runMultiplayerGame(SpriteBatch batch, MouseVars mouseVars) {
-        for (int x = 0; x != allMovesMade.size(); x++) {
-            System.out.println("move numbre " + x);
-            System.out.println(allMovesMade.get(x).get(0));
-            System.out.println(allMovesMade.get(x).get(1));
-            System.out.println(allMovesMade.get(x).get(2));
-            System.out.println(allMovesMade.get(x).get(3));
-        }
 
         //see if the player has clicked on/selected a piece
         processMouseInputClick(mouseVars);
@@ -518,7 +507,7 @@ public class GameState {
                 }
             }
         }
-        //their is a status effect that prevents a piece from capturing king, if a piece has it, the target is set to protected
+        //there is a status effect that prevents a piece from capturing king, if a piece has it, the target is set to protected
         if (allPiecesOnBoard.get(piecesOnBoard[xPosOfPiece][yPosOfPiece]).name.equalsIgnoreCase(("king"))) {
             if (pieceMoving.cantTargetKing) {
                 pieceIsProtected = true;
@@ -533,24 +522,24 @@ public class GameState {
 
         if (mouseVars.mouseClicked) {
             //if loc is actually on the board, we have to test to see if the square is occupied
-            if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= 7 && loc[1] <= 7) {
+            if (mouseLoc[0] >= 0 && mouseLoc[1] >= 0 && mouseLoc[0] <= 7 && mouseLoc[1] <= 7) {
 
                 //this happens so that the player can click on pieces and see what they are, it has no
                 //relevance on the code occurring here
-                if (boardState[loc[0]][loc[1]] != 0) {
-                    pieceLastSelected = piecesOnBoard[loc[0]][loc[1]];
+                if (boardState[mouseLoc[0]][mouseLoc[1]] != 0) {
+                    pieceLastSelected = piecesOnBoard[mouseLoc[0]][mouseLoc[1]];
                 }
 
                 //if the square is a piece the player owns, they might be able to pick it up
-                if (boardState[loc[0]][loc[1]] == playerTurn) {
+                if (boardState[mouseLoc[0]][mouseLoc[1]] == playerTurn) {
                     //if they haven't already selected a piece, the player can pick up a new piece
                     if (!pieceSelected) {
                         //the piece is selected
-                        allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).select();
+                        allPiecesOnBoard.get(piecesOnBoard[mouseLoc[0]][mouseLoc[1]]).select();
                         //the selected piece's location and index are stored
-                        selectedPieceLocx = loc[0];
-                        selectedPieceLocy = loc[1];
-                        selectedPiece = piecesOnBoard[loc[0]][loc[1]];
+                        selectedPieceLocx = mouseLoc[0];
+                        selectedPieceLocy = mouseLoc[1];
+                        selectedPiece = piecesOnBoard[mouseLoc[0]][mouseLoc[1]];
                         //pieceSelected is set true, so 2 pieces can't be selected at once
                         pieceSelected = true;
                     }
@@ -567,14 +556,15 @@ public class GameState {
 
             boolean validMove = false;
             //find the index for the moveset array to use
-            int xOffset = 7 + loc[0] - allPiecesOnBoard.get(selectedPiece).xLocation;
-            int yOffset = 7 + loc[1] - allPiecesOnBoard.get(selectedPiece).yLocation;
+            int xOnMoveset = convertBoardLocToMovesetArray(allPiecesOnBoard.get(selectedPiece).xLocation,mouseLoc[0]);
+            int yOnMoveset = convertBoardLocToMovesetArray(allPiecesOnBoard.get(selectedPiece).yLocation,mouseLoc[1]);
+
             //if a piece is selected, we know the player has attempted to make a move
             if (pieceSelected) {
                 //if the mouse is outside the board, then no move can be made
-                if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= 7 && loc[1] <= 7) {
+                if (mouseLoc[0] >= 0 && mouseLoc[1] >= 0 && mouseLoc[0] <= 7 && mouseLoc[1] <= 7) {
                     //check the validMoves array to see if the square targeted is valid
-                    if (allPiecesOnBoard.get(selectedPiece).validMoves[xOffset][yOffset]) {
+                    if (allPiecesOnBoard.get(selectedPiece).validMoves[xOnMoveset][yOnMoveset]) {
                         validMove = true;
                     }
                 }
@@ -584,7 +574,7 @@ public class GameState {
             if (validMove) {
                 hasMouseChangedLocationsYet = false;
                 //execute the move
-                executeMove(loc[0], loc[1], allPiecesOnBoard.get(selectedPiece), allPiecesOnBoard.get(selectedPiece).moveset[xOffset][yOffset]);
+                executeMove(mouseLoc[0], mouseLoc[1], allPiecesOnBoard.get(selectedPiece), allPiecesOnBoard.get(selectedPiece).moveset[xOnMoveset][yOnMoveset]);
                 //set up for the next turn
                 updateBoard();
 
@@ -691,11 +681,10 @@ public class GameState {
         tempPieces.clear();
     }
 
-
     //loads the two armies from "army" and "oppArmy"
     //strings are in the following format "pawn,pawn,pawn,....knight,rook"
     //if the user is white, colour=1, if the user is black colour=2
-    private void loadArmies(int colour, String army, String oppArmy) {
+    void loadArmies(int colour, String army, String oppArmy) {
         //this if statement exists only to ensure the first 16 pieces added to the array allPiecesOnBoard
         //are white.If the user is player one, aka white, load their pieces first,otherwise load their opponent's
         //pieces
@@ -731,7 +720,7 @@ public class GameState {
     }
 
     //prepare the board for the next turn
-    private void updateBoard() {
+    void updateBoard() {
         turnCounter++;
         updatePieceCounters();
         turnJustEnded = true;
@@ -796,7 +785,7 @@ public class GameState {
 
 
     //loop through all pieces and increase their counters, this will reduce the time of their status effects and increase the
-//number of turns they have survived
+    //number of turns they have survived
     private void updatePieceCounters() {
         //loop through all pieces and update their counters
         for (int x = 0; x != allPiecesOnBoard.size(); x++) {
@@ -1037,8 +1026,8 @@ public class GameState {
                     for (int x = 0; x != allPiecesOnBoard.size(); x++) {
                         if (allPiecesOnBoard.get(x).name.equalsIgnoreCase("king") && !allPiecesOnBoard.get(x).captured) {
                             if (allPiecesOnBoard.get(x).isWhite == thisPiece.isWhite) {
-                                int xOnMovesetArray = allPiecesOnBoard.get(x).xLocation - thisPiece.xLocation + 7;
-                                int yOnMovesetArray = allPiecesOnBoard.get(x).yLocation - thisPiece.yLocation + 7;
+                                int xOnMovesetArray = convertBoardLocToMovesetArray(thisPiece.xLocation,allPiecesOnBoard.get(x).xLocation);
+                                int yOnMovesetArray = convertBoardLocToMovesetArray(thisPiece.yLocation,allPiecesOnBoard.get(x).yLocation);
                                 thisPiece.changeableMoveset[xOnMovesetArray][yOnMovesetArray] = 1008;
                             }
                         }
@@ -1068,24 +1057,9 @@ public class GameState {
         effect.inEffect = false;
     }
 
-    private void executeMove(int xTarget, int yTarget, Piece pieceMoving, int movetype) {
-        System.out.println(movetype + " this is the move being madE!");
+    void executeMove(int xTarget, int yTarget, Piece pieceMoving, int movetype) {
         //add the move being made to the array of moves made
         addMoveToListOfMoves(pieceMoving.xLocation, pieceMoving.yLocation, xTarget, yTarget);
-        //if the user is the one that made the move, the move is sent to the server
-        if (playerTurn == colourOfUser) {
-            //take the location of the piece moving, and the location of the square targeted and put them into a string
-            //String is in format "####" where the first two numbers are the x and y coords of the piece moving, and
-            //the next two are the coords of the square being targeted
-            String move = String.valueOf(pieceMoving.xLocation) + String.valueOf(pieceMoving.yLocation) + String.valueOf(xTarget) + String.valueOf(yTarget);
-            System.out.println(move);
-            //convert move to hex
-            move = StringUtils.convertToHex(move);
-            //create the message to be sent to server, and send it
-            String message = "MOVE " + move;
-            serverComms.sendMessageToServer(message + "\n");
-        }
-
         //find if the movetype is blockable (if it's greater than 1000 it is blockable
         int blockable;
         if (movetype > 1000 && movetype < 2000) {
@@ -1143,9 +1117,9 @@ public class GameState {
     }
 
     //make a move based on a String containing the location, and the destination of the move
-//example string 1765, where (1,7) is the initial location of the piece, and (6,5) is the location
-//the piece is moving to
-    void executeMoveFromServer(String move) {
+    //example string 1765, where (1,7) is the initial location of the piece, and (6,5) is the location
+    //the piece is moving to
+     void executeMoveFromServer(String move) {
         //the String must be exactly 4 characters long or it won't execute
         if (move.length() == 4) {
             //array storing the four integers
@@ -1210,10 +1184,9 @@ public class GameState {
 
 
         int indexOfPieceMoving = piecesOnBoard[squareOfPieceMovingx][squareOfPieceMovingy];
-        int moveLocXOnMoveset = targetX + 7 - squareOfPieceMovingx;
-        int moveLocYOnMoveset = targetY + 7 - squareOfPieceMovingy;
+        int moveLocXOnMoveset = convertBoardLocToMovesetArray(squareOfPieceMovingx,targetX);
+        int moveLocYOnMoveset = convertBoardLocToMovesetArray(squareOfPieceMovingy,targetY);
         int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
-        System.out.println(movetypePieceUsing + " this movetype");
         executeMove(targetX, targetY, allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
         updateBoardSim();
 
@@ -1602,13 +1575,6 @@ public class GameState {
         return x;
     }
 
-    private int[] findLocationOnBoard(int movesetLocX, int movesetLocY, int pieceLocX, int pieceLocY) {
-        int[] location = new int[2];
-        location[0] = movesetLocX - 7 + pieceLocX;
-        location[1] = movesetLocY - 7 + pieceLocY;
-        return location;
-    }
-
     //find which square on the board the cursor is on
     public int[] findSquareMouseIsOn(int mousex, int mousey) {
         //reset these values, these will be the values of the mouse's location on screen
@@ -1694,7 +1660,7 @@ public class GameState {
     }
 
     //if the morale of a player is 0, set the gamestate booleans according to which player hit 0 morale
-    private void checkIfGameOver() {
+    void checkIfGameOver() {
         if (moraleTotals[0] <= 0) {
             moraleTotals[0] = 0;
             blackWins = true;
@@ -1705,12 +1671,6 @@ public class GameState {
             gameOver = true;
             whiteWins = true;
         }
-        if (gameOver) {
-            if (serverComms != null) {
-                serverComms.sendMessageToServer("RANKED_MATCH_OVER\n");
-            }
-        }
-
     }
 
     String getCurrentlySelectedPieceName() {
@@ -1731,8 +1691,29 @@ public class GameState {
         return lore;
     }
 
+    //convert movesetArray to on board location
+    private int[] findLocationOnBoard(int movesetLocX, int movesetLocY, int pieceLocX, int pieceLocY) {
+        int[] location = new int[2];
+        location[0] = movesetLocX - 7 + pieceLocX;
+        location[1] = movesetLocY - 7 + pieceLocY;
+        return location;
+    }
 
-    private void drawAll(SpriteBatch batch, MouseVars mouseVars) {
+    private int convertBoardLocToMovesetArray(int locOfPiece, int locOfSquareToMoveTo){
+        int arrayLoc;
+        arrayLoc = locOfSquareToMoveTo + 7 - locOfPiece;
+        return arrayLoc;
+    }
+
+    private int[] convertBoardLocToMovesetArray(int[] locOfPiece, int[] locOfSquareToMoveTo){
+        int[] arrayLoc = new int[2];
+        arrayLoc[0] = locOfSquareToMoveTo[0] + 7 - locOfPiece[0];
+        arrayLoc[1] = locOfSquareToMoveTo[1] + 7 - locOfPiece[1];
+        return arrayLoc;
+    }
+
+
+   void drawAll(SpriteBatch batch, MouseVars mouseVars) {
         //draw board Sprite
         sprite.draw(batch);
 
@@ -1740,8 +1721,8 @@ public class GameState {
         if (System.currentTimeMillis() - timePieceLastSelected <= 1500) {
             if (pieceSelected) {
                 drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(selectedPiece).moveset, allPiecesOnBoard.get(selectedPiece).validMoves);
-            } else if (loc[0] >= 0 && loc[1] >= 0 && loc[0] <= 7 && loc[1] <= 7 && piecesOnBoard[loc[0]][loc[1]] != -1 && hasMouseChangedLocationsYet) {
-                drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).moveset, allPiecesOnBoard.get(piecesOnBoard[loc[0]][loc[1]]).validMoves);
+            } else if (mouseLoc[0] >= 0 && mouseLoc[1] >= 0 && mouseLoc[0] <= 7 && mouseLoc[1] <= 7 && piecesOnBoard[mouseLoc[0]][mouseLoc[1]] != -1 && hasMouseChangedLocationsYet) {
+                drawMovesOnBoard(batch, mouseVars, allPiecesOnBoard.get(piecesOnBoard[mouseLoc[0]][mouseLoc[1]]).moveset, allPiecesOnBoard.get(piecesOnBoard[mouseLoc[0]][mouseLoc[1]]).validMoves);
             }
         }
         batch.begin();
@@ -1928,20 +1909,20 @@ public class GameState {
                     msX = x - selectedPieceLocx + 7;
                     msY = y - selectedPieceLocy + 7;
                 } else {
-                    msX = x - loc[0] + 7;
-                    msY = y - loc[1] + 7;
+                    msX = x - mouseLoc[0] + 7;
+                    msY = y - mouseLoc[1] + 7;
                 }
                 int type = moves[msX][msY];
 
                 if (type != 0) {
                     if (validMoves[msX][msY]) { // if the move is a valid one and is a move
-                        if (loc[0] == x && loc[1] == y) { // if the move is a selected one
+                        if (mouseLoc[0] == x && mouseLoc[1] == y) { // if the move is a selected one
                             state = 3;
                         } else { // if the move is valid but not selected
                             state = 1;
                         }
                     } else if (!validMoves[msX][msY]) { // if the move is not valid
-                        if (loc[0] == x && loc[1] == y) { // if the move is a selected one
+                        if (mouseLoc[0] == x && mouseLoc[1] == y) { // if the move is a selected one
                             state = 2;
                         } else { // if the move is invalid and not selected
                             state = 0;
@@ -2037,7 +2018,7 @@ public class GameState {
         }
     }
 
-    private void loadGraphics() {
+    void loadGraphics() {
         boardImage = GraphicsUtils.loadTexture("Board.png");
         reticleTexture = GraphicsUtils.loadTexture("reticule.png");
         reticleTextureBlocked = GraphicsUtils.loadTexture("reticuleBlocked.png");
@@ -2055,7 +2036,6 @@ public class GameState {
             allPiecesOnBoard.get(x).setImage();
         }
     }
-
 
     //delete graphics objects, used when the game is being reset to avoid leaking memory
     void deleteGraphics() {

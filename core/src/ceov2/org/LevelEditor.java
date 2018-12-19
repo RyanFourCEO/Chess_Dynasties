@@ -23,8 +23,8 @@ public class LevelEditor extends ArmyMaker {
         super();
         loadLevelEditorMenu(inputMultiplexer);
         loadCurrentLevel();
-        pageX = 2;
-        pageY = 5;
+        columnsOfPiecesShown = 2;
+        rowsOfPiecesShown = 5;
     }
 
     public void run(SpriteBatch batch, MouseVars mouseVars) {
@@ -38,7 +38,7 @@ public class LevelEditor extends ArmyMaker {
         //perform logic based on the mouse location on the army grid and the mouse variables
         processMouseInputArmy(mouseVars, mouseLocOnArmy, 8, 8);
         //find the mouse's location on the collection grid
-        mouseLocOnCollection = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy, 60, 910, 180, pageX, pageY);
+        mouseLocOnCollection = findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy, 60, 910, 180, columnsOfPiecesShown, rowsOfPiecesShown);
         //perform logic based on the mouse's locations on both grids and the mouse variables
         processMouseInputCollection(mouseVars, mouseLocOnCollection, mouseLocOnArmy, 8, 8);
 
@@ -57,21 +57,21 @@ public class LevelEditor extends ArmyMaker {
         int yLocation = 0;
         //depending on the page, certain pieces should be drawn
         //indexToDrawFrom controls which pieces get drawn
-        int indexToDrawFrom = page * pageX * pageY - pageX * pageY;
+        int indexToDrawFrom = page * columnsOfPiecesShown * rowsOfPiecesShown - columnsOfPiecesShown * rowsOfPiecesShown;
 //if indexToDrawFrom is greater than the size of the pieces array, then we are on a page with no pieces to display
         if (indexToDrawFrom > allPieces.size()) {
             //draw nothing
         } else {
             //loop through pieces and draw them
             int numberOfPiecesToDraw = 0;
-            if ((allPieces.size() - indexToDrawFrom) > (pageX * pageY)) {
+            if ((allPieces.size() - indexToDrawFrom) > (columnsOfPiecesShown * rowsOfPiecesShown)) {
                 numberOfPiecesToDraw = 10;
             } else {
-                numberOfPiecesToDraw = allPieces.size() % (pageX * pageY);
+                numberOfPiecesToDraw = allPieces.size() % (columnsOfPiecesShown * rowsOfPiecesShown);
             }
             for (int x = indexToDrawFrom; x != indexToDrawFrom + numberOfPiecesToDraw; x++) {
                 allPieces.get(x).drawSpecificLoc(batch, 60, 940 + 60 * xLocation, 450 - 60 * yLocation);
-                if (xLocation == pageX - 1) {
+                if (xLocation == columnsOfPiecesShown - 1) {
                     xLocation = 0;
                     yLocation++;
                 } else {

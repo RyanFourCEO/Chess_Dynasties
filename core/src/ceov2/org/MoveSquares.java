@@ -35,8 +35,8 @@ public class MoveSquares {
                         msX = x - main.selectedPieceLocx + 7;
                         msY = y - main.selectedPieceLocy + 7;
                     } else {
-                        msX = x - main.loc[0] + 7;
-                        msY = y - main.loc[1] + 7;
+                        msX = x - main.mouseLoc[0] + 7;
+                        msY = y - main.mouseLoc[1] + 7;
                     }
                     allMoveSquares[i][x][y] = main.allPiecesOnBoard.get(i).moveset[msX][msY];
                 }
@@ -50,8 +50,8 @@ public class MoveSquares {
         // finds which move you are hovering over
         int[][][] ret = new int[8][8][];
         int msX, msY;
-        int mouseX = main.loc[0];
-        int mouseY = main.loc[1];
+        int mouseX = main.mouseLoc[0];
+        int mouseY = main.mouseLoc[1];
         int valid, type, index, hovered;
         for (int x = 0; x <= 7; x++) {
             for (int y = 0; y <= 7; y++) {
@@ -69,7 +69,7 @@ public class MoveSquares {
 
                 ret[x][y][0] = type;
 
-                if (main.loc[0] == x && main.loc[1] == y) { // if the move is a selected one
+                if (main.mouseLoc[0] == x && main.mouseLoc[1] == y) { // if the move is a selected one
                     hovered = 1;
                 } else { // if the move is valid but not selected
                     hovered = 0;

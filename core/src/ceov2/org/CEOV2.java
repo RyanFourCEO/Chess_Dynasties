@@ -99,51 +99,18 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         //loopback ip address: "127.0.0.1"
         //actual server ip address: "23.233.5.44"
         //port: 5000
-        serverComms = new ServerCommunications("23.233.5.44", 5000);
+        serverComms = new ServerCommunications("127.0.0.1", 5000);
 
-        //create semi-transparent black box texture
-        pixmap = new Pixmap(290, 300, Pixmap.Format.RGBA8888);
-        pixmap.setColor(0, 0, 0, 0.75f);
-        pixmap.fillRectangle(0, 0, 290, 300);
-        texture = new Texture(pixmap);
-        sprite1 = new Sprite(texture);
-        sprite1.setCenter(550, 309);
-        pixmap.dispose();
+        loadPivotalGraphicsObjects();
+
+        loadGraphics();
+
+        initMainMenuOptionsMenuServerMenu();
 
         lang = new Lang("eng");
-
-        camera = new PerspectiveCamera();
-        viewport = new StretchViewport(1100, 618, camera);
-        inputMultiplexer = new InputMultiplexer();
-
-        //load the options menu, this is just one button that can bring up further options for the player
-        //including screen resolution options and audio options
-        optionsMenu = new Menu(inputMultiplexer);
-        //load the mainMenu, this menu is the first menu the user sees
-        mainMenu = new Menu(inputMultiplexer);
-        //load the serverMenu, used to provide user with UI to log in
-        serverMenu = new Menu(inputMultiplexer);
-
-        Gdx.input.setInputProcessor(inputMultiplexer);
-        inputMultiplexer.addProcessor(this);
-
-        //load the main menu's UI components
-        loadMainMenuUIComponents();
-        //load the single button that the user can press to bring up their various options
-        loadOptionsMenuUIComponents();
-
 //mouseVars holds the mouse's variables, it's position and whether or not it is clicked
 //every time the main loop executes this object finds the variables again
         mouseVars = new MouseVars();
-
-//graphics objects are initialized
-        batch = new SpriteBatch();
-
-        texture = new Texture(Gdx.files.internal("Fonts\\ArialDistanceField2.png"), true);
-        texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
-        font = new BitmapFont(Gdx.files.internal("Fonts\\ArialDistanceField2.fnt"), new TextureRegion(texture), false);
-        font.setColor(Color.WHITE);
-
         //attempt to log user in, if it failed, provide user with text areas to enter login info
         attemptToLogUserIn();
         System.out.println(loggedIn);
@@ -155,22 +122,124 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     //The main loop of the game, all graphics will be drawn here, and game logic is executed here
     @Override
     public void render() {
-        //collect the mouse variable for this frame
-        mouseVars.setMouseVariables(DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH, viewport.getScreenHeight(), viewport.getScreenWidth());
-//clear the screen
+        updateMouseVars();
+        clearScreen();
+        processServerInput();
+        //based on state of the game execute certain code, if the user is in a game, then
+        //that logic will be called from this method. Same if they are army building. The
+        //menu is also run from this method and not the one below
+        executeCurrentStateLogic();
+        //note that the main menu is drawn in the above method
+        drawMenusAndTextToUser();
+    }
+
+    //delete graphics objects
+    @Override
+    public void dispose() {
+        //graphics objects deleted
+        batch.dispose();
+        font.dispose();
+        mainMenu.dispose();
+        optionsMenu.dispose();
+        serverMenu.dispose();
+        texture.dispose();
+        serverComms.sendMessageToServer("end");
+        serverComms.closeStreams();
+    }
+
+    void loadPivotalGraphicsObjects() {
+        camera = new PerspectiveCamera();
+        viewport = new StretchViewport(1100, 618, camera);
+        //having multiple draw calls "batched" together greatly increases performance
+        batch = new SpriteBatch();
+    }
+
+    void loadGraphics(){
+
+        //create semi-transparent black box texture
+        pixmap = new Pixmap(290, 300, Pixmap.Format.RGBA8888);
+        pixmap.setColor(0, 0, 0, 0.75f);
+        pixmap.fillRectangle(0, 0, 290, 300);
+        texture = new Texture(pixmap);
+        sprite1 = new Sprite(texture);
+        sprite1.setCenter(550, 309);
+        pixmap.dispose();
+        //non-semi-transparent black box graphics are initialized
+        texture = new Texture(Gdx.files.internal("Fonts\\ArialDistanceField2.png"), true);
+        texture.setFilter(Texture.TextureFilter.MipMapLinearNearest, Texture.TextureFilter.Linear);
+        font = new BitmapFont(Gdx.files.internal("Fonts\\ArialDistanceField2.fnt"), new TextureRegion(texture), false);
+        font.setColor(Color.WHITE);
+    }
+
+    void reloadGraphics() {
+        switch (currentGameState) {
+            case GAME_IS_LIVE_STATE:
+                game.reloadGraphics();
+                break;
+
+            case ARMY_BUILDING_STATE:
+                armyMaker.reloadGraphics();
+                break;
+
+            case LEVEL_EDITOR_STATE:
+                levelEditor.reloadGraphics();
+                break;
+        }
+    }
+
+    void initMainMenuOptionsMenuServerMenu(){
+
+        inputMultiplexer = new InputMultiplexer();
+        //load the options menu, this is just one button that can bring up further options for the player
+        //including screen resolution options and audio options
+        optionsMenu = new Menu(inputMultiplexer);
+        //load the mainMenu, this menu is the first menu the user sees
+        mainMenu = new Menu(inputMultiplexer);
+        //load the serverMenu, used to provide user with UI to log in
+        serverMenu = new Menu(inputMultiplexer);
+        Gdx.input.setInputProcessor(inputMultiplexer);
+        inputMultiplexer.addProcessor(this);
+        //load the main menu's UI components
+        loadMainMenuUIComponents();
+        //load the single button that the user can press to bring up their various options
+        loadOptionsMenuUIComponents();
+    }
+
+    void reloadLanguage() {
+        lang = new Lang(language);
+        switch (currentGameState) {
+//if in the main menu, ensure the main menu is enabled and draw the main menu components
+            case GAME_IS_LIVE_STATE:
+                game.reloadGraphics();
+                break;
+
+            case ARMY_BUILDING_STATE:
+                armyMaker.reloadGraphics();
+                break;
+
+            case LEVEL_EDITOR_STATE:
+                levelEditor.reloadGraphics();
+                break;
+        }
+    }
+
+    void clearScreen(){
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    }
+
+    void updateMouseVars(){
+        //collect the mouse variable for this frame
+        mouseVars.setMouseVariables(DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH, viewport.getScreenHeight(), viewport.getScreenWidth());
         if (currentlyInOptionsMenu) {
-            //if the user is in the options menu, we unset the mouse variables so the user can't accidentalluy
+            //if the user is in the options menu, we unset the mouse variables so the user can't accidentally
             //make a move while doing options menu things
             mouseVars.unSetMouseVariables();
         }
+    }
 
-        //this is a useful comment
-        //process Server input
-        processServerInput();
-
-//based on the state of the game, execute certain code
+    void executeCurrentStateLogic(){
+        //based on the state of the game, execute certain code
         switch (currentGameState) {
 //if in the main menu, ensure the main menu is enabled and draw the main menu components
             case MAIN_MENU_STATE:
@@ -206,10 +275,10 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                     currentGameState = MAIN_MENU_STATE;
                 }
                 break;
-
         }
+    }
 
-
+    void drawMenusAndTextToUser(){
         if (currentlyInOptionsMenu) {
             drawOptionsMenuNonUIComponents();
         }
@@ -224,61 +293,40 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         }
     }
 
-    //delete graphics objects
-    @Override
-    public void dispose() {
-        //graphics objects deleted
-        batch.dispose();
-        font.dispose();
-        mainMenu.dispose();
-        optionsMenu.dispose();
-        serverMenu.dispose();
-        texture.dispose();
-        serverComms.sendMessageToServer("end");
-        serverComms.closeStreams();
-    }
-
-    void reloadGraphics() {
+    //based on the state of the game, unselect everything in the current area of the game
+    //this is so that when the user presses escape to look at the menu, they don't
+    //stay having a piece selected, for example.
+    void unselectAll() {
+        //based on the state of the game, unselect everything in the current area of the game
         switch (currentGameState) {
-//if in the main menu, ensure the main menu is enabled and draw the main menu components
+
+            case MAIN_MENU_STATE:
+
+                break;
+
             case GAME_IS_LIVE_STATE:
-                game.reloadGraphics();
+                game.unselectAll();
                 break;
 
             case ARMY_BUILDING_STATE:
-                armyMaker.reloadGraphics();
+                armyMaker.unselectAll();
                 break;
 
             case LEVEL_EDITOR_STATE:
-                levelEditor.reloadGraphics();
+                levelEditor.unselectAll();
                 break;
+
         }
     }
 
-    void reloadLanguage() {
-        lang = new Lang(language);
-        switch (currentGameState) {
-//if in the main menu, ensure the main menu is enabled and draw the main menu components
-            case GAME_IS_LIVE_STATE:
-                game.reloadGraphics();
-                break;
-
-            case ARMY_BUILDING_STATE:
-                armyMaker.reloadGraphics();
-                break;
-
-            case LEVEL_EDITOR_STATE:
-                levelEditor.reloadGraphics();
-                break;
-        }
-    }
-
-    //later when screen resizing is supported this will be important,currently does nothing
+    //All menus must be included here, so that when the window is resized their components remain
+    //drawn on the correct locations
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height);
         optionsMenu.stage.getViewport().update(width, height);
         mainMenu.stage.getViewport().update(width, height);
+        serverMenu.stage.getViewport().update(width,height);
         if (game != null) {
             game.menu.stage.getViewport().update(width, height);
         }
@@ -290,7 +338,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         }
 
     }
-
 
     @Override
     public boolean keyDown(int keycode) {
@@ -341,6 +388,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         batch.setShader(Shaders.distanceFieldShader);
         batch.begin();
         font.setColor(Color.BLACK);
+        //display whether the user is connected to the server
         font.draw(batch, connectionMessage, 900, 600);
         if (username.length() > 0){
             font.draw(batch,"logged in as " +username,900,570);
@@ -361,7 +409,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
         //attempt to read any new messages the server may have sent
         serverComms.readMessages();
-        //if their is a message in the queue to process
+        //if there is a message in the queue to process
         if (serverComms.getFirstClientMessageInQueue() != null) {
             //process it, then remove it from the queue
             dealWithServerMessage(serverComms.getFirstClientMessageInQueue());
@@ -384,8 +432,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
     //process a single server message
     void dealWithServerMessage(String message) {
         //split the message into it's two parts, the command, and the arguments
+        //the command is located at exactly index 0, the args are everything else
        String[] commandThenArgs = message.split(" ");
-        String command = commandThenArgs[0];
+       String command = commandThenArgs[0];
 
         //deal with the heartBeat command
         if (command.equals("HEARTBEAT")) {
@@ -401,7 +450,9 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                     String args = commandThenArgs[1];
                     String move = StringUtils.convertFromHex(args);
                     System.out.println(move);
-                    game.state.executeMoveFromServer(move);
+                    if (game != null) {
+                        game.state.executeMoveFromServer(move);
+                    }
                 }
             }
         }
@@ -432,16 +483,15 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 army += splitArgs[x];
             }
         }
-        System.out.println(army + " hmm");
         //load the army the user is using
         String army2 = Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
         hideMainMenu();
         //set other objects not used by the game to be null
         setAllObjectsNull();
         //game object created using the army sent by the server, the colour sent by the server
-        //and the army the user is using. ServerComms also sent to LiveGame object so it can
+        //and the army the user is using. ServerComms also given to LiveGame object so it can
         //send messages to the server
-        game = new LiveGame(inputMultiplexer, colour, army2, army, serverComms);
+        game = new MultiplayerLiveGame(inputMultiplexer, colour, army2, army, serverComms);
         //state set to 1, which means game is currently being played
         currentGameState = GAME_IS_LIVE_STATE;
     }
@@ -517,8 +567,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
     void loadServerMenuUIComponents() {
         displayServerMenu = true;
-
-
         serverMenu.addTextArea("Enter desired username \nbelow To create account\nand log in", 190, 75, 900, 500);
         serverMenu.addTextArea("", 190, 40, 900, 450);
         ClickListener clickListener = new ClickListener() {
@@ -545,6 +593,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
     void removeServerMenu(){
         displayServerMenu = false;
+        //remove all UI components
         for (int x = serverMenu.allButtons.size() - 1; x != 0; x--) {
             serverMenu.allButtons.get(x).remove();
             optionsMenu.allButtons.remove(x);
@@ -552,7 +601,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         for (int x = serverMenu.allGroups.size() - 1; x != -1; x--) {
             serverMenu.allGroups.clear();
         }
-
         for (int x = serverMenu.allContainers.size() - 1; x != -1; x--) {
             serverMenu.allContainers.get(x).getActor().remove();
             serverMenu.allContainers.get(x).remove();
@@ -587,7 +635,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
         ClickListener clickListener = new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                //set other objects not used by the game to be null
                 toggleOptionsMenu();
             }
 
@@ -664,8 +711,8 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                 }
             };
             optionsMenu.addButtonToGroup(0, "best", 50, 50, 615, 200, clickListener);
-            Array<TextButton2> buttons = new Array();
-            buttons = optionsMenu.allGroups.get(0).getButtons();
+
+            Array<TextButton2> buttons = optionsMenu.allGroups.get(0).getButtons();
             //check the button which is currently selected
             switch (GraphicsUtils.graphicsQuality) {
 
@@ -693,7 +740,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             optionsMenu.allGroups.get(1).setMinCheckCount(1);
             optionsMenu.allGroups.get(1).setUncheckLast(true);
 
-            //use bad graphics settings button
+
             clickListener = new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -703,7 +750,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             };
 
             optionsMenu.addButtonToGroup(1, "ENG", 50, 50, 535, 140, clickListener);
-            //use bad graphics settings button
+
             clickListener = new ClickListener() {
                 @Override
                 public void clicked(InputEvent event, float x, float y) {
@@ -714,8 +761,8 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
 
             optionsMenu.addButtonToGroup(1, "SSP", 50, 50, 595, 140, clickListener);
 
-            Array<TextButton2> buttons2 = new Array();
-            buttons2 = optionsMenu.allGroups.get(1).getButtons();
+
+            Array<TextButton2> buttons2  = optionsMenu.allGroups.get(1).getButtons();
             //check the button which is currently selected
             switch (GraphicsUtils.graphicsQuality) {
                 case 0:
@@ -791,32 +838,6 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
             if (string1.equals(buttonText)) {
                 buttons.get(x).setChecked(true);
             }
-        }
-    }
-
-    //based on the state of the game, unselect everything in the current area of the game
-    //this is so that when the user presses escape to look at the menu, they don't
-    //stay having a piece selected, for example.
-    void unselectAll() {
-        //based on the state of the game, unselect everything in the current area of the game
-        switch (currentGameState) {
-
-            case MAIN_MENU_STATE:
-
-                break;
-
-            case GAME_IS_LIVE_STATE:
-                game.unselectAll();
-                break;
-
-            case ARMY_BUILDING_STATE:
-                armyMaker.unselectAll();
-                break;
-
-            case LEVEL_EDITOR_STATE:
-                levelEditor.unselectAll();
-                break;
-
         }
     }
 

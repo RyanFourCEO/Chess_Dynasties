@@ -22,30 +22,28 @@ class LiveGame {
     //each step occurring during it's own tick. Whenever a step is completed this is increased by 1
     //so the next step will be executed on the following tick.
     int stepCounterForMoveDisplayPreviews = 0;
+    public LiveGame(){
+
+    }
 
     public LiveGame(InputMultiplexer inputMultiplexer) {
         state = new GameState();
         loadGameMenu(inputMultiplexer);
     }
 
-    //colour =1 means the user is white, colour =2 means the user is black
     public LiveGame(InputMultiplexer inputMultiplexer, int colour, String army, String oppArmy, ServerCommunications serverComms) {
         state = new GameState(colour, army, oppArmy, serverComms);
         loadGameMenu(inputMultiplexer);
-        multiplayerGame = true;
     }
-
     void performGameLogic(SpriteBatch batch, MouseVars mouseVars) {
         updateMenuObjects();
         menu.stage.getViewport().apply();
         menu.stage.draw();
-
-        if (multiplayerGame) {
-            state.runMultiplayerGame(batch, mouseVars);
-        } else {
+        //if (!multiplayerGame) {
+        //    state.runGame(batch, mouseVars);
+        //}else{
             state.runGame(batch, mouseVars);
-        }
-
+        //}
 
         detectIfPieceSelected();
         detectIfMousePosChanged(mouseVars);
@@ -63,9 +61,9 @@ class LiveGame {
 
     void detectIfMousePosChanged(MouseVars mouseVars) {
         int[] mousePosOnBoard = state.findSquareMouseIsOn(mouseVars.mousePosx, mouseVars.mousePosy);
-        if (mousePosOnBoard[0] != state.loc[0] || mousePosOnBoard[1] != state.loc[1]) {
-            state.loc[0] = mousePosOnBoard[0];
-            state.loc[1] = mousePosOnBoard[1];
+        if (mousePosOnBoard[0] != state.mouseLoc[0] || mousePosOnBoard[1] != state.mouseLoc[1]) {
+            state.mouseLoc[0] = mousePosOnBoard[0];
+            state.mouseLoc[1] = mousePosOnBoard[1];
             state.hasMouseChangedLocationsYet = true;
             stepCounterForMoveDisplayPreviews = 0;
             state.timePieceLastSelected = System.currentTimeMillis();
@@ -84,7 +82,7 @@ class LiveGame {
 
     void detectAndCalculateMovePreviews(MouseVars mouseVars) {
         long startTime = System.currentTimeMillis();
-        if (state.loc[0] != -1 && state.loc[1] != -1 && state.pieceSelected) {
+        if (state.mouseLoc[0] != -1 && state.mouseLoc[1] != -1 && state.pieceSelected) {
             switch (stepCounterForMoveDisplayPreviews) {
                 case 0:
                     sim = null;
@@ -115,8 +113,8 @@ class LiveGame {
                     System.out.println("part 4 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 4:
-                    sim.loc[0] = state.loc[0];
-                    sim.loc[1] = state.loc[1];
+                    sim.mouseLoc[0] = state.mouseLoc[0];
+                    sim.mouseLoc[1] = state.mouseLoc[1];
                     sim.projectHoveredMove(indexOfSelectedPiece);
                     System.out.println("part 5 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
@@ -147,6 +145,7 @@ class LiveGame {
         differencesToDraw.calculateLossWinDraw();
         int pieceX, pieceY, simX, simY, xDiff, yDiff;
         //find piece location change
+        System.out.println(state.allPiecesOnBoard.size()+ " large");
         for (int i = 0; i <= state.allPiecesOnBoard.size() - 1; i++) {
             simX = sim.allPiecesOnBoard.get(i).xLocation;
             simY = sim.allPiecesOnBoard.get(i).yLocation;
