@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 //and also creates the menu for the gamestate object
 class LiveGame {
     GameState state;
-    GameState sim;
+    SimulationGameState sim;
     MoveSquares squares;
     int indexOfSelectedPiece;
     DiffBetweenGameStates listOfThingsToDraw;
@@ -22,6 +22,7 @@ class LiveGame {
     //each step occurring during it's own tick. Whenever a step is completed this is increased by 1
     //so the next step will be executed on the following tick.
     int stepCounterForMoveDisplayPreviews = 0;
+
     public LiveGame(){
 
     }
@@ -31,20 +32,11 @@ class LiveGame {
         loadGameMenu(inputMultiplexer);
     }
 
-    public LiveGame(InputMultiplexer inputMultiplexer, int colour, String army, String oppArmy, ServerCommunications serverComms) {
-        state = new GameState(colour, army, oppArmy, serverComms);
-        loadGameMenu(inputMultiplexer);
-    }
     void performGameLogic(SpriteBatch batch, MouseVars mouseVars) {
         updateMenuObjects();
         menu.stage.getViewport().apply();
         menu.stage.draw();
-        //if (!multiplayerGame) {
-        //    state.runGame(batch, mouseVars);
-        //}else{
-            state.runGame(batch, mouseVars);
-        //}
-
+        state.runGame(batch, mouseVars);
         detectIfPieceSelected();
         detectIfMousePosChanged(mouseVars);
         detectAndCalculateMovePreviews(mouseVars);
@@ -80,23 +72,24 @@ class LiveGame {
         */
     }
 
+    //TODO have entire computation of this function, and any other relevant stuff for finding move previews executed on another thread
     void detectAndCalculateMovePreviews(MouseVars mouseVars) {
         long startTime = System.currentTimeMillis();
         if (state.mouseLoc[0] != -1 && state.mouseLoc[1] != -1 && state.pieceSelected) {
             switch (stepCounterForMoveDisplayPreviews) {
                 case 0:
                     sim = null;
-                    sim = new GameState(true);
+                    sim = new SimulationGameState(true);
                     System.out.println("part 1 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;
                 case 1:
                     //if in a multiplayer game, the simulation must load pieces from
                     //the army the server sent, not from the files on the user's computer
-                    //as is normally does with sim.loadArmiesNoGraphics();
+                    //as is normally done with sim.loadArmiesNoGraphics();
                     if (!multiplayerGame) {
-                        sim.loadArmiesNoGraphics();
+                        sim.loadArmies();
                     }else{
-                        sim.loadArmiesNoGraphics(state.colourOfUser,state.yourArmy,state.oppArmy);
+                        sim.loadArmies(state.colourOfUser,state.yourArmy,state.oppArmy);
                     }
                     System.out.println("part 2 Time  = " + ((System.currentTimeMillis() - startTime)) + "ms");
                     break;

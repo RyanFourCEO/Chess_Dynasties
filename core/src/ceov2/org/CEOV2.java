@@ -451,7 +451,7 @@ public class CEOV2 extends ApplicationAdapter implements InputProcessor {
                     String move = StringUtils.convertFromHex(args);
                     System.out.println(move);
                     if (game != null) {
-                        game.state.executeMoveFromServer(move);
+                        game.state.executeMoveFromLocationString(move);
                     }
                 }
             }

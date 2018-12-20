@@ -16,7 +16,7 @@ public class PieceMoveType {
     //this is for things like pawn's 2 square forward move, that can only be used on the very first move the piece makes
     boolean oneTimeUse = false;
 
-    //for move type squares on board
+    //for displaying move type squares on board to user
     float[] color = new float[4];
     float[] innerColor = new float[4];
 
@@ -109,8 +109,6 @@ public class PieceMoveType {
                 isValidTarget = !immovable || !movetypeMovesPieceWhenTargetingEnemy;
             }
         }
-
-
         return isValidTarget;
     }
 

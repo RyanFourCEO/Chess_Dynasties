@@ -17,7 +17,6 @@ import java.util.ArrayList;
 
 //this class deals with all the logic of a live game.
 public class GameState {
-    ServerCommunications serverComms;
     String yourArmy;
     String oppArmy;
 
@@ -96,11 +95,9 @@ public class GameState {
 
     //single player practice game constructor
     public GameState() {
-
         initFont();
         Piece.InitAllMoveTypes();
         loadGraphics();
-
         loadArmies();
         setBoard();
         turnJustStarted = true;
@@ -114,49 +111,9 @@ public class GameState {
 
     }
 
-    public GameState(int colour,String army, String oppArmy, ServerCommunications serverComms){
-        yourArmy = army;
-        this.oppArmy = oppArmy;
-        this.serverComms = serverComms;
-        //set the colour of the user
-        colourOfUser = colour;
-        initFont();
-        Piece.InitAllMoveTypes();
-        loadArmies(colour, army, oppArmy);
-        //if the player is not player one, the board is flipped so their pieces are still located on the
-        //bottom of the board
-        if (colour != 1) {
-            flipBoard = !flipBoard;
-        }
-        loadGraphics();
-        setBoard();
-        turnJustStarted = true;
-        testAndExecuteAbilities();
-        turnJustStarted = false;
-        updatePieceMoveSets();
-        findAllValidMoves();
-    }
     void executeArrayOfMoves(ArrayList<ArrayList<Integer>> moves) {
         for (int i = 0; i < ((moves.isEmpty()) ? 0 : moves.size()); i++) {
             executeMoveUsingSquareLocations(moves.get(i).get(0), moves.get(i).get(1), moves.get(i).get(2), moves.get(i).get(3));
-        }
-    }
-
-    void projectHoveredMove(int indexOfPieceMoving) {
-        //if the input string was valid, continue on
-        //find the location of the move in the 15x15 moveset array
-        int moveLocXOnMoveset = convertBoardLocToMovesetArray(allPiecesOnBoard.get(indexOfPieceMoving).xLocation,mouseLoc[0]);
-
-        int moveLocYOnMoveset = convertBoardLocToMovesetArray(allPiecesOnBoard.get(indexOfPieceMoving).yLocation, mouseLoc[1]);
-
-        //find all valid moves , then see if the move is valid
-        findAllValidMoves();
-        //find the movetype the piece is using
-        int movetypePieceUsing = allPiecesOnBoard.get(indexOfPieceMoving).moveset[moveLocXOnMoveset][moveLocYOnMoveset];
-        //if the move is valid, execute the move
-        if (allPiecesOnBoard.get(indexOfPieceMoving).validMoves[moveLocXOnMoveset][moveLocYOnMoveset]) {
-            executeMove(mouseLoc[0], mouseLoc[1], allPiecesOnBoard.get(indexOfPieceMoving), movetypePieceUsing);
-            updateBoard();
         }
     }
 
@@ -623,63 +580,6 @@ public class GameState {
         tempPieces.clear();
     }
 
-    //same as above method, but calls a piece constructor where graphics aren't loaded
-    void loadArmiesNoGraphics() {
-        //load the army1 file, this will contain the setup for the white army
-        String army = Gdx.files.internal("UserFiles\\armies\\army1.txt").readString();
-        String[] separatedNames;
-        //separate the loaded string from the file into it's 16 piece names
-        separatedNames = army.split(",");
-        //load all the pieces corresponding to the piece names from the file
-        //load all white pieces first, so they take up the first 16 places in the array
-        for (int x = 0; x != 16; x++) {
-            allPiecesOnBoard.add(new Piece(true, separatedNames[x]));
-        }
-//repeat the above for the black pieces, which are loaded from army2
-        army = Gdx.files.internal("UserFiles\\armies\\army2.txt").readString();
-        separatedNames = army.split(",");
-        for (int x = 0; x != 16; x++) {
-            allPiecesOnBoard.add(new Piece(false, separatedNames[x]));
-        }
-        //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
-        tempPieces.clear();
-    }
-
-    //overload of above method, mimics below method but doesn't load graphics
-    void loadArmiesNoGraphics(int colour, String army, String oppArmy) {
-        //this if statement exists only to ensure the first 16 pieces added to the array allPiecesOnBoard
-        //are white.If the user is player one, aka white, load their pieces first,otherwise load their opponent's
-        //pieces
-        if (colour == 1) {
-            //separate the loaded string from the file into it's 16 piece names
-            String[] separated = army.split(",");
-            //load all the pieces corresponding to the piece names from the String
-            //load all of player 1's pieces first, so they take up the first 16 places in the array
-            for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(true, separated[x]));
-            }
-//repeat the above for the black pieces, which are loaded from army2
-            separated = oppArmy.split(",");
-            for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(false, separated[x]));
-            }
-        } else {
-            //separate the loaded string from the file into it's 16 piece names
-            String[] separated = oppArmy.split(",");
-            //load all the pieces corresponding to the piece names from the String
-            //load all of player 1's pieces first, so they take up the first 16 places in the array
-            for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(true, separated[x]));
-            }
-//repeat the above for the black pieces, which are loaded from army2
-            separated = army.split(",");
-            for (int x = 0; x != 16; x++) {
-                allPiecesOnBoard.add(new Piece(false, separated[x]));
-            }
-        }
-        //clear tempPieces as we no longer need to load pieces, which is tempPieces' only purpose
-        tempPieces.clear();
-    }
 
     //loads the two armies from "army" and "oppArmy"
     //strings are in the following format "pawn,pawn,pawn,....knight,rook"
@@ -1119,7 +1019,7 @@ public class GameState {
     //make a move based on a String containing the location, and the destination of the move
     //example string 1765, where (1,7) is the initial location of the piece, and (6,5) is the location
     //the piece is moving to
-     void executeMoveFromServer(String move) {
+     void executeMoveFromLocationString(String move) {
         //the String must be exactly 4 characters long or it won't execute
         if (move.length() == 4) {
             //array storing the four integers
@@ -1699,13 +1599,13 @@ public class GameState {
         return location;
     }
 
-    private int convertBoardLocToMovesetArray(int locOfPiece, int locOfSquareToMoveTo){
+    public int convertBoardLocToMovesetArray(int locOfPiece, int locOfSquareToMoveTo){
         int arrayLoc;
         arrayLoc = locOfSquareToMoveTo + 7 - locOfPiece;
         return arrayLoc;
     }
 
-    private int[] convertBoardLocToMovesetArray(int[] locOfPiece, int[] locOfSquareToMoveTo){
+    public int[] convertBoardLocToMovesetArray(int[] locOfPiece, int[] locOfSquareToMoveTo){
         int[] arrayLoc = new int[2];
         arrayLoc[0] = locOfSquareToMoveTo[0] + 7 - locOfPiece[0];
         arrayLoc[1] = locOfSquareToMoveTo[1] + 7 - locOfPiece[1];

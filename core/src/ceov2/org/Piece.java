@@ -217,7 +217,6 @@ public class Piece {
     }
 
     //find all the movetypes a piece has
-    //untested, might not work, but also is currently unused
     void findMovetypesPieceHas() {
         int[] moveTypesPieceHas = new int[15];
         int numberOfMoveTypesPieceHas = 0;
@@ -248,8 +247,7 @@ public class Piece {
 
     void loadPiecesVariablesFromFile(String name) {
         //load the entire csv text file into String "fileText"
-        String fileText = "";
-        fileText = Gdx.files.internal("PieceInfo\\Pieces.txt").readString();
+        String fileText = Gdx.files.internal("PieceInfo\\Pieces.txt").readString();
         //separatedLines will hold all the values of each line in the csv
         String[] separatedLines = null;
         String newLine = "\n";
@@ -786,7 +784,7 @@ for example, a rook with north=true but all other booleans false would only be a
     }
 
     //this method is called when a piece moves, if they have any moves that can only be used as their first turn
-    //they are no longer usable
+    //they are no longer usable (Pawn can move 2 squares on it's first move for example)
     void removeOneTimeMovesMoves() {
         for (int x = 0; x != 15; x++) {
             for (int y = 0; y != 15; y++) {
@@ -826,9 +824,8 @@ for example, a rook with north=true but all other booleans false would only be a
         } else {
             playerWhoOwnsPiece = 2;
         }
-        if (isWhite == true) {
-
-        } else {
+        //if piece is not white, it's moveset it flipped so pawns move in the correct direction etc.
+        if (!isWhite){
             flipMoveset();
         }
     }
@@ -894,7 +891,7 @@ for example, a rook with north=true but all other booleans false would only be a
         pieceImage.dispose();
     }
 
-    //if a string has is "1", return true, otherwise return false
+    //if a string has value "1", return true, otherwise return false
     boolean convertToBoolean(String convert) {
         boolean converted = false;
         if (Integer.valueOf(convert) == 1) {
