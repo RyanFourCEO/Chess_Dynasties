@@ -50,7 +50,6 @@ public class StringUtils {
         return hex.toString();
     }
 
-
     static String convertFromHex(String hex) {
         StringBuilder notHex = new StringBuilder();
 //loop through the string half as many times as it's length

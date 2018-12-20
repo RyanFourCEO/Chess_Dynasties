@@ -33,7 +33,7 @@ public class DiffBetweenGameStates {
     boolean[] pieceCaptured;
 
     //constructor, simply make the arrays the appropriate size to be able to hold all the pieces that exist
-//in each GameState
+    //in each GameState
     public DiffBetweenGameStates(int currentNumOfPieces, int newNumOfPieces) {
         currentPieceLocationsX = new int[currentNumOfPieces];
         currentPieceLocationsY = new int[currentNumOfPieces];
@@ -53,7 +53,7 @@ public class DiffBetweenGameStates {
         moraleDifferenceBlack = currentMoraleBlack - newMoraleBlack;
     }
 
-    //determine if the "new" GameState has resulted in a win loss or draw
+    //determine if the "new" GameState has resulted in a win/loss/draw
     void calculateLossWinDraw() {
         if ((newMoraleBlack <= 0) && (newMoraleWhite <= 0)) {
             draw = true;
