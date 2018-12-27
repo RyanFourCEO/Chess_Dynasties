@@ -234,7 +234,7 @@ public class Piece {
                 //if the movetype that was added is new, and is not 0, increase the numberOfMoveTypesPieceHas
                 //also add the new movetype to an array which stores which movetypes a piece has
                 if (staticMoveset[x][y] != 0) {
-                    if (newMoveType == true) {
+                    if (newMoveType) {
                         moveTypesPieceHas[numberOfMoveTypesPieceHas] = staticMoveset[x][y];
                         numberOfMoveTypesPieceHas++;
                     }
@@ -476,28 +476,28 @@ for example, a rook with north=true but all other booleans false would only be a
 */
     private void setMovesetLines(int range, boolean north, boolean northeast, boolean east, boolean southeast, boolean south, boolean southwest, boolean west, boolean northwest, int movetype) {
         movetype = findMovetypeIndex(movetype);
-        if (south == true) {
+        if (south) {
             for (int y = 0; y != 7; y++) {
                 if (Math.abs(7 - y) <= range) {
                     staticMoveset[7][y] = movetype;
                 }
             }
         }
-        if (north == true) {
+        if (north) {
             for (int y = 8; y != 15; y++) {
                 if (Math.abs(7 - y) <= range) {
                     staticMoveset[7][y] = movetype;
                 }
             }
         }
-        if (east == true) {
+        if (east) {
             for (int x = 8; x != 15; x++) {
                 if (Math.abs(7 - x) <= range) {
                     staticMoveset[x][7] = movetype;
                 }
             }
         }
-        if (west == true) {
+        if (west) {
             for (int x = 0; x != 7; x++) {
                 if (Math.abs(7 - x) <= range) {
                     staticMoveset[x][7] = movetype;
@@ -505,28 +505,28 @@ for example, a rook with north=true but all other booleans false would only be a
             }
         }
 
-        if (northeast == true) {
+        if (northeast) {
             for (int x = 8; x != 15; x++) {
                 if (Math.abs(7 - x) <= range) {
                     staticMoveset[x][x] = movetype;
                 }
             }
         }
-        if (southwest == true) {
+        if (southwest) {
             for (int x = 8; x != 15; x++) {
                 if (Math.abs(7 - x) <= range) {
                     staticMoveset[14 - x][14 - x] = movetype;
                 }
             }
         }
-        if (northwest == true) {
+        if (northwest) {
             for (int x = 8; x != 15; x++) {
                 if (Math.abs(7 - x) <= range) {
                     staticMoveset[14 - x][x] = movetype;
                 }
             }
         }
-        if (southeast == true) {
+        if (southeast) {
             for (int x = 8; x != 15; x++) {
                 if (Math.abs(7 - x) <= range) {
                     staticMoveset[x][14 - x] = movetype;
@@ -559,31 +559,31 @@ for example, a rook with north=true but all other booleans false would only be a
             smallerNumber = coord1;
         }
 
-        if (upRight == true) {
+        if (upRight) {
             staticMoveset[7 + smallerNumber][7 + biggerNumber] = movetype;
         }
-        if (rightUp == true) {
+        if (rightUp) {
             staticMoveset[7 + biggerNumber][7 + smallerNumber] = movetype;
         }
 
-        if (rightDown == true) {
+        if (rightDown) {
             staticMoveset[7 + biggerNumber][7 - smallerNumber] = movetype;
         }
-        if (downRight == true) {
+        if (downRight) {
             staticMoveset[7 + smallerNumber][7 - biggerNumber] = movetype;
         }
 
-        if (downLeft == true) {
+        if (downLeft) {
             staticMoveset[7 - smallerNumber][7 - biggerNumber] = movetype;
         }
-        if (leftDown == true) {
+        if (leftDown) {
             staticMoveset[7 - biggerNumber][7 - smallerNumber] = movetype;
         }
 
-        if (leftUp == true) {
+        if (leftUp) {
             staticMoveset[7 - biggerNumber][7 + smallerNumber] = movetype;
         }
-        if (upLeft == true) {
+        if (upLeft) {
             staticMoveset[7 - smallerNumber][7 + biggerNumber] = movetype;
         }
 
@@ -659,7 +659,7 @@ for example, a rook with north=true but all other booleans false would only be a
     void updateStatuses(int playerTurn) {
         //turns survived incremented
         turnsSurvived++;
-        if (isWhite == true && playerTurn == 2) {
+        if (isWhite && playerTurn == 2) {
             updateAllStatuses();
         }
         if (isWhite == false && playerTurn == 1) {
@@ -675,7 +675,7 @@ for example, a rook with north=true but all other booleans false would only be a
 //loop through all status effects
         for (int x = 0; x != allStatuses.size(); x++) {
 //if the status is timebased it's duration is decreased
-            if (allStatuses.get(x).timeBased == true) {
+            if (allStatuses.get(x).timeBased) {
                 allStatuses.get(x).statusEffectLength--;
             }
 //if the duration reaches 0 the status is set to be removed
@@ -687,7 +687,7 @@ for example, a rook with north=true but all other booleans false would only be a
         }
 //statuses that have been set to be removed are removed
         for (int x = allStatuses.size() - 1; x >= 0; x--) {
-            if (allStatuses.get(x).setToBeRemoved == true) {
+            if (allStatuses.get(x).setToBeRemoved) {
                 allStatuses.remove(x);
             }
         }
@@ -793,7 +793,7 @@ for example, a rook with north=true but all other booleans false would only be a
                     blockable = 1;
                 }
                 int movetype = staticMoveset[x][y] % 1000;
-                if (allMoveTypes[blockable][movetype].oneTimeUse == true) {
+                if (allMoveTypes[blockable][movetype].oneTimeUse) {
                     staticMoveset[x][y] = 0;
                 }
             }
@@ -819,7 +819,7 @@ for example, a rook with north=true but all other booleans false would only be a
 
     void setColour(boolean isWhite) {
         this.isWhite = isWhite;
-        if (isWhite == true) {
+        if (isWhite) {
             playerWhoOwnsPiece = 1;
         } else {
             playerWhoOwnsPiece = 2;
@@ -849,7 +849,7 @@ for example, a rook with north=true but all other booleans false would only be a
         sprite.setSize((72), (72));
         sprite.setCenter(xLocToDraw, yLocToDraw);
 
-        if (isWhite == true) {
+        if (isWhite) {
 
             sprite.draw(batch);
 
@@ -867,7 +867,7 @@ for example, a rook with north=true but all other booleans false would only be a
         sprite.setSize((size), (size));
 
         sprite.setCenter(centerx, centery);
-        if (isWhite == true) {
+        if (isWhite) {
             sprite.draw(batch);
         } else {
             //if the piece is black, draw the piece with the colour inversion shaders
